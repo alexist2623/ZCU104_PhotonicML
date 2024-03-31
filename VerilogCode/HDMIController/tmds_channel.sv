@@ -22,15 +22,15 @@ module tmds_channel
 //////////////////////////////////////////////////////////////////////////////
 reg signed [4:0] acc = 5'sd0;
 
-wire [8:0] q_m;
-wire [9:0] q_out;
-wire [9:0] video_coding;
+logic [8:0] q_m;
+logic [9:0] q_out;
+logic [9:0] video_coding;
 assign video_coding = q_out;
 
-wire [3:0] N1D;
-wire signed [4:0] N1q_m07;
-wire signed [4:0] N0q_m07;
-always @(*) begin
+logic [3:0] N1D;
+logic signed [4:0] N1q_m07;
+logic signed [4:0] N0q_m07;
+always_comb begin
     N1D = video_data[0] + video_data[1] + video_data[2] + video_data[3] + video_data[4] + video_data[5] + video_data[6] + video_data[7];
     case(q_m[0] + q_m[1] + q_m[2] + q_m[3] + q_m[4] + q_m[5] + q_m[6] + q_m[7])
         4'b0000: N1q_m07 = 5'sd0;
@@ -47,11 +47,11 @@ always @(*) begin
     N0q_m07 = 5'sd8 - N1q_m07;
 end
 
-wire signed [4:0] acc_add;
+logic signed [4:0] acc_add;
 
 integer i;
 
-always @(*) begin
+always_comb begin
     if (N1D > 4'd4 || (N1D == 4'd4 && video_data[0] == 1'd0)) begin
         q_m[0] = video_data[0];
         for(i = 0; i < 7; i++)
@@ -95,8 +95,8 @@ end
 // See Section 5.4.2
 //////////////////////////////////////////////////////////////////////////////
 
-wire [9:0] control_coding;
-always @(*) begin 
+logic [9:0] control_coding;
+always_comb begin 
     unique case(control_data)
         2'b00: control_coding = 10'b1101010100;
         2'b01: control_coding = 10'b0010101011;
@@ -108,8 +108,8 @@ end
 // TERC4 Encoding
 // See Section 5.4.3
 //////////////////////////////////////////////////////////////////////////////
-wire [9:0] terc4_coding;
-always @(*) begin
+logic [9:0] terc4_coding;
+always_comb begin
     unique case(data_island_data)
         4'b0000 : terc4_coding = 10'b1010011100;
         4'b0001 : terc4_coding = 10'b1001100011;

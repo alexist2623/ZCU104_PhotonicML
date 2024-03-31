@@ -44,8 +44,8 @@ module HDMIController
 
     // Some HDMI sinks will show the source product description below to users (i.e. in a list of inputs instead of HDMI 1, HDMI 2, etc.).
     // If you care about this, change it below.
-    parameter bit [8*8-1:0] VENDOR_NAME = {"Unknown", 8'd0}, // Must be 8 bytes null-padded 7-bit ASCII
-    parameter bit [8*16-1:0] PRODUCT_DESCRIPTION = {"FPGA", 96'd0}, // Must be 16 bytes null-padded 7-bit ASCII
+    parameter bit [8*8-1:0] VENDOR_NAME = 64'h556E6B6E6F776E00, // Must be 8 bytes null-padded 7-bit ASCII "Unkonwn"
+    parameter bit [8*16-1:0] PRODUCT_DESCRIPTION = 128'h46504741000000000000000000000000, // Must be 16 bytes null-padded 7-bit ASCII "FPGA"
     parameter bit [7:0] SOURCE_DEVICE_INFORMATION = 8'h00, // See README.md or CTA-861-G for the list of valid codes
 
     // Starting screen coordinate when module comes out of reset.
@@ -91,8 +91,8 @@ module HDMIController
 );
 
 localparam int NUM_CHANNELS = 3;
-wire hsync;
-wire vsync;
+logic hsync;
+logic vsync;
 
 wire [BIT_WIDTH-1:0] hsync_pulse_start, hsync_pulse_size;
 wire [BIT_HEIGHT-1:0] vsync_pulse_start, vsync_pulse_size;
@@ -188,7 +188,7 @@ generate
     endcase
 endgenerate
 
-always @(*) begin
+always_comb begin
     hsync <= invert ^ (cx >= screen_width + hsync_pulse_start && cx < screen_width + hsync_pulse_start + hsync_pulse_size);
     // vsync pulses should begin and end at the start of hsync, so special
     // handling is required for the lines on which vsync starts and ends
@@ -260,8 +260,8 @@ end
 
 // See Section 5.2.3.1
 int max_num_packets_alongside;
-wire [4:0] num_packets_alongside;
-always @(*) begin
+logic [4:0] num_packets_alongside;
+always_comb begin
     max_num_packets_alongside = (
         frame_width - screen_width  /* VD period */ 
         - 2 /* V guard */ 
@@ -274,10 +274,10 @@ always @(*) begin
     ) / 32;
         
     if (max_num_packets_alongside > 18) begin
-        num_packets_alongside = 5'd18;
+        num_packets_alongside <= 5'd18;
     end
     else begin
-        num_packets_alongside = 5'(max_num_packets_alongside);
+        num_packets_alongside <= 5'(max_num_packets_alongside);
     end
 end
 
