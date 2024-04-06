@@ -72,8 +72,9 @@ module HDMIController
     input wire [AUDIO_BIT_WIDTH-1:0] audio_sample_word [1:0],
 
     // These outputs go to your HDMI port
-    output wire [2:0] tmds,
-    output wire tmds_clock,
+    output wire [9:0] tmds0_10bit,
+    output wire [9:0] tmds1_10bit,
+    output wire [9:0] tmds2_10bit,
     
     // All outputs below this line stay inside the FPGA
     // They are used (by you) to pick the color each pixel should have
@@ -89,6 +90,10 @@ module HDMIController
     output wire [BIT_WIDTH-1:0] screen_width,
     output wire [BIT_HEIGHT-1:0] screen_height
 );
+
+assign tmds0_10bit[9:0] = tmds_internal[0][9:0];
+assign tmds1_10bit[9:0] = tmds_internal[1][9:0];
+assign tmds2_10bit[9:0] = tmds_internal[2][9:0];
 
 localparam int NUM_CHANNELS = 3;
 logic hsync;
@@ -380,17 +385,5 @@ generate
         );
     end
 endgenerate
-
-serializer #(
-    .NUM_CHANNELS(NUM_CHANNELS), 
-    .VIDEO_RATE(VIDEO_RATE)
-) serializer(
-    .clk_pixel(clk_pixel), 
-    .clk_pixel_x5(clk_pixel_x5), 
-    .reset(reset), 
-    .tmds_internal(tmds_internal), 
-    .tmds(tmds), 
-    .tmds_clock(tmds_clock)
-);
 
 endmodule

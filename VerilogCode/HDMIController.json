@@ -4,7 +4,6 @@
         "top": "HDMIController.sv",
         "files" : [
             "HDMIController/HDMIController.sv",
-            "HDMIController/serializer.sv",
             "HDMIController/auxiliary_video_information_info_frame.sv",
             "HDMIController/packet_assembler.sv",
             "HDMIController/packet_picker.sv",
