@@ -3,7 +3,7 @@
 
 module HDMIController 
 #(
-    // Defaults to 640x480 which should be supported by almost if not all HDMI sinks.
+    // Defaults to 1920x1080 which should be supported by almost if not all HDMI sinks.
     // See README.md or CEA-861-D for enumeration of video id codes.
     // Pixel repetition, interlaced scans and other special output modes are not implemented (yet).
     parameter int VIDEO_ID_CODE = 16,
@@ -37,10 +37,6 @@ module HDMIController
     // As specified in Section 7.3, the minimal audio requirements are met: 16-bit or more L-PCM audio at 32 kHz, 44.1 kHz, or 48 kHz.
     // See Table 7-4 or README.md for an enumeration of sampling frequencies supported by HDMI.
     // Note that sinks may not support rates above 48 kHz.
-    parameter int AUDIO_RATE = 44100,
-
-    // Defaults to 16-bit audio, the minmimum supported by HDMI sinks. Can be anywhere from 16-bit to 24-bit.
-    parameter int AUDIO_BIT_WIDTH = 16,
 
     // Some HDMI sinks will show the source product description below to users (i.e. in a list of inputs instead of HDMI 1, HDMI 2, etc.).
     // If you care about this, change it below.
@@ -63,13 +59,10 @@ module HDMIController
     parameter int START_Y = 0
 )
 (
-    input wire clk_pixel_x5,
     input wire clk_pixel,
-    input wire clk_audio,
     // synchronous reset back to 0,0
-    input wire reset,
+    input wire resetn,
     input wire [23:0] rgb,
-    input wire [AUDIO_BIT_WIDTH-1:0] audio_sample_word [1:0],
 
     // These outputs go to your HDMI port
     output wire [9:0] tmds0_10bit,
@@ -90,6 +83,9 @@ module HDMIController
     output wire [BIT_WIDTH-1:0] screen_width,
     output wire [BIT_HEIGHT-1:0] screen_height
 );
+
+wire reset;
+assign reset = ~resetn;
 
 assign tmds0_10bit[9:0] = tmds_internal[0][9:0];
 assign tmds1_10bit[9:0] = tmds_internal[1][9:0];
