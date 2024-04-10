@@ -1,11 +1,18 @@
+`timescale 1ps / 1ps
+
 module GTH_serializer (
     input  wire clk, // 148.5MHz
     input  wire resetn,
     input  wire [9:0] r,
     input  wire [9:0] g,
     input  wire [9:0] b, 
-    output wire [2:0] gthtxn_out,
-    output wire [2:0] gthtxp_out,
+    output wire gthtxn_out_0,
+    output wire gthtxp_out_0,
+    output wire gthtxn_out_1,
+    output wire gthtxp_out_1,
+    output wire gthtxn_out_2,
+    output wire gthtxp_out_2,
+    output wire out_en,
     output wire [0:0] gtwiz_reset_rx_cdr_stable_out,
     output wire [0:0] gtwiz_reset_tx_done_out,
     output wire [0:0] gtwiz_reset_rx_done_out,
@@ -14,14 +21,24 @@ module GTH_serializer (
     output wire [2:0] txpmaresetdone_out,
     output wire [2:0] txprgdivresetdone_out,
     output wire txoutclk_out,
-    output wire txoutclk_pll_out,
+    output wire txoutclk_pll_out_p,
+    output wire txoutclk_pll_out_n,
     output wire locked
 );
+    wire txoutclk_pll_out;
+    wire [2:0] gthtxn_out;
+    wire [2:0] gthtxp_out;
     wire [0:0] qpll0outclk_out;
     wire [0:0] qpll0outrefclk_out;
     wire [59:0] gtwiz_userdata_rx_out;
     wire reset;
     assign reset = ~resetn;
+    assign gthtxp_out_0 = gthtxp_out[0];
+    assign gthtxp_out_1 = gthtxp_out[1];
+    assign gthtxp_out_2 = gthtxp_out[2];
+    assign gthtxn_out_0 = gthtxn_out[0];
+    assign gthtxn_out_1 = gthtxn_out[1];
+    assign gthtxn_out_2 = gthtxn_out[2];
 
     reg [59:0] gtwiz_userdata_tx_in; //74.25MHz
     reg [0:0] gtrefclk00_in = 1'b0; //74.25MHz
@@ -38,6 +55,7 @@ module GTH_serializer (
     assign gtwiz_reset_tx_pll_and_datapath_in = reset;
     assign gtwiz_reset_tx_datapath_in = reset;
     assign gtwiz_reset_clk_freerun_in = gtrefclk00_in;
+    assign out_en = 1'b1;
     
     always@(posedge clk) begin
         gtrefclk00_in <= ~gtrefclk00_in;
@@ -112,6 +130,14 @@ clk_wiz_0 clk_wiz_0(
     .clk_in1(~txoutclk_out),
     .clk_out1(txoutclk_pll_out),
     .locked(locked)
+);
+
+OBUFDS #(
+    .IOSTANDARD("DEFAULT")
+) OBUFDS_inst (
+    .O(txoutclk_pll_out_p),
+    .OB(txoutclk_pll_out_n),
+    .I(txoutclk_pll_out)
 );
 
 endmodule

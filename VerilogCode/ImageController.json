@@ -1,0 +1,40 @@
+{
+    "verilog" : {
+        "name" : "ImageController",
+        "top": "ImageController.sv",
+        "files" : [
+            "ImageController/ImageController.sv",
+            "ImageController/ImageSender.sv",
+            "ImageController/AXI2FIFO.sv"
+        ]
+    },
+    "ip" : {
+        "fifo_generator_1" : {
+            "name" : "fifo_generator",
+            "version" : "13.2",
+            "vendor" : "xilinx.com",
+            "library" : "ip",
+            "tcl_options" : ["name", "version", "vendor", "library", "module_name"],
+            "config" : {
+                "Fifo_Implementation" : "Independent_Clocks_Builtin_FIFO",
+                "Read_Clock_Frequency" : "125",
+                "Write_Clock_Frequency" : "125",
+                "Performance_Options" : "First_Word_Fall_Through",
+                "Input_Data_Width" : "128", 
+                "Input_Depth" : "512",
+                "Output_Data_Width" : "128", 
+                "Output_Depth" : "512",
+                "Underflow_Flag" : "true", 
+                "Overflow_Flag" : "true",
+                "Data_Count_Width" : "5",
+                "Write_Data_Count_Width" : "5",
+                "Read_Data_Count_Width" : "5", 
+                "Programmable_Full_Type" : "Single_Programmable_Full_Threshold_Constant",
+                "Full_Threshold_Assert_Value" : "504",
+                "Full_Threshold_Negate_Value" : "504",
+                "Empty_Threshold_Assert_Value" : "4",
+                "Empty_Threshold_Negate_Value" : "5"
+            }
+        }
+    }
+}

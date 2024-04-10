@@ -4,9 +4,19 @@
         "axi_offset" : "0xA0000000",
         "json_path" : [
             "HDMIController.json", 
-            "GTH_serializer.json"
+            "GTH_serializer.json",
+            "ImageController.json"
         ],
         "output_ports" : [
+            "HDMI_TX0_N",
+            "HDMI_TX1_N",
+            "HDMI_TX2_N",
+            "HDMI_TX0_P",
+            "HDMI_TX1_P",
+            "HDMI_TX2_P",
+            "HDMI_TX_LVDS_OUT_P",
+            "HDMI_TX_LVDS_OUT_N",
+            "HDMI_TX_EN"
         ],
         "input_ports" : [
             "FMC_LPC_LA26_P",

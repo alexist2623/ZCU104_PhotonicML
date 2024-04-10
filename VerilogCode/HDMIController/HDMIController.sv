@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 // Implementation of HDMI Spec v1.4a
 // By Sameer Puri https://github.com/sameer
 
@@ -87,11 +88,12 @@ module HDMIController
 wire reset;
 assign reset = ~resetn;
 
+localparam int NUM_CHANNELS = 3;
+wire [9:0] tmds_internal [NUM_CHANNELS-1:0];
 assign tmds0_10bit[9:0] = tmds_internal[0][9:0];
 assign tmds1_10bit[9:0] = tmds_internal[1][9:0];
 assign tmds2_10bit[9:0] = tmds_internal[2][9:0];
 
-localparam int NUM_CHANNELS = 3;
 logic hsync;
 logic vsync;
 
@@ -364,7 +366,6 @@ always @(posedge clk_pixel) begin
 end
 
 // All logic below relates to the production and output of the 10-bit TMDS code.
-wire [9:0] tmds_internal [NUM_CHANNELS-1:0] /* verilator public_flat */ ;
 genvar i;
 generate
     // TMDS code production.
