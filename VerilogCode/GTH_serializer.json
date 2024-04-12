@@ -43,29 +43,18 @@
             "library" : "ip",
             "tcl_options" : ["name", "version", "vendor", "library", "module_name"],
             "config" : {
-                "PRIMITIVE" : "PLL",
                 "PRIM_IN_FREQ" : "148.5",
                 "CLKOUT1_REQUESTED_OUT_FREQ" : "148.5",
-                "CLKOUT1_REQUESTED_PHASE" : "296.8354935",
+                "CLKOUT1_REQUESTED_PHASE" : "226.971580817",
                 "CLKIN1_JITTER_PS" : "67.34",
-                "CLKOUT1_DRIVES" : "Buffer",
-                "CLKOUT2_DRIVES" : "Buffer",
-                "CLKOUT3_DRIVES" : "Buffer",
-                "CLKOUT4_DRIVES" : "Buffer",
-                "CLKOUT5_DRIVES" : "Buffer",
-                "CLKOUT6_DRIVES" : "Buffer",
-                "CLKOUT7_DRIVES" : "Buffer",
                 "MMCM_DIVCLK_DIVIDE" : "1",
-                "MMCM_BANDWIDTH" : "OPTIMIZED",
-                "MMCM_CLKFBOUT_MULT_F" : "6",
+                "MMCM_CLKFBOUT_MULT_F" : "5.750",
                 "MMCM_CLKIN1_PERIOD" : "6.734",
                 "MMCM_CLKIN2_PERIOD" : "10.0",
-                "MMCM_COMPENSATION" : "AUTO",
-                "MMCM_CLKOUT0_DIVIDE_F" : "6",
-                "MMCM_CLKOUT0_PHASE" : "300.000",
-                "PLL_CLKIN_PERIOD" : "6.734",
-                "CLKOUT1_JITTER" : "114.232",
-                "CLKOUT1_PHASE_ERROR" : "99.870"
+                "MMCM_CLKOUT0_DIVIDE_F" : "5.750",
+                "MMCM_CLKOUT0_PHASE" : "226.957",
+                "CLKOUT1_JITTER" : "111.205",
+                "CLKOUT1_PHASE_ERROR" : "99.236"
             }
         }
     }

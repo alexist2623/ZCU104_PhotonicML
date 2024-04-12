@@ -127,7 +127,7 @@ gtwizard_ultrascale_0 gtwizard_ultrascale_0 (
 
 clk_wiz_0 clk_wiz_0(
     .reset(reset),
-    .clk_in1(~txoutclk_out),
+    .clk_in1(clk),
     .clk_out1(txoutclk_pll_out),
     .locked(locked)
 );
