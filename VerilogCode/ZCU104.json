@@ -19,8 +19,8 @@
             "HDMI_TX_EN"
         ],
         "input_ports" : [
-            "FMC_LPC_LA26_P",
-            "FMC_LPC_LA26_N"
+            "HDMI_DRU_CLOCK_C_P",
+            "HDMI_DRU_CLOCK_C_N"
         ]
     },
     "bd_cell" : {

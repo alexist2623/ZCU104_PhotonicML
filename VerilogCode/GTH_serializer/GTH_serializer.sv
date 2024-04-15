@@ -1,7 +1,7 @@
 `timescale 1ps / 1ps
 
 module GTH_serializer (
-    input  wire clk, 
+    input  wire clk, //125MHz PL clk
     input  wire resetn,
     input  wire [9:0] r,
     input  wire [9:0] g,
@@ -62,6 +62,7 @@ wire reset;
 wire gtrefclk00_in; //156.5MHz
 wire wr_en;
 wire [59:0] gtwiz_userdata_tx_in_wire;
+wire empty;
 
 assign reset = ~resetn;
 assign txoutclk = txoutclk_internal;
@@ -82,11 +83,10 @@ assign gtwiz_reset_rx_datapath_in = reset;
 assign gtwiz_reset_rx_pll_and_datapath_in = reset;
 assign gtwiz_reset_tx_pll_and_datapath_in = reset;
 assign gtwiz_reset_tx_datapath_in = reset;
-assign gtwiz_reset_clk_freerun_in = txoutclk_div2;
 assign out_en = 1'b1;
 assign wr_en = ~phase;
 
-always@(posedge clk) begin // 148.5MHz
+always@(posedge txoutclk_internal) begin // 148.5MHz
     phase <= ~phase;
     if( reset == 1'b1 ) begin
         gtwiz_userdata_tx_in_buffer <= 60'h0;
@@ -107,7 +107,7 @@ always@(posedge clk) begin // 148.5MHz
 end
 
 always@(posedge txoutclk_div2) begin // 74,25MHz
-    {reset_buffer2, reset_buffer1} <= {reset_buffer2, reset};
+    {reset_buffer2, reset_buffer1} <= {reset_buffer1, reset};
     if( reset_buffer2 == 1'b1 ) begin
         gtwiz_userdata_tx_in <= 60'h0;
     end
@@ -161,16 +161,16 @@ fifo_generator_0 async_fifo
 (
     .wr_clk                                  (txoutclk_internal), //148.5MHz
     .rd_clk                                  (txoutclk_div2), //74.25MHz
-    .srst                                    (reset),
+    .srst                                    (~gtwiz_reset_tx_done_out),
     .underflow                               (underflow),
     .wr_rst_busy                             (),
     .rd_rst_busy                             (),
     .wr_en                                   (wr_en),
-    .rd_en                                   (1'b1),
+    .rd_en                                   (~empty),
     .din                                     (gtwiz_userdata_tx_in_buffer),
     .dout                                    (gtwiz_userdata_tx_in_wire),
     .full                                    (),
-    .empty                                   ()
+    .empty                                   (empty)
 );
 
 BUFG_GT #(
@@ -186,12 +186,27 @@ BUFG_GT_inst_0 (
    .I                                        (txoutclk_int[0])
 );
 
+IBUFDS #(
+    .IOSTANDARD                              ("DEFAULT")
+) IBUFDS_inst (
+    .O                                       (tmds_clk_p),
+    .OB                                      (tmds_clk_n),
+    .I                                       (txoutclk_delayed)
+);
+
 clk_wiz_0 clk_wiz_0(
     .reset                                   (reset),
     .clk_in1                                 (txoutclk_internal),
     .clk_out1                                (txoutclk_delayed),
     .clk_out2                                (txoutclk_div2),
     .locked                                  (locked)
+);
+
+clk_wiz_1 clk_wiz_1(
+    .reset                                   (reset),
+    .clk_in1                                 (clk),
+    .clk_out1                                (gtwiz_reset_clk_freerun_in),
+    .locked                                  ()
 );
 
 IBUFDS_GTE4 #(
