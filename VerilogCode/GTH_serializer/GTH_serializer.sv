@@ -186,14 +186,6 @@ BUFG_GT_inst_0 (
    .I                                        (txoutclk_int[0])
 );
 
-IBUFDS #(
-    .IOSTANDARD                              ("DEFAULT")
-) IBUFDS_inst (
-    .O                                       (tmds_clk_p),
-    .OB                                      (tmds_clk_n),
-    .I                                       (txoutclk_delayed)
-);
-
 clk_wiz_0 clk_wiz_0(
     .reset                                   (reset),
     .clk_in1                                 (txoutclk_internal),
