@@ -36,6 +36,7 @@ reg [59:0] gtwiz_userdata_tx_in_buffer; //148.5MHz
 reg reset_buffer1;//74.25MHz
 reg reset_buffer2;//74.25MHz
 reg phase = 1'b0;
+reg resetn_buffer;
 
 wire txoutclk_internal; //148.5MHz
 wire txoutclk_div2; // 74.25MHz
@@ -64,9 +65,9 @@ wire wr_en;
 wire [59:0] gtwiz_userdata_tx_in_wire;
 wire empty;
 
-assign reset = ~resetn;
+assign reset = ~resetn_buffer;
 assign txoutclk = txoutclk_internal;
-assign resetn_out = reset_buffer2;
+assign resetn_out = ~reset_buffer2;
 assign gthtxp_out_0 = gthtxp_out[0];
 assign gthtxp_out_1 = gthtxp_out[1];
 assign gthtxp_out_2 = gthtxp_out[2];
@@ -114,6 +115,10 @@ always@(posedge txoutclk_div2) begin // 74,25MHz
     else begin
         gtwiz_userdata_tx_in <= gtwiz_userdata_tx_in_wire;
     end
+end
+
+always@(posedge clk) begin
+    resetn_buffer <= resetn;
 end
 
 gtwizard_ultrascale_0 gtwizard_ultrascale_0 (
