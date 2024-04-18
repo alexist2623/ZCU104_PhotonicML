@@ -1,7 +1,7 @@
 `timescale 1ps / 1ps
 
 module GTH_serializer (
-    input  wire clk, //125MHz PL clk
+    input  wire s_axi_clk, //125MHz PL clk
     input  wire resetn,
     input  wire [9:0] r,
     input  wire [9:0] g,
@@ -25,7 +25,7 @@ module GTH_serializer (
     output wire [2:0] txprgdivresetdone_out,
     output wire tmds_clk_p,
     output wire tmds_clk_n,
-    output wire txoutclk,
+    output wire clk_pixel,
     output wire locked,
     output wire underflow,
     output wire resetn_out
@@ -66,7 +66,7 @@ wire [59:0] gtwiz_userdata_tx_in_wire;
 wire empty;
 
 assign reset = ~resetn_buffer;
-assign txoutclk = txoutclk_internal;
+assign clk_pixel = txoutclk_internal;
 assign resetn_out = ~reset_buffer2;
 assign gthtxp_out_0 = gthtxp_out[0];
 assign gthtxp_out_1 = gthtxp_out[1];
@@ -117,7 +117,7 @@ always@(posedge txoutclk_div2) begin // 74,25MHz
     end
 end
 
-always@(posedge clk) begin
+always@(posedge s_axi_clk) begin
     resetn_buffer <= resetn;
 end
 
@@ -201,7 +201,7 @@ clk_wiz_0 clk_wiz_0(
 
 clk_wiz_1 clk_wiz_1(
     .reset                                   (reset),
-    .clk_in1                                 (clk),
+    .clk_in1                                 (s_axi_clk),
     .clk_out1                                (gtwiz_reset_clk_freerun_in),
     .locked                                  ()
 );

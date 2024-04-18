@@ -79,13 +79,13 @@ module HDMIController
     // The screen is at the upper left corner of the frame.
     // 0,0 = 0,0 in video
     // the frame includes extra space for sending auxiliary data
-    output wire [BIT_WIDTH-1:0] frame_width,
-    output wire [BIT_HEIGHT-1:0] frame_height,
-    output wire [BIT_WIDTH-1:0] screen_width,
-    output wire [BIT_HEIGHT-1:0] screen_height
 );
 
 wire reset;
+wire [BIT_WIDTH-1:0] frame_width,
+wire [BIT_HEIGHT-1:0] frame_height,
+wire [BIT_WIDTH-1:0] screen_width,
+wire [BIT_HEIGHT-1:0] screen_height
 assign reset = ~resetn;
 
 localparam int NUM_CHANNELS = 3;

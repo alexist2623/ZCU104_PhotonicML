@@ -93,7 +93,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////  
     // ImageSender interface
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire pixel_clk,
+    input  wire clk_pixel,
     input  wire [BIT_WIDTH-1:0] cx,
     input  wire [BIT_HEIGHT-1:0] cy,
     output wire [23:0] rgb
@@ -103,13 +103,13 @@ module ImageController
 //////////////////////////////////////////////////////////////////////////////////
 // RTO_Core interface
 //////////////////////////////////////////////////////////////////////////////////
-wire image_sender_reset;                      // pixel_clk region
-wire image_sender_flush;                      // pixel_clk region
-wire image_sender_write;                     // pixel_clk region
-wire [127:0] image_sender_fifo_din;          // pixel_clk region
+wire image_sender_reset;                      // clk_pixel region
+wire image_sender_flush;                      // clk_pixel region
+wire image_sender_write;                     // clk_pixel region
+wire [127:0] image_sender_fifo_din;          // clk_pixel region
 
-wire image_sender_full;                       // pixel_clk region
-wire image_sender_empty;                      // pixel_clk region
+wire image_sender_full;                       // clk_pixel region
+wire image_sender_empty;                      // clk_pixel region
 
 //////////////////////////////////////////////////////////////////////////////////
 // RTI_Core interface
@@ -210,7 +210,7 @@ axi2fifo_0
     
     .image_sender_full              (image_sender_full),
     .image_sender_empty             (image_sender_empty),
-    .pixel_clk                      (pixel_clk),
+    .clk_pixel                      (clk_pixel),
     .data_num                       (data_num)
 );
 
@@ -236,7 +236,7 @@ ImageSender #(
     .image_sender_fifo_din          (image_sender_fifo_din),
     .image_sender_full              (image_sender_full),
     .image_sender_empty             (image_sender_empty),
-    .pixel_clk                      (pixel_clk),
+    .clk_pixel                      (clk_pixel),
     .auto_start                     (auto_start),
     .cx                             (cx),
     .cy                             (cy),

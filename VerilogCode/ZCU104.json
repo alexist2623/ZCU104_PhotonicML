@@ -5,7 +5,8 @@
         "json_path" : [
             "HDMIController.json", 
             "GTH_serializer.json",
-            "ImageController.json"
+            "ImageController.json",
+            "TimeController.json"
         ],
         "output_ports" : [
             "HDMI_TX0_N",

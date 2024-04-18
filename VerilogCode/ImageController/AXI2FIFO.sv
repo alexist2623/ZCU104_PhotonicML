@@ -96,13 +96,13 @@ module AXI2FIFO
     //////////////////////////////////////////////////////////////////////////////////
     // Image Sender interface
     //////////////////////////////////////////////////////////////////////////////////
-    output reg image_sender_reset,                      // pixel_clk region
-    output reg image_sender_flush,                      // pixel_clk region
-    output wire image_sender_write,                     // pixel_clk region
-    output wire [127:0] image_sender_fifo_din,          // pixel_clk region
+    output reg image_sender_reset,                      // clk_pixel region
+    output reg image_sender_flush,                      // clk_pixel region
+    output wire image_sender_write,                     // clk_pixel region
+    output wire [127:0] image_sender_fifo_din,          // clk_pixel region
     
-    input  wire image_sender_full,                       // pixel_clk region
-    input  wire image_sender_empty,                      // pixel_clk region
+    input  wire image_sender_full,                       // clk_pixel region
+    input  wire image_sender_empty,                      // clk_pixel region
    
     //////////////////////////////////////////////////////////////////////////////////
     // RTI_Core interface
@@ -119,7 +119,7 @@ module AXI2FIFO
     //////////////////////////////////////////////////////////////////////////////////
     // Clock Domain Crossing Interface
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire pixel_clk
+    input  wire clk_pixel
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -189,19 +189,19 @@ initial begin
 end
 
 //////////////////////////////////////////////////////////////////////////////////
-// Asyncrhonous fifo for CDC (s_aclk -> pixel_clk)
+// Asyncrhonous fifo for CDC (s_aclk -> clk_pixel)
 //////////////////////////////////////////////////////////////////////////////////
 wire async_fifo_out_full;                       // s_aclk region
-wire async_fifo_out_empty;                      // pixel_clk region
-wire [127:0] async_fifo_out_dout;               // pixel_clk region
+wire async_fifo_out_empty;                      // clk_pixel region
+wire [127:0] async_fifo_out_dout;               // clk_pixel region
 reg  [127:0] async_fifo_out_din;                // s_aclk region
 reg  async_fifo_out_write;                      // s_aclk region
 reg  async_image_sender_flush;                  // s_aclk region
-reg  image_sender_flush_buffer1;                // pixel_clk region
-reg  image_sender_flush_buffer2;                // pixel_clk region
+reg  image_sender_flush_buffer1;                // clk_pixel region
+reg  image_sender_flush_buffer2;                // clk_pixel region
 reg  async_image_sender_reset;                  // s_aclk region
-reg  image_sender_reset_buffer1;                // pixel_clk region
-reg  image_sender_reset_buffer2;                // pixel_clk region
+reg  image_sender_reset_buffer1;                // clk_pixel region
+reg  image_sender_reset_buffer2;                // clk_pixel region
 
 assign image_sender_write = (~image_sender_full) & (~async_fifo_out_empty);
 assign image_sender_fifo_din = async_fifo_out_dout;
@@ -218,7 +218,7 @@ assign s_axi_arready = (axi_state_read == IDLE);
 
 fifo_generator_1 async_fifo_out( // 512 depth, 504 program full
     .wr_clk                             (s_axi_aclk),
-    .rd_clk                             (pixel_clk),
+    .rd_clk                             (clk_pixel),
     .srst                               (async_image_sender_flush | async_image_sender_reset),  // rst -> srst in Vivado 2020.2
     .din                                (async_fifo_out_din),
     .wr_en                              (async_fifo_out_write),
@@ -230,13 +230,13 @@ fifo_generator_1 async_fifo_out( // 512 depth, 504 program full
     .underflow                          ()
 );
 
-always @(posedge pixel_clk) begin
+always @(posedge clk_pixel) begin
     {image_sender_flush, image_sender_flush_buffer2, image_sender_flush_buffer1} <= {image_sender_flush_buffer2, image_sender_flush_buffer1, async_image_sender_flush};
     {image_sender_reset, image_sender_reset_buffer2, image_sender_reset_buffer1} <= {image_sender_reset_buffer2, image_sender_reset_buffer1, async_image_sender_reset};
 end
 
 //////////////////////////////////////////////////////////////////////////////////
-// Asyncrhonous fifo for CDC (pixel_clk -> s_aclk)
+// Asyncrhonous fifo for CDC (clk_pixel -> s_aclk)
 //////////////////////////////////////////////////////////////////////////////////
 wire async_fifo_in_full;
 wire [127:0] async_fifo_in_dout;
@@ -253,7 +253,7 @@ reg  data_receiver_flush_buffer2;
 assign data_receiver_rd_en = (~data_receiver_empty) & (~async_fifo_in_full);
 
 fifo_generator_1 async_fifo_in( // 512 depth, 504 program full
-    .wr_clk                             (pixel_clk),
+    .wr_clk                             (clk_pixel),
     .rd_clk                             (s_axi_aclk),
     .srst                               (data_receiver_reset | data_receiver_flush),  // rst -> srst in Vivado 2020.2
     .din                                (data_receiver_fifo_dout),
@@ -266,7 +266,7 @@ fifo_generator_1 async_fifo_in( // 512 depth, 504 program full
     .underflow                          ()
 );
 
-always @(posedge pixel_clk) begin
+always @(posedge clk_pixel) begin
     {data_receiver_flush, data_receiver_flush_buffer2, data_receiver_flush_buffer1} <= {data_receiver_flush_buffer2, data_receiver_flush_buffer1, async_data_receiver_flush};
     {data_receiver_reset, data_receiver_reset_buffer2, data_receiver_reset_buffer1} <= {data_receiver_reset_buffer2, data_receiver_reset_buffer1, async_data_receiver_reset};
 end

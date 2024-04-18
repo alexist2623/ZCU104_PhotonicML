@@ -16,18 +16,18 @@ module ImageSender
     //////////////////////////////////////////////////////////////////////////////////
     // Image Sender interface
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire image_sender_reset,                     // pixel_clk region
-    input  wire image_sender_flush,                     // pixel_clk region
-    input  wire image_sender_write,                     // pixel_clk region
-    input  wire [127:0] image_sender_fifo_din,          // pixel_clk region
-    input  wire pixel_clk,                              // pixel_clk = pixel_clk
+    input  wire image_sender_reset,                     // clk_pixel region
+    input  wire image_sender_flush,                     // clk_pixel region
+    input  wire image_sender_write,                     // clk_pixel region
+    input  wire [127:0] image_sender_fifo_din,          // clk_pixel region
+    input  wire clk_pixel,                              // clk_pixel = clk_pixel
     input  wire [BIT_WIDTH-1:0] cx,
     input  wire [BIT_HEIGHT-1:0] cy,
     input  wire auto_start,
     input  wire image_change,
     
-    output wire image_sender_full,                       // pixel_clk region
-    output wire image_sender_empty,                      // pixel_clk region,
+    output wire image_sender_full,                       // clk_pixel region
+    output wire image_sender_empty,                      // clk_pixel region,
     output reg  [23:0] rgb,
     output reg  require_new_image,
     output reg  [FIFO_DEPTH-1:0] data_num
@@ -64,7 +64,7 @@ assign image_buffer = ( image_change_buffer2 == 1'b1 ) ? dout_new : dout_old;
 // FIFO for New data
 //////////////////////////////////////////////////////////////////////////////////
 fifo_generator_3 fifo_new( // 130000 depth, 130000 program full
-    .clk                                (pixel_clk),
+    .clk                                (clk_pixel),
     .srst                               (image_sender_reset | image_sender_flush),  // rst -> srst in Vivado 2020.2
     .din                                (image_sender_fifo_din),
     .wr_en                              (image_sender_write),
@@ -78,7 +78,7 @@ fifo_generator_3 fifo_new( // 130000 depth, 130000 program full
 // FIFO for Old data
 //////////////////////////////////////////////////////////////////////////////////
 fifo_generator_2 fifo_old( // 130000 depth, 130000 program full
-    .clk                                (pixel_clk),
+    .clk                                (clk_pixel),
     .srst                               (image_sender_reset | image_sender_flush),  // rst -> srst in Vivado 2020.2
     .din                                (image_buffer),
     .wr_en                              (~rd_en_new | ~rd_en_old),
@@ -91,7 +91,7 @@ fifo_generator_2 fifo_old( // 130000 depth, 130000 program full
 //////////////////////////////////////////////////////////////////////////////////
 // Image Process
 //////////////////////////////////////////////////////////////////////////////////
-always@(posedge pixel_clk) begin
+always@(posedge clk_pixel) begin
     if( image_sender_reset == 1'b1 ) begin
         image_buffer_index <= {IMAGE_BUFFER_DEPTH{1'b0}};
         require_new_image <= 1'b0;
@@ -136,7 +136,7 @@ end
 //////////////////////////////////////////////////////////////////////////////////
 // Coordinate setiing
 //////////////////////////////////////////////////////////////////////////////////
-always @(posedge pixel_clk) begin
+always @(posedge clk_pixel) begin
     if (image_sender_reset) begin
         cx_buffer <= BIT_WIDTH'(0);
         cy_buffer <= BIT_HEIGHT'(0);
@@ -156,7 +156,7 @@ end
 //////////////////////////////////////////////////////////////////////////////////
 // data_num
 //////////////////////////////////////////////////////////////////////////////////
-always @(posedge pixel_clk) begin
+always @(posedge clk_pixel) begin
     if (image_sender_reset) begin
         data_num <= FIFO_DEPTH'(0);
     end
