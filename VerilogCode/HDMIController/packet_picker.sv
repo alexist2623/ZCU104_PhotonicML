@@ -34,18 +34,21 @@ assign sub[3] = subs[packet_type][3];
 assign headers[0] = {8'd0, 8'd0, 8'd0}; assign subs[0] = '{56'd0, 56'd0, 56'd0, 56'd0};
 
 auxiliary_video_information_info_frame #(
-    .VIDEO_ID_CODE(7'(VIDEO_ID_CODE)),
-    .IT_CONTENT(IT_CONTENT)
-) auxiliary_video_information_info_frame(.header(headers[130]), .sub(subs[130]));
+    .VIDEO_ID_CODE                  (7'(VIDEO_ID_CODE)),
+    .IT_CONTENT                     (IT_CONTENT)
+) auxiliary_video_information_info_frame(
+    .header                         (headers[130]), 
+    .sub                            (subs[130])
+);
 
 
 source_product_description_info_frame #(
-    .VENDOR_NAME(VENDOR_NAME), 
-    .PRODUCT_DESCRIPTION(PRODUCT_DESCRIPTION), 
-    .SOURCE_DEVICE_INFORMATION(SOURCE_DEVICE_INFORMATION)
+    .VENDOR_NAME                    (VENDOR_NAME), 
+    .PRODUCT_DESCRIPTION            (PRODUCT_DESCRIPTION), 
+    .SOURCE_DEVICE_INFORMATION      (SOURCE_DEVICE_INFORMATION)
 ) source_product_description_info_frame(
-    .header(headers[131]), 
-    .sub(subs[131])
+    .header                         (headers[131]), 
+    .sub                            (subs[131])
 );
 
 // "A Source shall always transmit... [an InfoFrame] at least once per two Video Fields"

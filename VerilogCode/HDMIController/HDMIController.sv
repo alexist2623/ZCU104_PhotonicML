@@ -318,32 +318,32 @@ assign video_field_end = cx == screen_width - 1'b1 && cy == screen_height - 1'b1
 wire [4:0] packet_pixel_counter;
 
 packet_picker #(
-    .VIDEO_ID_CODE(VIDEO_ID_CODE),
-    .VIDEO_RATE(VIDEO_RATE),
-    .IT_CONTENT(IT_CONTENT),
-    .VENDOR_NAME(VENDOR_NAME),
-    .PRODUCT_DESCRIPTION(PRODUCT_DESCRIPTION),
-    .SOURCE_DEVICE_INFORMATION(SOURCE_DEVICE_INFORMATION)
+    .VIDEO_ID_CODE                  (VIDEO_ID_CODE),
+    .VIDEO_RATE                     (VIDEO_RATE),
+    .IT_CONTENT                     (IT_CONTENT),
+    .VENDOR_NAME                    (VENDOR_NAME),
+    .PRODUCT_DESCRIPTION            (PRODUCT_DESCRIPTION),
+    .SOURCE_DEVICE_INFORMATION      (SOURCE_DEVICE_INFORMATION)
 ) packet_picker (
-    .clk_pixel(clk_pixel), 
-    .reset(reset), 
-    .video_field_end(video_field_end), 
-    .packet_enable(packet_enable), 
-    .packet_pixel_counter(packet_pixel_counter), 
-    .header(header), 
-    .sub(sub)
+    .clk_pixel                      (clk_pixel), 
+    .reset                          (reset), 
+    .video_field_end                (video_field_end), 
+    .packet_enable                  (packet_enable), 
+    .packet_pixel_counter           (packet_pixel_counter), 
+    .header                         (header), 
+    .sub                            (sub)
 );
 
 wire [8:0] packet_data;
 
 packet_assembler packet_assembler (
-    .clk_pixel(clk_pixel), 
-    .reset(reset), 
-    .data_island_period(data_island_period), 
-    .header(header), 
-    .sub(sub), 
-    .packet_data(packet_data), 
-    .counter(packet_pixel_counter)
+    .clk_pixel                      (clk_pixel), 
+    .reset                          (reset), 
+    .data_island_period             (data_island_period), 
+    .header                         (header), 
+    .sub                            (sub), 
+    .packet_data                    (packet_data), 
+    .counter                        (packet_pixel_counter)
 );
 
 
@@ -355,7 +355,10 @@ always @(posedge clk_pixel) begin
         data_island_data <= 12'd0;
     end
     else begin
-        mode <= data_island_guard ? 3'd4 : data_island_period ? 3'd3 : video_guard ? 3'd2 : video_data_period ? 3'd1 : 3'd0;
+        mode <= data_island_guard ? 3'd4 
+            : data_island_period ? 3'd3 
+            : video_guard ? 3'd2 
+            : video_data_period ? 3'd1 : 3'd0;
         video_data <= rgb;
         control_data <= {{1'b0, data_island_preamble}, {1'b0, video_preamble || data_island_preamble}, {vsync, hsync}}; // ctrl3, ctrl2, ctrl1, ctrl0, vsync, hsync
         data_island_data[11:4] <= packet_data[8:1];
@@ -371,14 +374,14 @@ generate
     // TMDS code production.
     for (i = 0; i < NUM_CHANNELS; i++) begin: tmds_gen
         tmds_channel #(
-            .CN(i)
+            .CN                     (i)
         ) tmds_channel (
-            .clk_pixel(clk_pixel), 
-            .video_data(video_data[i*8+7:i*8]), 
-            .data_island_data(data_island_data[i*4+3:i*4]), 
-            .control_data(control_data[i*2+1:i*2]), 
-            .mode(mode), 
-            .tmds(tmds_internal[i])
+            .clk_pixel              (clk_pixel), 
+            .video_data             (video_data[i*8+7:i*8]), 
+            .data_island_data       (data_island_data[i*4+3:i*4]), 
+            .control_data           (control_data[i*2+1:i*2]), 
+            .mode                   (mode), 
+            .tmds                   (tmds_internal[i])
         );
     end
 endgenerate
