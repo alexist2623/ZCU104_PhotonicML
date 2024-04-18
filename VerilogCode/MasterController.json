@@ -1,0 +1,11 @@
+{
+    "verilog" : {
+        "name" : "MasterController",
+        "top": "MasterController.sv",
+        "files" : [
+            "MasterController/AXI2COM.sv",
+            "MasterController/MasterController.sv",
+            "MasterController/Timestamp_Counter.sv"
+        ]
+    }
+}

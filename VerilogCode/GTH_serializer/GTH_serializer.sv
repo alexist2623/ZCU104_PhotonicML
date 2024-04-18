@@ -2,12 +2,13 @@
 
 module GTH_serializer (
     input  wire s_axi_clk, //125MHz PL clk
-    input  wire resetn,
+    input  wire s_axi_resetn,
     input  wire [9:0] r,
     input  wire [9:0] g,
     input  wire [9:0] b, 
     input  wire gtrefclk00_in_p,
     input  wire gtrefclk00_in_n,
+    input  wire clk_pixel_resetn,
     
     output wire gthtxn_out_0,
     output wire gthtxp_out_0,
@@ -16,36 +17,39 @@ module GTH_serializer (
     output wire gthtxn_out_2,
     output wire gthtxp_out_2,
     output wire out_en,
-    output wire [0:0] gtwiz_reset_rx_cdr_stable_out,
-    output wire [0:0] gtwiz_reset_tx_done_out,
-    output wire [0:0] gtwiz_reset_rx_done_out,
-    output wire [2:0] gtpowergood_out,
-    output wire [2:0] rxpmaresetdone_out,
-    output wire [2:0] txpmaresetdone_out,
-    output wire [2:0] txprgdivresetdone_out,
     output wire tmds_clk_p,
     output wire tmds_clk_n,
-    output wire clk_pixel,
-    output wire locked,
-    output wire underflow,
-    output wire resetn_out
+    output wire clk_pixel
 );
+//dummy wires
+wire [0:0] gtwiz_reset_rx_cdr_stable_out;
+wire [0:0] gtwiz_reset_tx_done_out;
+wire [0:0] gtwiz_reset_rx_done_out;
+wire [2:0] gtpowergood_out;
+wire [2:0] rxpmaresetdone_out;
+wire [2:0] txpmaresetdone_out;
+wire [2:0] txprgdivresetdone_out;
+wire locked;
+wire underflow;
+wire gtwiz_reset_clk_freerun_in_locked;
 
 reg [59:0] gtwiz_userdata_tx_in; //74.25MHz
 reg [59:0] gtwiz_userdata_tx_in_buffer; //148.5MHz
-reg reset_buffer1;//74.25MHz
-reg reset_buffer2;//74.25MHz
 reg phase = 1'b0;
-reg resetn_buffer;
+reg s_axi_resetn_buffer1;
+reg s_axi_resetn_buffer2;
+reg clk_pixel_resetn_buffer1;
+reg clk_pixel_resetn_buffer2;
+reg [9:0] gtwiz_reset_all_in;
+reg [0:0] gtwiz_reset_all_in_buffer1;
+reg [0:0] gtwiz_reset_all_in_buffer2;
+reg wait_reset;
+reg wait_reset_buffer1;
+reg wait_reset_buffer2;
 
 wire txoutclk_internal; //148.5MHz
 wire txoutclk_div2; // 74.25MHz
 wire txoutclk_delayed; // delayed 148.5MHz
-wire [0:0] gtwiz_reset_rx_datapath_in;
-wire [0:0] gtwiz_reset_rx_pll_and_datapath_in;
-wire [0:0] gtwiz_reset_all_in;
-wire [0:0] gtwiz_reset_tx_pll_and_datapath_in;
-wire [0:0] gtwiz_reset_tx_datapath_in;
 wire [0:0] gtwiz_reset_clk_freerun_in;
 wire [2:0] txusrclk_int;
 wire [2:0] txusrclk2_int;
@@ -65,9 +69,8 @@ wire wr_en;
 wire [59:0] gtwiz_userdata_tx_in_wire;
 wire empty;
 
-assign reset = ~resetn_buffer;
+assign reset = ~s_axi_resetn_buffer2;
 assign clk_pixel = txoutclk_internal;
-assign resetn_out = ~reset_buffer2;
 assign gthtxp_out_0 = gthtxp_out[0];
 assign gthtxp_out_1 = gthtxp_out[1];
 assign gthtxp_out_2 = gthtxp_out[2];
@@ -79,17 +82,12 @@ assign txusrclk2_int = {3{txoutclk_div2}};
 assign rxusrclk_int  = {3{txoutclk_div2}};
 assign rxusrclk2_int = {3{txoutclk_div2}};
 assign gtpowergood_out = gtpowergood_int;
-assign gtwiz_reset_all_in = reset;
-assign gtwiz_reset_rx_datapath_in = reset;
-assign gtwiz_reset_rx_pll_and_datapath_in = reset;
-assign gtwiz_reset_tx_pll_and_datapath_in = reset;
-assign gtwiz_reset_tx_datapath_in = reset;
 assign out_en = 1'b1;
 assign wr_en = ~phase;
 
 always@(posedge txoutclk_internal) begin // 148.5MHz
     phase <= ~phase;
-    if( reset == 1'b1 ) begin
+    if( ~clk_pixel_resetn ) begin
         gtwiz_userdata_tx_in_buffer <= 60'h0;
         phase <= 1'b0;
     end
@@ -108,8 +106,8 @@ always@(posedge txoutclk_internal) begin // 148.5MHz
 end
 
 always@(posedge txoutclk_div2) begin // 74,25MHz
-    {reset_buffer2, reset_buffer1} <= {reset_buffer1, reset};
-    if( reset_buffer2 == 1'b1 ) begin
+    {clk_pixel_resetn_buffer2, clk_pixel_resetn_buffer1} <= {clk_pixel_resetn_buffer1, clk_pixel_resetn}; // from clk_pixel to txoutclk_div2
+    if( ~clk_pixel_resetn_buffer2 ) begin
         gtwiz_userdata_tx_in <= 60'h0;
     end
     else begin
@@ -118,7 +116,19 @@ always@(posedge txoutclk_div2) begin // 74,25MHz
 end
 
 always@(posedge s_axi_clk) begin
-    resetn_buffer <= resetn;
+    {s_axi_resetn_buffer2, s_axi_resetn_buffer1} <= {s_axi_resetn_buffer1, s_axi_resetn}; // to relieve clock skew
+    gtwiz_reset_all_in[9:0] <= {gtwiz_reset_all_in[8:0],1'b0}; // make 10 cycles of reset signal
+    if( s_axi_resetn_buffer2 == 1'b0 ) begin
+        wait_reset <= 1'b1;
+    end
+    if( s_axi_resetn_buffer2 == 1'b1 && wait_reset == 1'b1 && gtwiz_reset_clk_freerun_in_locked ) begin
+        wait_reset <= 1'b0;
+        gtwiz_reset_all_in[9:0] <= 10'h3ff;
+    end
+end
+
+always@(posedge gtwiz_reset_clk_freerun_in) begin
+    {gtwiz_reset_all_in_buffer2, gtwiz_reset_all_in_buffer1} <= {gtwiz_reset_all_in_buffer1, gtwiz_reset_all_in[9]}; // from s_axi_clk to gtwiz_reset_clk_freerun_in
 end
 
 gtwizard_ultrascale_0 gtwizard_ultrascale_0 (
@@ -126,14 +136,14 @@ gtwizard_ultrascale_0 gtwizard_ultrascale_0 (
     .gthrxp_in                               (3'b111),
     .gthtxn_out                              (gthtxn_out),
     .gthtxp_out                              (gthtxp_out),
-    .gtwiz_userclk_tx_active_in              (~reset),
+    .gtwiz_userclk_tx_active_in              (~s_axi_resetn_buffer2),
     .gtwiz_userclk_rx_active_in              (1'b0),
     .gtwiz_reset_clk_freerun_in              (gtwiz_reset_clk_freerun_in),
-    .gtwiz_reset_all_in                      (gtwiz_reset_all_in),
-    .gtwiz_reset_tx_pll_and_datapath_in      (gtwiz_reset_tx_pll_and_datapath_in),
-    .gtwiz_reset_tx_datapath_in              (gtwiz_reset_tx_datapath_in),
-    .gtwiz_reset_rx_pll_and_datapath_in      (gtwiz_reset_rx_pll_and_datapath_in),
-    .gtwiz_reset_rx_datapath_in              (gtwiz_reset_rx_datapath_in),
+    .gtwiz_reset_all_in                      (gtwiz_reset_all_in_buffer2),
+    .gtwiz_reset_tx_pll_and_datapath_in      (gtwiz_reset_all_in_buffer2),
+    .gtwiz_reset_tx_datapath_in              (gtwiz_reset_all_in_buffer2),
+    .gtwiz_reset_rx_pll_and_datapath_in      (gtwiz_reset_all_in_buffer2),
+    .gtwiz_reset_rx_datapath_in              (gtwiz_reset_all_in_buffer2),
     .gtwiz_reset_rx_cdr_stable_out           (gtwiz_reset_rx_cdr_stable_out),
     .gtwiz_reset_tx_done_out                 (gtwiz_reset_tx_done_out),
     .gtwiz_reset_rx_done_out                 (gtwiz_reset_rx_done_out),
@@ -166,7 +176,7 @@ fifo_generator_0 async_fifo
 (
     .wr_clk                                  (txoutclk_internal), //148.5MHz
     .rd_clk                                  (txoutclk_div2), //74.25MHz
-    .srst                                    (~gtwiz_reset_tx_done_out),
+    .srst                                    (~clk_pixel_resetn_buffer2), //148.5MHz
     .underflow                               (underflow),
     .wr_rst_busy                             (),
     .rd_rst_busy                             (),
@@ -203,7 +213,7 @@ clk_wiz_1 clk_wiz_1(
     .reset                                   (reset),
     .clk_in1                                 (s_axi_clk),
     .clk_out1                                (gtwiz_reset_clk_freerun_in),
-    .locked                                  ()
+    .locked                                  (gtwiz_reset_clk_freerun_in_locked)
 );
 
 IBUFDS_GTE4 #(

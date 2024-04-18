@@ -6,7 +6,7 @@
             "HDMIController.json", 
             "GTH_serializer.json",
             "ImageController.json",
-            "TimeController.json"
+            "MasterController.json"
         ],
         "output_ports" : [
             "HDMI_TX0_N",

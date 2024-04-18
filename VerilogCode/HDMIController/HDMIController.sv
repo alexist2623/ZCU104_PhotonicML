@@ -62,7 +62,7 @@ module HDMIController
 (
     input wire clk_pixel,
     // synchronous reset back to 0,0
-    input wire resetn,
+    input wire clk_pixel_resetn,
     input wire [23:0] rgb,
 
     // These outputs go to your HDMI port
@@ -74,7 +74,7 @@ module HDMIController
     // They are used (by you) to pick the color each pixel should have
     // i.e. always_ff @(posedge pixel_clk) rgb <= {8'd0, 8'(cx), 8'(cy)};
     output reg [BIT_WIDTH-1:0] cx = START_X,
-    output reg [BIT_HEIGHT-1:0] cy = START_Y,
+    output reg [BIT_HEIGHT-1:0] cy = START_Y
 
     // The screen is at the upper left corner of the frame.
     // 0,0 = 0,0 in video
@@ -82,11 +82,11 @@ module HDMIController
 );
 
 wire reset;
-wire [BIT_WIDTH-1:0] frame_width,
-wire [BIT_HEIGHT-1:0] frame_height,
-wire [BIT_WIDTH-1:0] screen_width,
-wire [BIT_HEIGHT-1:0] screen_height
-assign reset = ~resetn;
+wire [BIT_WIDTH-1:0] frame_width;
+wire [BIT_HEIGHT-1:0] frame_height;
+wire [BIT_WIDTH-1:0] screen_width;
+wire [BIT_HEIGHT-1:0] screen_height;
+assign reset = ~clk_pixel_resetn;
 
 localparam int NUM_CHANNELS = 3;
 wire [9:0] tmds_internal [NUM_CHANNELS-1:0];
