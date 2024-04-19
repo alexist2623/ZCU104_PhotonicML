@@ -231,7 +231,7 @@ ImageSender #(
     .IMAGE_WIDTH                    (IMAGE_WIDTH),
     .IMAGE_HEIGHT                   (IMAGE_HEIGHT)
 ) ImageSender_0 (
-    .image_sender_reset             (image_sender_reset | clk_pixel_resetn),
+    .image_sender_reset             (image_sender_reset | ~clk_pixel_resetn),
     .image_sender_flush             (image_sender_flush),
     .image_sender_write             (image_sender_write),
     .image_sender_fifo_din          (image_sender_fifo_din),

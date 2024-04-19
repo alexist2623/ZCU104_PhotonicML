@@ -45,7 +45,6 @@ wire [IMAGE_BUFFER_SIZE-1:0] image_buffer;
 wire [IMAGE_BUFFER_SIZE-1:0] dout_old;
 wire [IMAGE_BUFFER_SIZE-1:0] dout_new;
 wire image_out;
-reg  old_fifo_reset;
 reg  [IMAGE_BUFFER_DEPTH-1:0] image_buffer_index;
 reg  image_send_start;
 reg  image_change_buffer1;

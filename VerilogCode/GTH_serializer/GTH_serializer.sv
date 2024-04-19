@@ -44,8 +44,6 @@ reg [9:0] gtwiz_reset_all_in;
 reg [0:0] gtwiz_reset_all_in_buffer1;
 reg [0:0] gtwiz_reset_all_in_buffer2;
 reg wait_reset;
-reg wait_reset_buffer1;
-reg wait_reset_buffer2;
 
 wire txoutclk_internal; //148.5MHz
 wire txoutclk_div2; // 74.25MHz
@@ -136,7 +134,7 @@ gtwizard_ultrascale_0 gtwizard_ultrascale_0 (
     .gthrxp_in                               (3'b111),
     .gthtxn_out                              (gthtxn_out),
     .gthtxp_out                              (gthtxp_out),
-    .gtwiz_userclk_tx_active_in              (~s_axi_resetn_buffer2),
+    .gtwiz_userclk_tx_active_in              (s_axi_resetn_buffer2),
     .gtwiz_userclk_rx_active_in              (1'b0),
     .gtwiz_reset_clk_freerun_in              (gtwiz_reset_clk_freerun_in),
     .gtwiz_reset_all_in                      (gtwiz_reset_all_in_buffer2),
