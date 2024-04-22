@@ -24,7 +24,7 @@ module ImageController
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Address Write
+    // AXI4 Slave Address Write
     //////////////////////////////////////////////////////////////////////////////////
     input  wire [AXI_ADDR_WIDTH - 1:0] s_axi_awaddr,
     input  wire [15:0] s_axi_awid, 
@@ -36,7 +36,7 @@ module ImageController
     output wire s_axi_awready,                                                        //Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Write Response
+    // AXI4 Slave Write Response
     //////////////////////////////////////////////////////////////////////////////////
     input  wire s_axi_bready,
     output wire [1:0] s_axi_bresp,
@@ -44,7 +44,7 @@ module ImageController
     output wire [15:0] s_axi_bid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Data Write
+    // AXI4 Slave Data Write
     //////////////////////////////////////////////////////////////////////////////////
     input  wire [AXI_DATA_WIDTH - 1:0] s_axi_wdata,
     input  wire [AXI_STROBE_WIDTH - 1:0] s_axi_wstrb,
@@ -53,7 +53,7 @@ module ImageController
     output wire s_axi_wready,                                                        //Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Address Read
+    // AXI4 Slave Address Read
     //////////////////////////////////////////////////////////////////////////////////
     input  wire [1:0] s_axi_arburst,
     input  wire [7:0] s_axi_arlen,
@@ -66,7 +66,7 @@ module ImageController
     output wire [15:0] s_axi_rid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Data Read
+    // AXI4 Slave Data Read
     //////////////////////////////////////////////////////////////////////////////////
     input  wire s_axi_rready,
     output wire [AXI_DATA_WIDTH - 1:0] s_axi_rdata,
@@ -75,26 +75,85 @@ module ImageController
     output wire s_axi_rlast,
     
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Clock
+    // AXI4 Slave Clock
     //////////////////////////////////////////////////////////////////////////////////
     input  wire s_axi_aclk,
     
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Reset
+    // AXI4 Slave Reset
     //////////////////////////////////////////////////////////////////////////////////
     input  wire s_axi_aresetn,
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Master Address Write
+    //////////////////////////////////////////////////////////////////////////////////
+    output wire [AXI_ADDR_WIDTH - 1:0] m_axi_awaddr,
+    output wire [15:0] m_axi_awid, 
+    output wire [1:0] m_axi_awburst,
+    output wire [2:0] m_axi_awsize,
+    output wire [7:0] m_axi_awlen,
+    output wire m_axi_awvalid,
+    output wire [15:0] m_axi_awuser, // added to resolve wrapping error
+    input  wire m_axi_awready,                                                        //Note that ready signal is wire
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Master Write Response
+    //////////////////////////////////////////////////////////////////////////////////
+    output wire m_axi_bready,
+    input  wire [1:0] m_axi_bresp,
+    input  wire m_axi_bvalid,
+    input  wire [15:0] m_axi_bid, // added to resolve wrapping error
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Master Data Write
+    //////////////////////////////////////////////////////////////////////////////////
+    output wire [AXI_DATA_WIDTH - 1:0] m_axi_wdata,
+    output wire [AXI_STROBE_WIDTH - 1:0] m_axi_wstrb,
+    output wire m_axi_wvalid,
+    output wire m_axi_wlast,
+    input  wire m_axi_wready,                                                        //Note that ready signal is wire
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Master Address Read
+    //////////////////////////////////////////////////////////////////////////////////
+    output wire [1:0] m_axi_arburst,
+    output wire [7:0] m_axi_arlen,
+    output wire [AXI_ADDR_WIDTH - 1:0] m_axi_araddr,
+    output wire [2:0] m_axi_arsize,
+    output wire m_axi_arvalid,
+    output wire [15:0] m_axi_arid, // added to resolve wrapping error
+    output wire [15:0] m_axi_aruser, // added to resolve wrapping error
+    input  wire m_axi_arready,
+    input  wire [15:0] m_axi_rid, // added to resolve wrapping error
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Master Data Read
+    //////////////////////////////////////////////////////////////////////////////////
+    output wire m_axi_rready,
+    input  wire [AXI_DATA_WIDTH - 1:0] m_axi_rdata,
+    input  wire [1:0] m_axi_rresp,
+    input  wire m_axi_rvalid,
+    input  wire m_axi_rlast,
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Master Clock
+    //////////////////////////////////////////////////////////////////////////////////
+    input  wire m_axi_aclk,
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Master Reset
+    //////////////////////////////////////////////////////////////////////////////////
+    input  wire m_axi_aresetn,
     
     //////////////////////////////////////////////////////////////////////////////////  
     // TimeController interface
     //////////////////////////////////////////////////////////////////////////////////
     input  wire auto_start,
     input  wire [63:0] counter,
-    input  wire clk_pixel_resetn,
     
     //////////////////////////////////////////////////////////////////////////////////  
     // ImageSender interface
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire clk_pixel,
     input  wire [BIT_WIDTH-1:0] cx,
     input  wire [BIT_HEIGHT-1:0] cy,
     output wire [23:0] rgb
@@ -104,13 +163,13 @@ module ImageController
 //////////////////////////////////////////////////////////////////////////////////
 // RTO_Core interface
 //////////////////////////////////////////////////////////////////////////////////
-wire image_sender_reset;                      // clk_pixel region
-wire image_sender_flush;                      // clk_pixel region
-wire image_sender_write;                     // clk_pixel region
-wire [127:0] image_sender_fifo_din;          // clk_pixel region
+wire image_sender_reset;
+wire image_sender_flush;
+wire image_sender_write;
+wire [127:0] image_sender_fifo_din;
 
-wire image_sender_full;                       // clk_pixel region
-wire image_sender_empty;                      // clk_pixel region
+wire image_sender_full;
+wire image_sender_empty;
 
 //////////////////////////////////////////////////////////////////////////////////
 // RTI_Core interface
@@ -211,7 +270,6 @@ axi2fifo_0
     
     .image_sender_full              (image_sender_full),
     .image_sender_empty             (image_sender_empty),
-    .clk_pixel                      (clk_pixel),
     .data_num                       (data_num)
 );
 
@@ -231,13 +289,13 @@ ImageSender #(
     .IMAGE_WIDTH                    (IMAGE_WIDTH),
     .IMAGE_HEIGHT                   (IMAGE_HEIGHT)
 ) ImageSender_0 (
-    .image_sender_reset             (image_sender_reset | ~clk_pixel_resetn),
+    .image_sender_reset             (image_sender_reset | ~s_axi_aresetn),
     .image_sender_flush             (image_sender_flush),
     .image_sender_write             (image_sender_write),
     .image_sender_fifo_din          (image_sender_fifo_din),
     .image_sender_full              (image_sender_full),
     .image_sender_empty             (image_sender_empty),
-    .clk_pixel                      (clk_pixel),
+    .clk_pixel                      (s_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),
     .cy                             (cy),
