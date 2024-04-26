@@ -20,7 +20,7 @@ module ImageController
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_STROBE_WIDTH              = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN                = 4, // LOG(AXI_STROBE_WDITH)
-    parameter FIFO_DEPTH                    = 130000,
+    parameter FIFO_DEPTH                    = 512,
     //////////////////////////////////////////////////////////////////////////////////
     // DRAM Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
@@ -175,19 +175,19 @@ wire [127:0] image_sender_fifo_din;
 wire image_sender_full;
 wire image_sender_empty;
 
-wire [AXI_ADDR_WIDTH - 1:0] dram_read_addr,
-wire [7:0] dram_read_len,
-wire dram_read_en,
+wire [AXI_ADDR_WIDTH - 1:0] dram_read_addr;
+wire [7:0] dram_read_len;
+wire dram_read_en;
 
-wire [AXI_ADDR_WIDTH - 1:0] dram_write_addr,
-wire [7:0] dram_write_len,
-wire dram_write_en,
-wire [AXI_DATA_WIDTH - 1:0] dram_write_data,
+wire [AXI_ADDR_WIDTH - 1:0] dram_write_addr;
+wire [7:0] dram_write_len;
+wire dram_write_en;
+wire [AXI_DATA_WIDTH - 1:0] dram_write_data;
 
-wire [DRAM_DATA_WIDTH - 1:0] dram_read_data,
-wire dram_read_data_valid,
-wire dram_write_busy,
-wire dram_read_busy
+wire [DRAM_DATA_WIDTH - 1:0] dram_read_data;
+wire dram_read_data_valid;
+wire dram_write_busy;
+wire dram_read_busy;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI2FIFO Declaration

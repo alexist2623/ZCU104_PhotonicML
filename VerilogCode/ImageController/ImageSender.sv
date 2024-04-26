@@ -8,14 +8,15 @@ module ImageSender
     parameter SCREEN_HEIGHT                 = 1080,
     parameter int BIT_WIDTH                 = 12,
     parameter int BIT_HEIGHT                = 11,
-    parameter FIFO_DEPTH                    = 130000,
+    parameter FIFO_DEPTH                    = 256,
+    parameter DRAM_DATA_WIDTH               = 512,
     parameter IMAGE_WIDTH                   = 100,
     parameter IMAGE_HEIGHT                  = 100,
-    parameter IMAGE_BUFFER_THRESHOLD        = 3,
-    parameter IMAGE_BUFFER_DEPTH            = 512,
+    parameter IMAGE_BUFFER_FIFO_DIV         = 4,
+    parameter IMAGE_BUFFER_DEPTH            = DRAM_DATA_WIDTH >> $clog2(IMAGE_BUFFER_FIFO_DIV),
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_ADDR_WIDTH                = 32,
-    parameter DRAM_DATA_WIDTH               = 512
+    parameter BUFFER_THRESHOLD              = 14
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -24,8 +25,8 @@ module ImageSender
     input  wire image_sender_reset,
     input  wire image_sender_flush,
     input  wire image_sender_write,
-    input  wire [IMAGE_BUFFER_DEPTH - 1 : 0] image_sender_fifo_din,          // clk_pixel region
-    input  wire clk_pixel,                              // clk_pixel = clk_pixel
+    input  wire [IMAGE_BUFFER_DEPTH - 1 : 0] image_sender_fifo_din,
+    input  wire clk_pixel, 
     input  wire [BIT_WIDTH-1:0] cx,                     // Current Image x coordinate
     input  wire [BIT_HEIGHT-1:0] cy,                    // Current Image y coordinate
     input  wire auto_start,                             // Signal which initiate modules
@@ -55,37 +56,42 @@ module ImageSender
 localparam BYTE_SIZE = 8;
 localparam IMAGE_BUFFER_LEN = (IMAGE_BUFFER_DEPTH >> 3);
 localparam IMAGE_BUFFER_WIDTH = $clog2(IMAGE_BUFFER_DEPTH);
+localparam IMAGE_BUFFER_FIFO_DIV_LEN = $clog2(IMAGE_BUFFER_FIFO_DIV);
 
 
 reg  image_send_start;
 reg  image_change_buffer;
-reg  image_change_trigger;
 reg  [IMAGE_BUFFER_WIDTH-1:0] image_buffer_index;
 reg  [BIT_WIDTH - 1:0] cx_buffer = 0;
 reg  [BIT_HEIGHT - 1:0] cy_buffer = 0;
+reg  [AXI_ADDR_WIDTH - 1:0] image_current_addr;
 reg  [AXI_ADDR_WIDTH - 1:0] dram_last_addr;
 reg  image_end_reached;
+reg  [DRAM_DATA_WIDTH - 1:0] dram_buffer;
+reg  image_buffer_fifo_wr_en;
+reg  [IMAGE_BUFFER_FIFO_DIV_LEN - 1:0] image_buffer_fifo_din_select;
 
-wire image_fifo_rd_en;
+wire image_buffer_fifo_rd_en;
 wire [IMAGE_BUFFER_DEPTH-1:0] image_buffer;
 wire image_discharge_en;
-wire dram_address_rd_en;
 wire [AXI_ADDR_WIDTH - 1:0] image_addr_upper;
 wire [AXI_ADDR_WIDTH - 1:0] image_addr_lower;
+wire [IMAGE_BUFFER_DEPTH - 1:0] image_buffer_fifo_din;
 wire image_buffer_fifo_full;
-wire image_end_reached;
+wire dram_address_rd_en;
 
 assign image_discharge_en = ( ( (SCREEN_HEIGHT >> 1) - (IMAGE_HEIGHT >> 1) < cy_buffer ) && ( cy_buffer <= (SCREEN_HEIGHT >> 1) + (IMAGE_HEIGHT >> 1) ) ) 
                     && ( ( (SCREEN_WIDTH >> 1) - (IMAGE_WIDTH >> 1) < cx_buffer ) && ( cx_buffer <= (SCREEN_WIDTH >> 1) + (IMAGE_WIDTH >> 1) ) )
                     && (image_send_start == 1'b1);
-assign image_fifo_rd_en = image_discharge_en && (image_buffer_index == (IMAGE_BUFFER_LEN - 1));
+assign image_buffer_fifo_rd_en = image_discharge_en && (image_buffer_index == (IMAGE_BUFFER_LEN - 1));
 assign dram_address_rd_en = ( cx_buffer == (SCREEN_WIDTH - 1) ) && ( cy_buffer == (SCREEN_HEIGHT - 1) ) && image_change_buffer;
+assign image_buffer_fifo_din[IMAGE_BUFFER_DEPTH - 1:0] = dram_buffer[image_buffer_fifo_din_select * IMAGE_BUFFER_DEPTH +:IMAGE_BUFFER_DEPTH];
 
 //////////////////////////////////////////////////////////////////////////////////
 // FIFO for Image Address
 //////////////////////////////////////////////////////////////////////////////////
 
-fifo_generator_1 image_address( // 128 width, 256 depth, 250 program full
+fifo_generator_1 image_address( // 128 width, 512 depth, 500 program full
     .clk                                (clk_pixel),
     .srst                               (image_sender_reset | image_sender_flush),  // rst -> srst 
     .din                                (image_sender_fifo_din),
@@ -99,15 +105,15 @@ fifo_generator_1 image_address( // 128 width, 256 depth, 250 program full
 //////////////////////////////////////////////////////////////////////////////////
 // FIFO for Image Data
 //////////////////////////////////////////////////////////////////////////////////
-fifo_generator_0 image_data_buffer( // 512 width, 16 depth, 15 program full
+fifo_generator_0 image_data_buffer( // 128 width, 512 depth, 510 program full
     .clk                                (clk_pixel),
-    .srst                               (image_sender_reset | image_sender_flush | dram_address_rd_en),  // rst -> srst 
-    .din                                (dram_read_data),
-    .wr_en                              (dram_read_data_valid),
-    .rd_en                              (image_fifo_rd_en),
+    .srst                               (image_sender_reset | image_sender_flush | image_end_reached),  // rst -> srst 
+    .din                                (image_buffer_fifo_din),
+    .wr_en                              (image_buffer_fifo_wr_en),
+    .rd_en                              (image_buffer_fifo_rd_en),
     .dout                               (image_buffer),
-    .prog_full                          (),  // full -> prog_full to deal with full delay signal
-    .empty                              (image_buffer_fifo_full)
+    .prog_full                          (image_buffer_fifo_full),  // full -> prog_full to deal with full delay signal
+    .empty                              ()
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -117,18 +123,21 @@ always@(posedge clk_pixel) begin
     if( image_sender_reset == 1'b1 ) begin
         rgb <= 24'hffffff;
         
-        image_buffer_index <= {IMAGE_BUFFER_DEPTH{1'b0}};
+        image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);
         image_send_start <= 1'b0;
-        image_change_buffer <= 1'b1;
-        image_change_trigger <= 1'b0;
+        image_change_buffer <= 1'b0;
+        image_end_reached <= 1'b0;
+        image_current_addr <= AXI_ADDR_WIDTH'(0);
     end
     else begin
+        image_end_reached <= 1'b0;
         if( image_send_start == 1'b1 ) begin
             //////////////////////////////////////////////////////////////////////////////////
             // Image Send
             //////////////////////////////////////////////////////////////////////////////////
             if( image_discharge_en )begin
                 image_buffer_index <= image_buffer_index + 1;
+                image_current_addr <= image_current_addr + 1;
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
@@ -142,10 +151,11 @@ always@(posedge clk_pixel) begin
             //////////////////////////////////////////////////////////////////////////////////
             if( ( cx_buffer == (SCREEN_WIDTH - 1) ) && ( cy_buffer == (SCREEN_HEIGHT - 1) ) ) begin // Change image data only when state reached end of image
                 image_change_buffer <= image_change;
-                image_change_trigger <= image_change_buffer;
                 image_end_reached <= 1'b1;
+                image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);
+                image_current_addr <= AXI_ADDR_WIDTH'(0);
             end
-            else if( image_change == 1'b1 ) begin // To remeber when image_change get positive edge
+            else if( image_change == 1'b1 ) begin // To save image_change signal
                 image_change_buffer <= 1'b1;
             end
         end
@@ -162,28 +172,29 @@ end
 //////////////////////////////////////////////////////////////////////////////////
 always@(posedge clk_pixel) begin
     if( image_sender_reset == 1'b1 ) begin
-        dram_read_addr <= AXI_ADDR_WIDTH'h0;
-        dram_last_addr <= AXI_ADDR_WIDTH'h0;
+        dram_read_addr <= AXI_ADDR_WIDTH'(0);
+        dram_last_addr <= AXI_ADDR_WIDTH'(0);
         dram_read_en <= 1'b0;
         dram_read_len <= 8'h0;
     end
     else begin
         dram_read_en <= 1'b0;
         if( image_send_start == 1'b1 ) begin
-            if( ( dram_last_addr < (image_addr_lower + cx_buffer + cy_buffer * IMAGE_WIDTH + 10) ) && 
-                (dram_last_addr < image_addr_upper) && 
+            if( ( dram_last_addr < (image_addr_lower + image_current_addr + (DRAM_DATA_WIDTH >> 3) * BUFFER_THRESHOLD) ) && 
+                (dram_last_addr <= image_addr_upper) && 
                 ~dram_read_busy && 
-                ~image_change_trigger &&
-                ~image_buffer_fifo_full &&
-                ~image_end_reached) begin // 10 buffer data is read from DRAM before discharge
-                dram_read_addr <= dram_last_addr + 1;
-                dram_last_addr <= dram_last_addr + 1;
+                ~image_buffer_fifo_full) begin // 10 buffer data is read from DRAM before discharge
+                dram_read_addr <= dram_last_addr + (DRAM_DATA_WIDTH >> 3);
+                dram_last_addr <= dram_last_addr + (DRAM_DATA_WIDTH >> 3);
                 dram_read_en <= 1'b1;
                 dram_read_len <= 8'h0;
             end
             
             if( image_end_reached == 1'b1 ) begin
                 dram_last_addr <= image_addr_lower;
+                dram_read_addr <= image_addr_lower;
+                dram_read_en <= 1'b1;
+                dram_read_len <= 8'h0;
             end
         end
         
@@ -191,6 +202,24 @@ always@(posedge clk_pixel) begin
             if( auto_start == 1'b1 && image_send_start == 1'b0) begin
                 dram_last_addr <= image_addr_lower;
             end
+        end
+    end
+end
+            
+//////////////////////////////////////////////////////////////////////////////////
+// FIFO write FSM
+//////////////////////////////////////////////////////////////////////////////////
+always@(posedge clk_pixel) begin
+    if( image_sender_reset == 1'b1 ) begin
+        image_buffer_fifo_din_select <= IMAGE_BUFFER_FIFO_DIV_LEN'(0);
+        image_buffer_fifo_wr_en <= 1'b0;
+    end
+    else begin
+        image_buffer_fifo_din_select <= dram_read_data_valid;
+        image_buffer_fifo_wr_en <= dram_read_data_valid;
+        if( image_buffer_fifo_din_select != IMAGE_BUFFER_FIFO_DIV_LEN'(0) ) begin
+            image_buffer_fifo_wr_en <= 1'b1;
+            image_buffer_fifo_din_select <= image_buffer_fifo_din_select + 1;
         end
     end
 end

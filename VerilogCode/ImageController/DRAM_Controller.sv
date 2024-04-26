@@ -124,18 +124,13 @@ module DRAM_Controller
 //////////////////////////////////////////////////////////////////////////////////
 localparam AXI_STATE_LEN         = 6;
 
-localparam IDLE                  = AXI_STATE_LEN'h0;
-localparam WRITE_DRAM            = AXI_STATE_LEN'h1;
-
-localparam WRITE_DRAM_WDATA      = AXI_STATE_LEN'h11;
-
-localparam WRITE_DRAM_RESP       = AXI_STATE_LEN'h21;
-
-localparam READ_DRAM             = AXI_STATE_LEN'h1;
-
-localparam READ_DRAM_RDATA       = AXI_STATE_LEN'h11;
-
-localparam ERROR_STATE           = AXI_STATE_LEN'hc;
+localparam IDLE                  = AXI_STATE_LEN'(6'h0);
+localparam WRITE_DRAM            = AXI_STATE_LEN'(6'h1);
+localparam WRITE_DRAM_WDATA      = AXI_STATE_LEN'(6'h11);
+localparam WRITE_DRAM_RESP       = AXI_STATE_LEN'(6'h21);
+localparam READ_DRAM             = AXI_STATE_LEN'(6'h1);
+localparam READ_DRAM_RDATA       = AXI_STATE_LEN'(6'h2);
+localparam ERROR_STATE           = AXI_STATE_LEN'(6'hc);
 
 reg [AXI_STATE_LEN - 1:0] axi_state_write;
 reg [AXI_STATE_LEN - 1:0] axi_state_read;
@@ -143,10 +138,6 @@ reg [AXI_STATE_LEN - 1:0] axi_state_read;
 //////////////////////////////////////////////////////////////////////////////////
 // AXI Data Buffer
 //////////////////////////////////////////////////////////////////////////////////
-reg [AXI_ADDR_WIDTH - 1:0] dram_read_addr;
-reg [7:0] dram_read_len;
-reg [AXI_ADDR_WIDTH - 1:0] dram_write_addr;
-reg [7:0] dram_write_len;
     
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 FSM State initialization
@@ -171,7 +162,7 @@ end
 always @(posedge m_axi_aclk) begin
     if( m_axi_aresetn == 1'b0 ) begin
         axi_state_write <= IDLE;
-        m_axi_awaddr <= AXI_ADDR_WIDTH'h0;
+        m_axi_awaddr <= AXI_ADDR_WIDTH'(2'h0);
         m_axi_awid <= 16'h0; 
         m_axi_awburst <= 2'h0;
         m_axi_awsize <= 3'h0;
@@ -179,8 +170,8 @@ always @(posedge m_axi_aclk) begin
         m_axi_awvalid <= 1'b0;
         m_axi_awuser <= 16'h0; // added to resolve wrapping error
         m_axi_bready <= 1'b0;
-        m_axi_wdata <= AXI_DATA_WIDTH'h0;
-        m_axi_wstrb <= AXI_STROBE_WIDTH'h0;
+        m_axi_wdata <= AXI_DATA_WIDTH'(0);
+        m_axi_wstrb <= AXI_STROBE_WIDTH'(0);
         m_axi_wvalid <= 1'b0;
         m_axi_wlast <= 1'b0;
         
@@ -191,7 +182,7 @@ always @(posedge m_axi_aclk) begin
         case(axi_state_write)
             IDLE: begin
                 axi_state_write <= IDLE;
-                m_axi_awaddr <= AXI_ADDR_WIDTH'h0;
+                m_axi_awaddr <= AXI_ADDR_WIDTH'(0);
                 m_axi_awid <= 16'h0; 
                 m_axi_awburst <= 2'h0;
                 m_axi_awsize <= 3'h0;
@@ -199,8 +190,8 @@ always @(posedge m_axi_aclk) begin
                 m_axi_awvalid <= 1'b0;
                 m_axi_awuser <= 16'h0; // added to resolve wrapping error
                 m_axi_bready <= 1'b0;
-                m_axi_wdata <= AXI_DATA_WIDTH'h0;
-                m_axi_wstrb <= AXI_STROBE_WIDTH'h0;
+                m_axi_wdata <= AXI_DATA_WIDTH'(0);
+                m_axi_wstrb <= AXI_STROBE_WIDTH'(0);
                 m_axi_wvalid <= 1'b0;
                 m_axi_wlast <= 1'b0;
                 
@@ -219,7 +210,7 @@ always @(posedge m_axi_aclk) begin
                     m_axi_awuser <= 16'h0;
                                         
                     m_axi_wdata <= dram_write_data;
-                    m_axi_wstrb <= AXI_STROBE_WIDTH'hff_ff_ff_ff_ff_ff_ff_ff;
+                    m_axi_wstrb <= AXI_STROBE_WIDTH'(128'hff_ff_ff_ff_ff_ff_ff_ff);
                     m_axi_wlast <= 1'b1;
                     m_axi_wvalid <= 1'b1;
                     
@@ -233,7 +224,7 @@ always @(posedge m_axi_aclk) begin
                 if( m_axi_awready == 1'b1 ) begin
                     axi_state_write <= WRITE_DRAM_WDATA;
                     
-                    m_axi_awaddr <= AXI_ADDR_WIDTH'h0;
+                    m_axi_awaddr <= AXI_ADDR_WIDTH'(0);
                     m_axi_awid <= 16'h0; 
                     m_axi_awburst <= 2'h0;
                     m_axi_awsize <= 3'b000;
@@ -251,8 +242,8 @@ always @(posedge m_axi_aclk) begin
                 if( m_axi_wready == 1'b1 ) begin
                     axi_state_write <= WRITE_DRAM_RESP;
                                         
-                    m_axi_wdata <= AXI_DATA_WIDTH'h0;
-                    m_axi_wstrb <= AXI_STROBE_WIDTH'h0;
+                    m_axi_wdata <= AXI_DATA_WIDTH'(0);
+                    m_axi_wstrb <= AXI_STROBE_WIDTH'(0);
                     m_axi_wlast <= 1'b0;
                     m_axi_wvalid <= 1'b0;
                 end
@@ -280,7 +271,7 @@ always @(posedge m_axi_aclk) begin
             
             ERROR_STATE: begin
                 axi_state_write <= IDLE;
-                m_axi_awaddr <= AXI_ADDR_WIDTH'h0;
+                m_axi_awaddr <= AXI_ADDR_WIDTH'(0);
                 m_axi_awid <= 16'h0; 
                 m_axi_awburst <= 2'h0;
                 m_axi_awsize <= 3'h0;
@@ -288,8 +279,8 @@ always @(posedge m_axi_aclk) begin
                 m_axi_awvalid <= 1'b0;
                 m_axi_awuser <= 16'h0; // added to resolve wrapping error
                 m_axi_bready <= 1'b0;
-                m_axi_wdata <= AXI_DATA_WIDTH'h0;
-                m_axi_wstrb <= AXI_STROBE_WIDTH'h0;
+                m_axi_wdata <= AXI_DATA_WIDTH'(0);
+                m_axi_wstrb <= AXI_STROBE_WIDTH'(0);
                 m_axi_wvalid <= 1'b0;
                 m_axi_wlast <= 1'b0;
                 
@@ -303,12 +294,12 @@ end
 // AXI4 Read FSM
 //////////////////////////////////////////////////////////////////////////////////
 always @(posedge m_axi_aclk) begin
-    if( s_axi_aresetn == 1'b0 ) begin
+    if( m_axi_aresetn == 1'b0 ) begin
         axi_state_read <= IDLE;
         
         m_axi_arburst <= 2'h0;
         m_axi_arlen <= 8'h0;
-        m_axi_araddr <= AXI_ADDR_WIDTH'h0;
+        m_axi_araddr <= AXI_ADDR_WIDTH'(0);
         m_axi_arsize <= 3'h0;
         m_axi_arvalid <= 1'b0;
         m_axi_arid <= 16'h0;
@@ -320,13 +311,14 @@ always @(posedge m_axi_aclk) begin
     end
     
     else begin
+        dram_read_data_valid <= 1'b0;
         case(axi_state_read)
             IDLE: begin
                 axi_state_read <= IDLE;
                 
                 m_axi_arburst <= 2'h0;
                 m_axi_arlen <= 8'h0;
-                m_axi_araddr <= AXI_ADDR_WIDTH'h0;
+                m_axi_araddr <= AXI_ADDR_WIDTH'(0);
                 m_axi_arsize <= 3'h0;
                 m_axi_arvalid <= 1'b0;
                 m_axi_arid <= 16'h0;
@@ -350,7 +342,6 @@ always @(posedge m_axi_aclk) begin
                     
                     dram_read_busy <= 1'b1;
                     
-                    dram_read_data_valid <= 1'b0;
                 end
             end
             READ_DRAM: begin
@@ -359,7 +350,7 @@ always @(posedge m_axi_aclk) begin
                     
                     m_axi_arburst <= 2'h0;
                     m_axi_arlen <= 8'h0;
-                    m_axi_araddr <= AXI_ADDR_WIDTH'h0;
+                    m_axi_araddr <= AXI_ADDR_WIDTH'(0);
                     m_axi_arsize <= 3'h0; // ?
                     m_axi_arvalid <= 1'b0;
                     m_axi_arid <= 16'h0;
@@ -368,7 +359,7 @@ always @(posedge m_axi_aclk) begin
             end
             READ_DRAM_RDATA: begin
                 if( m_axi_rready == 1'b1 ) begin
-                    axi_state_read <= READ_DRAM_RESP;
+                    axi_state_read <= IDLE;
                     if( m_axi_rvalid == 1'b1 ) begin
                         dram_read_data <= m_axi_rdata;
                         if( m_axi_rlast == 1'b1 ) begin
@@ -390,7 +381,7 @@ always @(posedge m_axi_aclk) begin
                 
                 m_axi_arburst <= 2'h0;
                 m_axi_arlen <= 8'h0;
-                m_axi_araddr <= AXI_ADDR_WIDTH'h0;
+                m_axi_araddr <= AXI_ADDR_WIDTH'(0);
                 m_axi_arsize <= 3'h0;
                 m_axi_arvalid <= 1'b0;
                 m_axi_arid <= 16'h0;

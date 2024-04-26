@@ -29,7 +29,7 @@ module AXI2FIFO
     parameter AXI_DATA_WIDTH                    = 128,
     parameter AXI_STROBE_WIDTH                  = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN                    = 4, // LOG(AXI_STROBE_WDITH)
-    parameter FIFO_DEPTH                        = 130000
+    parameter FIFO_DEPTH                        = 512
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -96,13 +96,13 @@ module AXI2FIFO
     //////////////////////////////////////////////////////////////////////////////////
     // Image Sender interface
     //////////////////////////////////////////////////////////////////////////////////
-    output wire image_sender_reset,                      // clk_pixel region
-    output reg  image_sender_flush,                      // clk_pixel region
-    output reg  image_sender_write,                     // clk_pixel region
-    output reg  [127:0] image_sender_fifo_din,          // clk_pixel region
+    output wire image_sender_reset, 
+    output reg  image_sender_flush, 
+    output reg  image_sender_write,  
+    output reg  [127:0] image_sender_fifo_din,
     
-    input  wire image_sender_full,                       // clk_pixel region
-    input  wire image_sender_empty,                      // clk_pixel region
+    input  wire image_sender_full,  
+    input  wire image_sender_empty, 
    
     //////////////////////////////////////////////////////////////////////////////////
     // RTI_Core interface
