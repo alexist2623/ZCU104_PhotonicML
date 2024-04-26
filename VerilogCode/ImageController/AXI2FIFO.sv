@@ -25,7 +25,7 @@ module AXI2FIFO
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH                    = 6,
+    parameter AXI_ADDR_WIDTH                    = 32,
     parameter AXI_DATA_WIDTH                    = 128,
     parameter AXI_STROBE_WIDTH                  = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN                    = 4, // LOG(AXI_STROBE_WDITH)

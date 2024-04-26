@@ -16,15 +16,15 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH                = 6,
+    parameter AXI_ADDR_WIDTH                = 32,
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_STROBE_WIDTH              = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN                = 4, // LOG(AXI_STROBE_WDITH)
     parameter FIFO_DEPTH                    = 130000,
     //////////////////////////////////////////////////////////////////////////////////
-    // AXIS Configuraiton
+    // DRAM Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXIS_DATA_WIDTH               = 512
+    parameter DRAM_DATA_WIDTH               = 512
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +175,20 @@ wire [127:0] image_sender_fifo_din;
 wire image_sender_full;
 wire image_sender_empty;
 
+wire [AXI_ADDR_WIDTH - 1:0] dram_read_addr,
+wire [7:0] dram_read_len,
+wire dram_read_en,
+
+wire [AXI_ADDR_WIDTH - 1:0] dram_write_addr,
+wire [7:0] dram_write_len,
+wire dram_write_en,
+wire [AXI_DATA_WIDTH - 1:0] dram_write_data,
+
+wire [DRAM_DATA_WIDTH - 1:0] dram_read_data,
+wire dram_read_data_valid,
+wire dram_write_busy,
+wire dram_read_busy
+
 //////////////////////////////////////////////////////////////////////////////////
 // AXI2FIFO Declaration
 //////////////////////////////////////////////////////////////////////////////////
@@ -266,12 +280,13 @@ axi2fifo_0
 );
 
 //////////////////////////////////////////////////////////////////////////////////
-// DMA data transfer axi interface
+// DRAM Controller with axi interface
 //////////////////////////////////////////////////////////////////////////////////
 
 DRAM_Controller #(
     .AXI_ADDR_WIDTH                 (AXI_ADDR_WIDTH),
-    .AXI_DATA_WIDTH                 (AXI_DATA_WIDTH),
+    .DRAM_DATA_WIDTH                (DRAM_DATA_WIDTH),
+    .AXI_DATA_WIDTH                 (DRAM_DATA_WIDTH),
     .AXI_STROBE_WIDTH               (AXI_STROBE_WIDTH),
     .AXI_STROBE_LEN                 (AXI_STROBE_LEN)
 ) dram_controller_0 (
@@ -308,13 +323,18 @@ DRAM_Controller #(
     .m_axi_aclk                     (m_axi_aclk),
     .m_axi_aresetn                  (m_axi_aresetn),
     
-    .mm2s_addr                      (),
-    .mm2s_len                       (),
-    .mm2s_en                        (),
-    .s2mm_addr                      (),
-    .s2mm_len                       (),
-    .s2mm_en                        (),
-    .dram_controller_busy           ()
+    .dram_read_addr                 (dram_read_addr),
+    .dram_read_len                  (dram_read_len),
+    .dram_read_en                   (dram_read_en),
+    .dram_read_data                 (dram_read_data),
+    .dram_read_data_valid           (dram_read_data_valid),
+    .dram_read_busy                 (dram_read_busy),
+    
+    .dram_write_addr                (dram_write_addr),
+    .dram_write_len                 (dram_write_len),
+    .dram_write_en                  (dram_write_en),
+    .dram_write_data                (dram_write_data),
+    .dram_write_busy                (dram_write_busy)
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -342,13 +362,18 @@ ImageSender #(
     .cy                             (cy),
     .rgb                            (rgb),
     
-    .mm2s_addr                      (),
-    .mm2s_len                       (),
-    .mm2s_en                        (),
-    .s2mm_addr                      (),
-    .s2mm_len                       (),
-    .s2mm_en                        (),
-    .dram_controller_busy           ()
+    .dram_read_addr                 (dram_read_addr),
+    .dram_read_len                  (dram_read_len),
+    .dram_read_en                   (dram_read_en),
+    .dram_read_data                 (dram_read_data),
+    .dram_read_data_valid           (dram_read_data_valid),
+    .dram_read_busy                 (dram_read_busy),
+    
+    .dram_write_addr                (dram_write_addr),
+    .dram_write_len                 (dram_write_len),
+    .dram_write_en                  (dram_write_en),
+    .dram_write_data                (dram_write_data),
+    .dram_write_busy                (dram_write_busy)
 );
 
 endmodule
