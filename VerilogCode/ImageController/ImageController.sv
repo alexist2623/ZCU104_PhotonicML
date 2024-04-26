@@ -20,7 +20,11 @@ module ImageController
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_STROBE_WIDTH              = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN                = 4, // LOG(AXI_STROBE_WDITH)
-    parameter FIFO_DEPTH                    = 130000
+    parameter FIFO_DEPTH                    = 130000,
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXIS Configuraiton
+    //////////////////////////////////////////////////////////////////////////////////
+    parameter AXIS_DATA_WIDTH               = 512
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +165,7 @@ module ImageController
 
 
 //////////////////////////////////////////////////////////////////////////////////
-// RTO_Core interface
+// Image Sender interface
 //////////////////////////////////////////////////////////////////////////////////
 wire image_sender_reset;
 wire image_sender_flush;
@@ -170,18 +174,6 @@ wire [127:0] image_sender_fifo_din;
 
 wire image_sender_full;
 wire image_sender_empty;
-
-//////////////////////////////////////////////////////////////////////////////////
-// RTI_Core interface
-//////////////////////////////////////////////////////////////////////////////////
-wire data_receiver_reset;
-wire data_receiver_rd_en;
-wire data_receiver_flush;
-
-wire [127:0] data_receiver_fifo_dout;
-wire data_receiver_full;
-wire data_receiver_empty;
-wire [FIFO_DEPTH - 1:0] data_num;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI2FIFO Declaration
@@ -274,20 +266,69 @@ axi2fifo_0
 );
 
 //////////////////////////////////////////////////////////////////////////////////
+// DMA data transfer axi interface
+//////////////////////////////////////////////////////////////////////////////////
+
+DRAM_Controller #(
+    .AXI_ADDR_WIDTH                 (AXI_ADDR_WIDTH),
+    .AXI_DATA_WIDTH                 (AXI_DATA_WIDTH),
+    .AXI_STROBE_WIDTH               (AXI_STROBE_WIDTH),
+    .AXI_STROBE_LEN                 (AXI_STROBE_LEN)
+) dram_controller_0 (
+    .m_axi_awaddr                   (m_axi_awaddr),
+    .m_axi_awid                     (m_axi_awid),
+    .m_axi_awburst                  (m_axi_awburst),
+    .m_axi_awsize                   (m_axi_awsize),
+    .m_axi_awlen                    (m_axi_awlen),
+    .m_axi_awvalid                  (m_axi_awvalid),
+    .m_axi_awuser                   (m_axi_awuser),
+    .m_axi_awready                  (m_axi_awready),
+    .m_axi_bready                   (m_axi_bready),
+    .m_axi_bresp                    (m_axi_bresp),
+    .m_axi_bvalid                   (m_axi_bvalid),
+    .m_axi_bid                      (m_axi_bid),
+    .m_axi_wdata                    (m_axi_wdata),
+    .m_axi_wstrb                    (m_axi_wstrb),
+    .m_axi_wvalid                   (m_axi_wvalid),
+    .m_axi_wlast                    (m_axi_wlast),
+    .m_axi_wready                   (m_axi_wready),
+    .m_axi_arburst                  (m_axi_arburst),
+    .m_axi_arlen                    (m_axi_arlen),
+    .m_axi_araddr                   (m_axi_araddr),
+    .m_axi_arsize                   (m_axi_arsize),
+    .m_axi_arvalid                  (m_axi_arvalid),
+    .m_axi_arid                     (m_axi_arid),
+    .m_axi_aruser                   (m_axi_aruser),
+    .m_axi_arready                  (m_axi_arready),
+    .m_axi_rready                   (m_axi_rready),
+    .m_axi_rdata                    (m_axi_rdata),
+    .m_axi_rresp                    (m_axi_rresp),
+    .m_axi_rvalid                   (m_axi_rvalid),
+    .m_axi_rlast                    (m_axi_rlast),
+    .m_axi_aclk                     (m_axi_aclk),
+    .m_axi_aresetn                  (m_axi_aresetn),
+    
+    .mm2s_addr                      (),
+    .mm2s_len                       (),
+    .mm2s_en                        (),
+    .s2mm_addr                      (),
+    .s2mm_len                       (),
+    .s2mm_en                        (),
+    .dram_controller_busy           ()
+);
+
+//////////////////////////////////////////////////////////////////////////////////
 // ImageSender interface
 //////////////////////////////////////////////////////////////////////////////////
 wire require_new_image;
-
-assign data_receiver_empty = 1'b1;
-assign data_receiver_full = 1'b0;
-assign data_receiver_fifo_dout = 128'h0;
 
 ImageSender #(
     .BIT_WIDTH                      (BIT_WIDTH),
     .BIT_HEIGHT                     (BIT_HEIGHT),
     .FIFO_DEPTH                     (FIFO_DEPTH),
     .IMAGE_WIDTH                    (IMAGE_WIDTH),
-    .IMAGE_HEIGHT                   (IMAGE_HEIGHT)
+    .IMAGE_HEIGHT                   (IMAGE_HEIGHT),
+    .AXI_DATA_WIDTH                 (AXI_DATA_WIDTH)
 ) ImageSender_0 (
     .image_sender_reset             (image_sender_reset | ~s_axi_aresetn),
     .image_sender_flush             (image_sender_flush),
@@ -295,12 +336,19 @@ ImageSender #(
     .image_sender_fifo_din          (image_sender_fifo_din),
     .image_sender_full              (image_sender_full),
     .image_sender_empty             (image_sender_empty),
-    .clk_pixel                      (s_axi_aclk),
+    .clk_pixel                      (m_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),
     .cy                             (cy),
     .rgb                            (rgb),
-    .require_new_image              (require_new_image)
+    
+    .mm2s_addr                      (),
+    .mm2s_len                       (),
+    .mm2s_en                        (),
+    .s2mm_addr                      (),
+    .s2mm_len                       (),
+    .s2mm_en                        (),
+    .dram_controller_busy           ()
 );
 
 endmodule

@@ -12,7 +12,8 @@ module ImageSender
     parameter IMAGE_WIDTH                   = 100,
     parameter IMAGE_HEIGHT                  = 100,
     parameter IMAGE_BUFFER_THRESHOLD        = 3,
-    parameter IMAGE_BUFFER_DEPTH            = 512
+    parameter IMAGE_BUFFER_DEPTH            = 512,
+    parameter AXI_DATA_WIDTH                = 128
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -31,8 +32,16 @@ module ImageSender
     output wire image_sender_full,
     output wire image_sender_empty,
     output reg  [23:0] rgb,                             // rgb value
-    output reg  require_new_data,                       // Signal which requires new image data to DRAM
-    output reg  [FIFO_DEPTH-1:0] data_num
+    //////////////////////////////////////////////////////////////////////////////////
+    // DMA Data Interface
+    //////////////////////////////////////////////////////////////////////////////////
+    output  reg [AXI_DATA_WIDTH - 1:0] mm2s_addr,
+    output  reg [AXI_DATA_WIDTH - 1:0] mm2s_len,
+    output  reg mm2s_en,
+    output  reg [AXI_DATA_WIDTH - 1:0] s2mm_addr,
+    output  reg [AXI_DATA_WIDTH - 1:0] s2mm_len,
+    output  reg s2mm_en,
+    input  wire dram_controller_busy
 );
 
 localparam BYTE_SIZE = 8;
@@ -61,7 +70,7 @@ assign image_buffer = dout;
 //////////////////////////////////////////////////////////////////////////////////
 fifo_generator_0 image_buffer( // 512 width, 256 depth, 250 program full
     .clk                                (clk_pixel),
-    .srst                               (image_sender_reset | image_sender_flush),  // rst -> srst in Vivado 2020.2
+    .srst                               (image_sender_reset | image_sender_flush),  // rst -> srst 
     .din                                (image_sender_fifo_din),
     .wr_en                              (image_sender_write),
     .rd_en                              (rd_en),
