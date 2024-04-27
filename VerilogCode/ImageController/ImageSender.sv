@@ -92,7 +92,7 @@ assign image_buffer_fifo_din[IMAGE_BUFFER_DEPTH - 1:0] = dram_buffer[image_buffe
 // FIFO for Image Address
 //////////////////////////////////////////////////////////////////////////////////
 
-fifo_generator_1 image_address( // 128 width, 512 depth, 500 program full
+fifo_generator_1 image_address_fifo_0 ( // 128 width, 512 depth, 500 program full
     .clk                                (clk_pixel),
     .srst                               (image_sender_reset | image_sender_flush),  // rst -> srst 
     .din                                (image_sender_fifo_din),
@@ -106,7 +106,7 @@ fifo_generator_1 image_address( // 128 width, 512 depth, 500 program full
 //////////////////////////////////////////////////////////////////////////////////
 // FIFO for Image Data
 //////////////////////////////////////////////////////////////////////////////////
-fifo_generator_0 image_data_buffer( // 128 width, 512 depth, 510 program full
+fifo_generator_0 image_data_buffer_fifo_0 ( // 128 width, 512 depth, 510 program full
     .clk                                (clk_pixel),
     .srst                               (image_sender_reset | image_sender_flush | image_end_reached),  // rst -> srst 
     .din                                (image_buffer_fifo_din),
@@ -122,7 +122,7 @@ fifo_generator_0 image_data_buffer( // 128 width, 512 depth, 510 program full
 //////////////////////////////////////////////////////////////////////////////////
 always@(posedge clk_pixel) begin
     if( image_sender_reset == 1'b1 ) begin
-        rgb <= 24'hffffff;
+        rgb <= 24'hff_ff_ff;
         
         image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);
         image_send_start <= 1'b0;
@@ -185,15 +185,15 @@ always@(posedge clk_pixel) begin
                 (dram_last_addr <= DRAM_ADDR_WIDTH'(image_addr_upper) ) && 
                 ~dram_read_busy && 
                 ~image_buffer_fifo_full) begin // 10 buffer data is read from DRAM before discharge
-                dram_read_addr <= dram_last_addr + (DRAM_DATA_WIDTH >> 3);
+                dram_read_addr <= (dram_last_addr + (DRAM_DATA_WIDTH >> 3)) | 39'h04_0000_0000;
                 dram_last_addr <= dram_last_addr + (DRAM_DATA_WIDTH >> 3);
                 dram_read_en <= 1'b1;
                 dram_read_len <= 8'h0;
             end
             
             if( image_end_reached == 1'b1 ) begin
+                dram_read_addr <= DRAM_ADDR_WIDTH'(image_addr_lower) | 39'h04_0000_0000;
                 dram_last_addr <= DRAM_ADDR_WIDTH'(image_addr_lower);
-                dram_read_addr <= DRAM_ADDR_WIDTH'(image_addr_lower);
                 dram_read_en <= 1'b1;
                 dram_read_len <= 8'h0;
             end
