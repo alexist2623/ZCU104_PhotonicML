@@ -14,23 +14,25 @@ module ImageController
     parameter IMAGE_WIDTH                   = 100,
     parameter IMAGE_HEIGHT                  = 100,
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Configuraiton
-    //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH                = 32,
-    parameter AXI_DATA_WIDTH                = 128,
-    parameter AXI_STROBE_WIDTH              = AXI_DATA_WIDTH >> 3,
-    parameter AXI_STROBE_LEN                = 4, // LOG(AXI_STROBE_WDITH)
-    parameter FIFO_DEPTH                    = 512,
-    //////////////////////////////////////////////////////////////////////////////////
     // DRAM Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter DRAM_DATA_WIDTH               = 512
+    parameter DRAM_DATA_WIDTH               = 512,
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Configuraiton
+    //////////////////////////////////////////////////////////////////////////////////
+    parameter SAXI_ADDR_WIDTH               = 6,
+    parameter MAXI_ADDR_WIDTH               = 39,
+    parameter SAXI_DATA_WIDTH               = 128,
+    parameter MAXI_DATA_WIDTH               = DRAM_DATA_WIDTH,
+    parameter AXI_STROBE_WIDTH              = SAXI_DATA_WIDTH >> 3,
+    parameter AXI_STROBE_LEN                = 4, // LOG(AXI_STROBE_WDITH)
+    parameter FIFO_DEPTH                    = 512
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Slave Address Write
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire [AXI_ADDR_WIDTH - 1:0] s_axi_awaddr,
+    input  wire [SAXI_ADDR_WIDTH - 1:0] s_axi_awaddr,
     input  wire [15:0] s_axi_awid, 
     input  wire [1:0] s_axi_awburst,
     input  wire [2:0] s_axi_awsize,
@@ -50,7 +52,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Slave Data Write
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire [AXI_DATA_WIDTH - 1:0] s_axi_wdata,
+    input  wire [SAXI_DATA_WIDTH - 1:0] s_axi_wdata,
     input  wire [AXI_STROBE_WIDTH - 1:0] s_axi_wstrb,
     input  wire s_axi_wvalid,
     input  wire s_axi_wlast,
@@ -61,7 +63,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     input  wire [1:0] s_axi_arburst,
     input  wire [7:0] s_axi_arlen,
-    input  wire [AXI_ADDR_WIDTH - 1:0] s_axi_araddr,
+    input  wire [SAXI_ADDR_WIDTH - 1:0] s_axi_araddr,
     input  wire [2:0] s_axi_arsize,
     input  wire s_axi_arvalid,
     input  wire [15:0] s_axi_arid, // added to resolve wrapping error
@@ -73,7 +75,7 @@ module ImageController
     // AXI4 Slave Data Read
     //////////////////////////////////////////////////////////////////////////////////
     input  wire s_axi_rready,
-    output wire [AXI_DATA_WIDTH - 1:0] s_axi_rdata,
+    output wire [SAXI_DATA_WIDTH - 1:0] s_axi_rdata,
     output wire [1:0] s_axi_rresp,
     output wire s_axi_rvalid,
     output wire s_axi_rlast,
@@ -91,7 +93,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Address Write
     //////////////////////////////////////////////////////////////////////////////////
-    output wire [AXI_ADDR_WIDTH - 1:0] m_axi_awaddr,
+    output wire [MAXI_ADDR_WIDTH - 1:0] m_axi_awaddr,
     output wire [15:0] m_axi_awid, 
     output wire [1:0] m_axi_awburst,
     output wire [2:0] m_axi_awsize,
@@ -111,7 +113,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Data Write
     //////////////////////////////////////////////////////////////////////////////////
-    output wire [AXI_DATA_WIDTH - 1:0] m_axi_wdata,
+    output wire [MAXI_DATA_WIDTH - 1:0] m_axi_wdata,
     output wire [AXI_STROBE_WIDTH - 1:0] m_axi_wstrb,
     output wire m_axi_wvalid,
     output wire m_axi_wlast,
@@ -122,7 +124,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     output wire [1:0] m_axi_arburst,
     output wire [7:0] m_axi_arlen,
-    output wire [AXI_ADDR_WIDTH - 1:0] m_axi_araddr,
+    output wire [MAXI_ADDR_WIDTH - 1:0] m_axi_araddr,
     output wire [2:0] m_axi_arsize,
     output wire m_axi_arvalid,
     output wire [15:0] m_axi_arid, // added to resolve wrapping error
@@ -134,7 +136,7 @@ module ImageController
     // AXI4 Master Data Read
     //////////////////////////////////////////////////////////////////////////////////
     output wire m_axi_rready,
-    input  wire [AXI_DATA_WIDTH - 1:0] m_axi_rdata,
+    input  wire [MAXI_DATA_WIDTH - 1:0] m_axi_rdata,
     input  wire [1:0] m_axi_rresp,
     input  wire m_axi_rvalid,
     input  wire m_axi_rlast,
@@ -175,16 +177,16 @@ wire [127:0] image_sender_fifo_din;
 wire image_sender_full;
 wire image_sender_empty;
 
-wire [AXI_ADDR_WIDTH - 1:0] dram_read_addr;
+wire [MAXI_ADDR_WIDTH - 1:0] dram_read_addr;
 wire [7:0] dram_read_len;
 wire dram_read_en;
 
-wire [AXI_ADDR_WIDTH - 1:0] dram_write_addr;
+wire [MAXI_ADDR_WIDTH - 1:0] dram_write_addr;
 wire [7:0] dram_write_len;
 wire dram_write_en;
-wire [AXI_DATA_WIDTH - 1:0] dram_write_data;
+wire [SAXI_DATA_WIDTH - 1:0] dram_write_data;
 
-wire [DRAM_DATA_WIDTH - 1:0] dram_read_data;
+wire [MAXI_DATA_WIDTH - 1:0] dram_read_data;
 wire dram_read_data_valid;
 wire dram_write_busy;
 wire dram_read_busy;
@@ -198,8 +200,8 @@ AXI2FIFO
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    .AXI_ADDR_WIDTH                 (AXI_ADDR_WIDTH),
-    .AXI_DATA_WIDTH                 (AXI_DATA_WIDTH),
+    .AXI_ADDR_WIDTH                 (SAXI_ADDR_WIDTH),
+    .AXI_DATA_WIDTH                 (SAXI_DATA_WIDTH),
     .AXI_STROBE_WIDTH               (AXI_STROBE_WIDTH ),
     .AXI_STROBE_LEN                 (AXI_STROBE_LEN)
 )
@@ -284,7 +286,7 @@ axi2fifo_0
 //////////////////////////////////////////////////////////////////////////////////
 
 DRAM_Controller #(
-    .AXI_ADDR_WIDTH                 (AXI_ADDR_WIDTH),
+    .AXI_ADDR_WIDTH                 (MAXI_ADDR_WIDTH),
     .DRAM_DATA_WIDTH                (DRAM_DATA_WIDTH),
     .AXI_DATA_WIDTH                 (DRAM_DATA_WIDTH),
     .AXI_STROBE_WIDTH               (AXI_STROBE_WIDTH),
@@ -348,7 +350,8 @@ ImageSender #(
     .FIFO_DEPTH                     (FIFO_DEPTH),
     .IMAGE_WIDTH                    (IMAGE_WIDTH),
     .IMAGE_HEIGHT                   (IMAGE_HEIGHT),
-    .AXI_DATA_WIDTH                 (AXI_DATA_WIDTH)
+    .AXI_DATA_WIDTH                 (SAXI_DATA_WIDTH),
+    .DRAM_ADDR_WIDTH                (MAXI_ADDR_WIDTH)
 ) ImageSender_0 (
     .image_sender_reset             (image_sender_reset | ~s_axi_aresetn),
     .image_sender_flush             (image_sender_flush),

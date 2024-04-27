@@ -21,17 +21,6 @@ module GTH_serializer (
     output wire tmds_clk_n,
     output wire clk_pixel
 );
-//dummy wires
-wire [0:0] gtwiz_reset_rx_cdr_stable_out;
-wire [0:0] gtwiz_reset_tx_done_out;
-wire [0:0] gtwiz_reset_rx_done_out;
-wire [2:0] gtpowergood_out;
-wire [2:0] rxpmaresetdone_out;
-wire [2:0] txpmaresetdone_out;
-wire [2:0] txprgdivresetdone_out;
-wire locked;
-wire underflow;
-wire gtwiz_reset_clk_freerun_in_locked;
 
 reg [59:0] gtwiz_userdata_tx_in; //74.25MHz
 reg [59:0] gtwiz_userdata_tx_in_buffer; //148.5MHz
@@ -44,6 +33,18 @@ reg [9:0] gtwiz_reset_all_in;
 reg [0:0] gtwiz_reset_all_in_buffer1;
 reg [0:0] gtwiz_reset_all_in_buffer2;
 reg wait_reset;
+
+//dummy wires
+wire [0:0] gtwiz_reset_rx_cdr_stable_out;
+wire [0:0] gtwiz_reset_tx_done_out;
+wire [0:0] gtwiz_reset_rx_done_out;
+wire [2:0] gtpowergood_out;
+wire [2:0] rxpmaresetdone_out;
+wire [2:0] txpmaresetdone_out;
+wire [2:0] txprgdivresetdone_out;
+wire locked;
+wire underflow;
+wire gtwiz_reset_clk_freerun_in_locked;
 
 wire txoutclk_internal; //148.5MHz
 wire txoutclk_div2; // 74.25MHz
@@ -114,7 +115,7 @@ always@(posedge txoutclk_div2) begin // 74,25MHz
 end
 
 always@(posedge s_axi_clk) begin
-    {s_axi_resetn_buffer2, s_axi_resetn_buffer1} <= {s_axi_resetn_buffer1, s_axi_resetn}; // to relieve clock skew
+    {s_axi_resetn_buffer2, s_axi_resetn_buffer1} <= {s_axi_resetn_buffer1, s_axi_resetn}; // to relieve clock skew, not for CDC
     gtwiz_reset_all_in[9:0] <= {gtwiz_reset_all_in[8:0],1'b0}; // make 10 cycles of reset signal
     if( s_axi_resetn_buffer2 == 1'b0 ) begin
         wait_reset <= 1'b1;

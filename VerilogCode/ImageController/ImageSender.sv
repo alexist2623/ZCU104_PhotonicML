@@ -16,7 +16,8 @@ module ImageSender
     parameter IMAGE_BUFFER_DEPTH            = DRAM_DATA_WIDTH >> $clog2(IMAGE_BUFFER_FIFO_DIV),
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_ADDR_WIDTH                = 32,
-    parameter BUFFER_THRESHOLD              = 14
+    parameter BUFFER_THRESHOLD              = 14,
+    parameter DRAM_ADDR_WIDTH               = 39
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -38,11 +39,11 @@ module ImageSender
     //////////////////////////////////////////////////////////////////////////////////
     // DRAM Data Interface
     //////////////////////////////////////////////////////////////////////////////////
-    output  reg [AXI_ADDR_WIDTH - 1:0] dram_read_addr,
+    output  reg [DRAM_ADDR_WIDTH - 1:0] dram_read_addr,
     output  reg [7:0] dram_read_len,
     output  reg dram_read_en,
     
-    output  reg [AXI_ADDR_WIDTH - 1:0] dram_write_addr,
+    output  reg [DRAM_ADDR_WIDTH - 1:0] dram_write_addr,
     output  reg [7:0] dram_write_len,
     output  reg dram_write_en,
     output  reg [DRAM_DATA_WIDTH - 1:0] dram_write_data,
@@ -172,16 +173,16 @@ end
 //////////////////////////////////////////////////////////////////////////////////
 always@(posedge clk_pixel) begin
     if( image_sender_reset == 1'b1 ) begin
-        dram_read_addr <= AXI_ADDR_WIDTH'(0);
-        dram_last_addr <= AXI_ADDR_WIDTH'(0);
+        dram_read_addr <= DRAM_ADDR_WIDTH'(0);
+        dram_last_addr <= DRAM_ADDR_WIDTH'(0);
         dram_read_en <= 1'b0;
         dram_read_len <= 8'h0;
     end
     else begin
         dram_read_en <= 1'b0;
         if( image_send_start == 1'b1 ) begin
-            if( ( dram_last_addr < (image_addr_lower + image_current_addr + (DRAM_DATA_WIDTH >> 3) * BUFFER_THRESHOLD) ) && 
-                (dram_last_addr <= image_addr_upper) && 
+            if( ( dram_last_addr < DRAM_ADDR_WIDTH'(image_addr_lower + image_current_addr + (DRAM_DATA_WIDTH >> 3) * BUFFER_THRESHOLD) ) && 
+                (dram_last_addr <= DRAM_ADDR_WIDTH'(image_addr_upper) ) && 
                 ~dram_read_busy && 
                 ~image_buffer_fifo_full) begin // 10 buffer data is read from DRAM before discharge
                 dram_read_addr <= dram_last_addr + (DRAM_DATA_WIDTH >> 3);
@@ -191,8 +192,8 @@ always@(posedge clk_pixel) begin
             end
             
             if( image_end_reached == 1'b1 ) begin
-                dram_last_addr <= image_addr_lower;
-                dram_read_addr <= image_addr_lower;
+                dram_last_addr <= DRAM_ADDR_WIDTH'(image_addr_lower);
+                dram_read_addr <= DRAM_ADDR_WIDTH'(image_addr_lower);
                 dram_read_en <= 1'b1;
                 dram_read_len <= 8'h0;
             end
