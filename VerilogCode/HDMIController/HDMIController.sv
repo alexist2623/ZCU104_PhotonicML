@@ -57,7 +57,7 @@ module HDMIController
     // generating a signal from scratch instead of processing an
     // external signal.
     parameter int START_X = 0,
-    parameter int START_Y = 0
+    parameter int START_Y = 1000
 )
 (
     input wire clk_pixel,
