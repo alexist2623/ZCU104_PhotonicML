@@ -140,13 +140,16 @@ initial begin
     #4000;
     tb.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.fpga_soft_reset(4'h0);
     #15000;
-    tb.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.write_burst(IMAGE_CONTROLLER_ADDR, LEN, SIZE, BURST, LOCK, CACHE, PROT, DATA, DATASIZE, response1);
+    //tb.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.write_burst(IMAGE_CONTROLLER_ADDR, LEN, SIZE, BURST, LOCK, CACHE, PROT, DATA, DATASIZE, response1);
     #15000;
     //reset in clk_pixel region
     tb.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.write_data(MASTER_CONTROLLER_ADDR, 8'h10, 128'h00000000000000000000000000000000 + 4'b0010, response2);
     #100;
     //reset end
     tb.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.write_data(MASTER_CONTROLLER_ADDR, 8'h10, 128'h00000000000000000000000000000000 + 4'b0000, response2);
+    #100;
+    // write address 
+    tb.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.write_data(IMAGE_CONTROLLER_ADDR, 8'h10, 128'h0000_0004_0001_0000_0000_0004_0000_0000 + 4'b0000, response2);
     //auto start
     #100;
     tb.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.write_data(MASTER_CONTROLLER_ADDR, 8'h10, 128'h00000000000000000000000000000000 + 4'b1001, response2);

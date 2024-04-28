@@ -359,7 +359,6 @@ always @(posedge m_axi_aclk) begin
             end
             READ_DRAM_RDATA: begin
                 if( m_axi_rready == 1'b1 ) begin
-                    axi_state_read <= IDLE;
                     if( m_axi_rvalid == 1'b1 ) begin
                         dram_read_data <= m_axi_rdata;
                         if( m_axi_rlast == 1'b1 ) begin

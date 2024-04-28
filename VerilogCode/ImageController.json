@@ -10,7 +10,7 @@
         ]
     },
     "ip" : {
-        "fifo_generator_0" : {
+        "image_data_buffer_fifo" : {
             "name" : "fifo_generator",
             "version" : "13.2",
             "vendor" : "xilinx.com",
@@ -201,7 +201,7 @@
                 "wrch_type" : "FIFO"
             }
         },
-        "fifo_generator_1" : {
+        "image_address_fifo" : {
             "name" : "fifo_generator",
             "version" : "13.2",
             "vendor" : "xilinx.com",
