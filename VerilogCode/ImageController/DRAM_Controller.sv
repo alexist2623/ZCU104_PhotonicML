@@ -185,7 +185,7 @@ always @(posedge m_axi_aclk) begin
                 m_axi_awaddr <= AXI_ADDR_WIDTH'(0);
                 m_axi_awid <= 16'h0; 
                 m_axi_awburst <= 2'h0;
-                m_axi_awsize <= 3'h0;
+                m_axi_awsize <= 3'b110;
                 m_axi_awlen <= 8'h0;
                 m_axi_awvalid <= 1'b0;
                 m_axi_awuser <= 16'h0; // added to resolve wrapping error
@@ -204,7 +204,7 @@ always @(posedge m_axi_aclk) begin
                     m_axi_awaddr <= dram_write_addr;
                     m_axi_awid <= 16'h0; 
                     m_axi_awburst <= 2'h0;
-                    m_axi_awsize <= 3'b010; // 4 byte data
+                    m_axi_awsize <= 3'b110; // 4 byte data
                     m_axi_awlen <= dram_read_len;
                     m_axi_awvalid <= 1'b1;
                     m_axi_awuser <= 16'h0;
@@ -319,7 +319,7 @@ always @(posedge m_axi_aclk) begin
                 m_axi_arburst <= 2'h0;
                 m_axi_arlen <= 8'h0;
                 m_axi_araddr <= AXI_ADDR_WIDTH'(0);
-                m_axi_arsize <= 3'h0;
+                m_axi_arsize <= 3'b110;
                 m_axi_arvalid <= 1'b0;
                 m_axi_arid <= 16'h0;
                 m_axi_aruser <= 16'h0;
@@ -333,7 +333,7 @@ always @(posedge m_axi_aclk) begin
                     m_axi_arburst <= 2'h0;
                     m_axi_arlen <= dram_read_len;
                     m_axi_araddr <= dram_read_addr;
-                    m_axi_arsize <= 3'h0; // ?
+                    m_axi_arsize <= 3'b110; // ?
                     m_axi_arvalid <= 1'b1;
                     m_axi_arid <= 16'h0;
                     m_axi_aruser <= 16'h0;

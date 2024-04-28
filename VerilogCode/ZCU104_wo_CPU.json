@@ -1,0 +1,17 @@
+{
+    "block_diagram" : {
+        "project_name" : "ZCU104_Main",
+        "axi_offset" : "0xA0000000",
+        "json_path" : [
+            "HDMIController.json", 
+            "ImageController.json",
+            "MasterController.json"
+        ],
+        "output_ports" : [
+        ],
+        "input_ports" : [
+        ]
+    },
+    "bd_cell" : {
+    }
+}
