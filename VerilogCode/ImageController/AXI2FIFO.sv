@@ -29,7 +29,10 @@ module AXI2FIFO
     parameter AXI_DATA_WIDTH                    = 128,
     parameter AXI_STROBE_WIDTH                  = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN                    = 4, // LOG(AXI_STROBE_WDITH)
-    parameter FIFO_DEPTH                        = 512
+    parameter FIFO_DEPTH                        = 512,
+    parameter int BIT_WIDTH                     = 12,
+    parameter int BIT_HEIGHT                    = 11
+    
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +103,8 @@ module AXI2FIFO
     output reg  image_sender_flush, 
     output reg  image_sender_write,  
     output reg  [127:0] image_sender_fifo_din,
+    output reg  [BIT_WIDTH-1:0] image_width,
+    output reg  [BIT_HEIGHT-1:0] image_height,
     
     input  wire image_sender_full,  
     input  wire image_sender_empty, 
@@ -120,8 +125,9 @@ module AXI2FIFO
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 WRITE Address Space
 //////////////////////////////////////////////////////////////////////////////////
-localparam AXI_WRITE_FIFO        = {AXI_ADDR_WIDTH{1'b0}};
-localparam AXI_FLUSH_FIFO        = {AXI_ADDR_WIDTH{1'b0}} + 6'h10;
+localparam AXI_WRITE_FIFO        = AXI_ADDR_WIDTH'(6'h00);
+localparam AXI_FLUSH_FIFO        = AXI_ADDR_WIDTH'(6'h10);
+localparam AXI_WRITE_IMAGE_SIZE  = AXI_ADDR_WIDTH'(6'h20);
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 READ Address Space
@@ -135,8 +141,9 @@ localparam AXI_READ_FIFO         = {AXI_ADDR_WIDTH{1'b0}};
 localparam IDLE                  = 4'h0;
 localparam WRITE_DATA_WRITE_FIFO = 4'h2;
 localparam WRITE_DATA_FLUSH_FIFO = 4'h3;
-localparam ERROR_STATE           = 4'h4;
-localparam WRITE_RESPONSE        = 4'h5;
+localparam WRITE_IMAGE_SIZE      = 4'h4;
+localparam ERROR_STATE           = 4'h5;
+localparam WRITE_RESPONSE        = 4'h6;
 
 localparam READ_DATA             = 4'h2;
 localparam READ_ISEMPTY          = 4'h3;
@@ -283,6 +290,21 @@ always @(posedge s_axi_aclk) begin
                         axi_state_write <= WRITE_DATA_FLUSH_FIFO;
                     end
                     
+                    else if( s_axi_awaddr == AXI_WRITE_IMAGE_SIZE ) begin
+                        axi_waddr <= s_axi_awaddr;
+                        axi_waddr_base <= s_axi_awaddr;
+                        axi_wlen <= s_axi_awlen;
+                        axi_wsize <= s_axi_awsize;
+                        axi_wburst <= s_axi_awburst;
+                        axi_wlen_counter <= s_axi_awlen;
+                        axi_wshift_size <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count <= 8'h0;
+                        axi_awuser <= s_axi_awuser;
+                        axi_awid <= s_axi_awid;
+                        
+                        axi_state_write <= WRITE_IMAGE_SIZE;
+                    end
+                    
                     else begin
                         axi_waddr <= {AXI_ADDR_WIDTH{1'b0}};
                         axi_waddr_base <= {AXI_ADDR_WIDTH{1'b0}};
@@ -340,6 +362,16 @@ always @(posedge s_axi_aclk) begin
                     if( s_axi_wdata[1] == 1'b1 ) begin
                         data_receiver_flush <= 1'b1;
                     end
+                    if( s_axi_wlast == 1'b1 ) begin
+                        axi_state_write <= WRITE_RESPONSE;
+                    end
+                end
+            end
+            
+            WRITE_IMAGE_SIZE: begin
+                if( s_axi_wvalid == 1'b1 ) begin
+                    image_width <= BIT_WIDTH'(s_axi_wdata[63:32]);
+                    image_height <= BIT_HEIGHT'(s_axi_wdata[31:0]);
                     if( s_axi_wlast == 1'b1 ) begin
                         axi_state_write <= WRITE_RESPONSE;
                     end

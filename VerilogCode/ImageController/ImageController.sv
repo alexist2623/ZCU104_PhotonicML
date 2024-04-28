@@ -173,9 +173,10 @@ wire image_sender_reset;
 wire image_sender_flush;
 wire image_sender_write;
 wire [127:0] image_sender_fifo_din;
-
 wire image_sender_full;
 wire image_sender_empty;
+wire [BIT_WIDTH-1:0] image_width;
+wire [BIT_HEIGHT-1:0] image_height;
 
 wire [MAXI_ADDR_WIDTH - 1:0] dram_read_addr;
 wire [7:0] dram_read_len;
@@ -203,7 +204,9 @@ AXI2FIFO
     .AXI_ADDR_WIDTH                 (SAXI_ADDR_WIDTH),
     .AXI_DATA_WIDTH                 (SAXI_DATA_WIDTH),
     .AXI_STROBE_WIDTH               (AXI_STROBE_WIDTH ),
-    .AXI_STROBE_LEN                 (AXI_STROBE_LEN)
+    .AXI_STROBE_LEN                 (AXI_STROBE_LEN),
+    .BIT_WIDTH                      (BIT_WIDTH),
+    .BIT_HEIGHT                     (BIT_HEIGHT)
 )
 axi2fifo_0
 (
@@ -278,6 +281,8 @@ axi2fifo_0
     
     .image_sender_full              (image_sender_full),
     .image_sender_empty             (image_sender_empty),
+    .image_width                    (image_width),
+    .image_height                   (image_height),
     .data_num                       (data_num)
 );
 
@@ -342,12 +347,11 @@ DRAM_Controller #(
 //////////////////////////////////////////////////////////////////////////////////
 // ImageSender interface
 //////////////////////////////////////////////////////////////////////////////////
+    
 ImageSender #(
     .BIT_WIDTH                      (BIT_WIDTH),
     .BIT_HEIGHT                     (BIT_HEIGHT),
     .FIFO_DEPTH                     (FIFO_DEPTH),
-    .IMAGE_WIDTH                    (IMAGE_WIDTH),
-    .IMAGE_HEIGHT                   (IMAGE_HEIGHT),
     .AXI_DATA_WIDTH                 (SAXI_DATA_WIDTH),
     .DRAM_ADDR_WIDTH                (MAXI_ADDR_WIDTH)
 ) ImageSender_0 (
@@ -357,6 +361,8 @@ ImageSender #(
     .image_sender_fifo_din          (image_sender_fifo_din),
     .image_sender_full              (image_sender_full),
     .image_sender_empty             (image_sender_empty),
+    .image_width                    (image_width),
+    .image_height                   (image_height),
     .clk_pixel                      (m_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),

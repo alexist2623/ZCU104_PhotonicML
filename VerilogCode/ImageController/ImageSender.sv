@@ -10,8 +10,6 @@ module ImageSender
     parameter int BIT_HEIGHT                = 11,
     parameter FIFO_DEPTH                    = 256,
     parameter DRAM_DATA_WIDTH               = 512,
-    parameter IMAGE_WIDTH                   = 100,
-    parameter IMAGE_HEIGHT                  = 100,
     parameter IMAGE_BUFFER_FIFO_DIV         = 4,
     parameter IMAGE_BUFFER_DEPTH            = DRAM_DATA_WIDTH >> $clog2(IMAGE_BUFFER_FIFO_DIV),
     parameter IMAGE_CHANGE_TIME             = 10,
@@ -33,6 +31,8 @@ module ImageSender
     input  wire [BIT_HEIGHT-1:0] cy,                    // Current Image y coordinate
     input  wire auto_start,                             // Signal which initiate modules
     input  wire image_change,                           // External signal which requires new image(e.g. Camera )
+    input  wire [BIT_WIDTH-1:0] image_width,
+    input  wire [BIT_HEIGHT-1:0] image_height,
     
     output wire image_sender_full,
     output wire image_sender_empty,
@@ -91,9 +91,13 @@ wire image_initial_trigger;
 
 wire dram_address_rd_en;
 
-
-assign image_discharge_en       = ( ( (SCREEN_HEIGHT >> 1) - (IMAGE_HEIGHT >> 1) < cy_buffer ) && ( cy_buffer <= (SCREEN_HEIGHT >> 1) + (IMAGE_HEIGHT >> 1) ) ) 
-                                    && ( ( (SCREEN_WIDTH >> 1) - (IMAGE_WIDTH >> 1) < cx_buffer ) && ( cx_buffer <= (SCREEN_WIDTH >> 1) + (IMAGE_WIDTH >> 1) ) )
+// for 10 x 10 size frame, 2 x 2 size image
+// only 4, 5 index of image should be discharged
+// so 10 >> 1 - 2 >> 1 = 4, 10 >> 1 + 2 >> 1 = 6
+//  for 3 x 3 size image, 4, 5, 6 of index of image should be discharged
+// so  10 >> - 3 >> 1 = 4 , 10 >> 1 + 3 >> 1 + 1= 7
+assign image_discharge_en       = ( ( (SCREEN_HEIGHT >> 1) - (image_height >> 1) <= cy_buffer ) && ( cy_buffer < (SCREEN_HEIGHT >> 1) + (image_height >> 1) + image_height[0] ) ) 
+                                    && ( ( (SCREEN_WIDTH >> 1) - (image_width >> 1) <= cx_buffer ) && ( cx_buffer < (SCREEN_WIDTH >> 1) + (image_width >> 1) + image_width[0] ) )
                                     && (image_send_start == 1'b1); // discharge image only when cx, and cy is in image section
 assign image_buffer_fifo_rd_en  = image_discharge_en && (image_buffer_index == (IMAGE_BUFFER_LEN - 1));
 assign image_flush_trigger      = ( cx_buffer == (FRAME_WIDTH - 1) ) && ( cy_buffer == (FRAME_HEIGHT - 1 - IMAGE_CHANGE_TIME) );
@@ -190,6 +194,7 @@ always@(posedge clk_pixel) begin
         dram_read_len <= 8'h0;
     end
     else begin
+        dram_buffer <= dram_read_data;
         if(~dram_read_busy) begin
             dram_read_en <= 1'b0;
         end
