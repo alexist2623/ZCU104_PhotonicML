@@ -716,7 +716,7 @@
                 "USE_STATUS" : "false"
             }
         },
-        "fifo_generator_0" : {
+        "GTH_serializer_async_fifo" : {
             "name" : "fifo_generator",
             "version" : "13.2",
             "vendor" : "xilinx.com",

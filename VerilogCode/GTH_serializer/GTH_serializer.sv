@@ -171,7 +171,7 @@ OBUFDS #(
     .I                                       (txoutclk_delayed)
 );
 
-fifo_generator_0 async_fifo
+GTH_serializer_async_fifo GTH_serializer_async_fifo_0
 (
     .wr_clk                                  (txoutclk_internal), //148.5MHz
     .rd_clk                                  (txoutclk_div2), //74.25MHz
