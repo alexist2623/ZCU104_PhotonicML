@@ -4,7 +4,7 @@
         "axi_offset" : "0xA0000000",
         "json_path" : [
             "HDMIController.json", 
-            "ImageController.json",
+            "ImageControllerIRQ.json",
             "MasterController.json"
         ],
         "output_ports" : [

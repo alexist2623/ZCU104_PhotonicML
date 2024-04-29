@@ -123,6 +123,7 @@ wire [DRAM_ADDR_WIDTH - 1:0] dram_write_addr;
 wire [7:0] dram_write_len;
 wire dram_write_en;
 wire [SAXI_DATA_WIDTH - 1:0] dram_write_data;
+wire dram_buffer_full;
 
 wire [DRAM_DATA_WIDTH - 1:0] dram_read_data;
 wire dram_read_data_valid;
@@ -233,6 +234,7 @@ axi2fifo_0
     .dram_read_data                 (dram_read_data),
     .dram_read_data_valid           (dram_read_data_valid),
     .dram_read_busy                 (dram_read_busy),
+    .dram_buffer_full               (dram_buffer_full),
     
     .dram_write_addr                (dram_write_addr),
     .dram_write_len                 (dram_write_len),
@@ -262,7 +264,7 @@ ImageSender #(
     .image_width                    (image_width),
     .image_height                   (image_height),
     .image_change                   (image_change),
-    .clk_pixel                      (m_axi_aclk),
+    .clk_pixel                      (s_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),
     .cy                             (cy),
@@ -274,6 +276,7 @@ ImageSender #(
     .dram_read_data                 (dram_read_data),
     .dram_read_data_valid           (dram_read_data_valid),
     .dram_read_busy                 (dram_read_busy),
+    .dram_buffer_full               (dram_buffer_full),
     
     .dram_write_addr                (dram_write_addr),
     .dram_write_len                 (dram_write_len),

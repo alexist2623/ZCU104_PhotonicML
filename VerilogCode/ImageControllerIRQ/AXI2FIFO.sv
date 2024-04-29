@@ -248,6 +248,8 @@ always @(posedge s_axi_aclk) begin
                 s_axi_bvalid <= 1'b0;
                 axi_awuser <= 16'h0;
                 axi_awid <= 16'h0;
+                dram_read_data_valid <= 1'b0;
+                
                 if( dram_read_en == 1'b1 ) begin
                     dram_read_busy <= 1'b1;
                 end
@@ -408,6 +410,7 @@ always @(posedge s_axi_aclk) begin
                         if( s_axi_wlast == 1'b1 ) begin
                             axi_state_write <= WRITE_RESPONSE;
                             dram_read_busy <= 1'b0;
+                            dram_read_data_valid <= 1'b0;
                         end
                     end
                     else begin
@@ -494,7 +497,7 @@ always @(posedge s_axi_aclk) begin
                     axi_arid <= s_axi_arid;
                     axi_aruser <= s_axi_aruser;
                     
-                    if( s_axi_araddr == READ_DRAM_ADDR ) begin
+                    if( s_axi_araddr == AXI_READ_DRAM_ADDR ) begin
                         axi_state_read <= READ_DRAM_ADDR;
                     end
                     else begin
