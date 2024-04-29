@@ -194,8 +194,8 @@ end
    
 
 int i = 0; 
-//localparam DATA_LEN = 100;
-localparam DATA_LEN = 4050;
+localparam DATA_LEN = 100;
+//localparam DATA_LEN = 4050;
 
 initial begin
 // Initialize write signals
