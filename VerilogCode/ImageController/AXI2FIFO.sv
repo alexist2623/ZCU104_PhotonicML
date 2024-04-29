@@ -197,7 +197,8 @@ end
 assign s_axi_awready = (axi_state_write == IDLE);
 assign s_axi_wready  = ((axi_state_write == WRITE_DATA_WRITE_FIFO) 
                         && (image_sender_full == 1'b0)) 
-                        || (axi_state_write == WRITE_DATA_FLUSH_FIFO);
+                        || (axi_state_write == WRITE_DATA_FLUSH_FIFO)
+                        || (axi_state_write == WRITE_IMAGE_SIZE);
 assign s_axi_arready = (axi_state_read == IDLE);
 assign data_receiver_rd_en = (~data_receiver_empty) & (~data_receiver_full);
 assign image_sender_reset = ~s_axi_aresetn;

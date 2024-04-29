@@ -57,7 +57,7 @@ module ImageSender
 
 localparam BYTE_SIZE = 8;
 localparam IMAGE_BUFFER_LEN = (IMAGE_BUFFER_DEPTH >> 3);
-localparam IMAGE_BUFFER_WIDTH = $clog2(IMAGE_BUFFER_DEPTH);
+localparam IMAGE_BUFFER_WIDTH = $clog2(IMAGE_BUFFER_LEN);
 localparam IMAGE_BUFFER_FIFO_DIV_LEN = $clog2(IMAGE_BUFFER_FIFO_DIV);
 localparam CX_BUFFER_TRIGGER_VALUE = (FRAME_WIDTH - 3);
 localparam CX_BUFFER_SET_VALUE = (FRAME_WIDTH - 1);
@@ -159,6 +159,9 @@ always@(posedge clk_pixel) begin
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
+                if( image_buffer_index == IMAGE_BUFFER_WIDTH'(IMAGE_BUFFER_LEN - 1)) begin
+                    image_buffer_index <= IMAGE_BUFFER_WIDTH'(0);
+                end
             end
             else begin
                 rgb[23:0] <= 24'h0;
@@ -229,15 +232,16 @@ always@(posedge clk_pixel) begin
         image_buffer_fifo_wr_en <= 1'b0;
     end
     else begin
-        image_buffer_fifo_wr_en <= dram_read_data_valid;
-        image_buffer_fifo_din_select <= IMAGE_BUFFER_FIFO_DIV_LEN'(dram_read_data_valid);
-        image_buffer_fifo_wr_en <= dram_read_data_valid;
         if( image_buffer_fifo_wr_en ) begin
             image_buffer_fifo_din_select <= image_buffer_fifo_din_select + 1;
-            if(image_buffer_fifo_din_select == IMAGE_BUFFER_FIFO_DIV_LEN'(8'hff)) begin
+            if(image_buffer_fifo_din_select == IMAGE_BUFFER_FIFO_DIV_LEN'(4'hf)) begin
                 image_buffer_fifo_din_select <= IMAGE_BUFFER_FIFO_DIV_LEN'(0);
                 image_buffer_fifo_wr_en <= 1'b0;
             end
+        end
+        else begin
+            image_buffer_fifo_din_select <= IMAGE_BUFFER_FIFO_DIV_LEN'(0);
+            image_buffer_fifo_wr_en <= dram_read_data_valid;
         end
     end
 end

@@ -68,6 +68,7 @@ reg                     s_axi_aresetn;
 wire [9:0]              tmds0_10bit_0;
 wire [9:0]              tmds1_10bit_0;
 wire [9:0]              tmds2_10bit_0;
+reg                     image_change;
 
 wire                    sys_rst; //Common port for all controllers
 wire                    c0_init_calib_complete;
@@ -152,7 +153,8 @@ ZCU104_Main_blk_wrapper zcu104_main_blk_wrapper_inst (
     .sys_rst                            (sys_rst),
     .tmds0_10bit_0                      (tmds0_10bit_0),
     .tmds1_10bit_0                      (tmds1_10bit_0),
-    .tmds2_10bit_0                      (tmds2_10bit_0)
+    .tmds2_10bit_0                      (tmds2_10bit_0),
+    .image_change                       (image_change)
 );
 
 dram_sim dram_sim_0(
@@ -192,10 +194,12 @@ end
    
 
 int i = 0; 
-localparam DATA_LEN = 100;
+//localparam DATA_LEN = 100;
+localparam DATA_LEN = 4050;
 
 initial begin
-// Initialize write signals    
+// Initialize write signals
+    image_change <= 1'b0;    
     S00_AXI_0_araddr <= 39'h0;
     S00_AXI_0_arburst <= 2'b00;
     S00_AXI_0_arcache <= 4'b0000;
@@ -241,7 +245,6 @@ initial begin
         S00_AXI_0_wstrb <= 64'hFFFF_FFFF_FFFF_FFFF; // All bytes are valid
         S00_AXI_0_wlast <= 1;
         S00_AXI_0_wvalid <= 1;
-        S00_AXI_0_rready <= 1;
         S00_AXI_0_bready <= 1'b1;
         
         // Wait for AWREADY and then de-assert AWVALID
@@ -270,7 +273,6 @@ initial begin
     S00_AXI_0_wstrb <= 64'h0000_0000_0000_FFFF; // All bytes are valid
     S00_AXI_0_wlast <= 1;
     S00_AXI_0_wvalid <= 1;
-    S00_AXI_0_rready <= 1;
     S00_AXI_0_bready <= 1'b1;
     
     // Wait for AWREADY and then de-assert AWVALID
@@ -287,8 +289,16 @@ initial begin
     wait(S00_AXI_0_bvalid);
     wait(~S00_AXI_0_bvalid);
     S00_AXI_0_bready <= 0;
+        
+    S00_AXI_0_awaddr <= 39'h0; // Example write address
+    S00_AXI_0_awvalid <= 0;
+    S00_AXI_0_wdata <= 512'h0; // Example write data
+    S00_AXI_0_wstrb <= 64'h0; // All bytes are valid
+    S00_AXI_0_wlast <= 0;
+    S00_AXI_0_wvalid <= 0;
+    S00_AXI_0_bready <= 0;
+    #1000;
     
-    #100;
     
     //////////////////////////////////////////////////////////////////////////////////
     // Write DISABLE RESET command to MasterController
@@ -317,18 +327,24 @@ initial begin
     wait(~S00_AXI_0_bvalid);
     S00_AXI_0_bready <= 0;
     
-    #100;
+        
+    S00_AXI_0_awaddr <= 39'h0; // Example write address
+    S00_AXI_0_awvalid <= 0;
+    S00_AXI_0_wdata <= 512'h0; // Example write data
+    S00_AXI_0_wstrb <= 64'h0; // All bytes are valid
+    S00_AXI_0_wlast <= 0;
+    S00_AXI_0_wvalid <= 0;
+    S00_AXI_0_bready <= 0;
+    #1000;
     
     //////////////////////////////////////////////////////////////////////////////////
     // Write to ImageController
     //////////////////////////////////////////////////////////////////////////////////
-    S00_AXI_0_awaddr <= 39'h00_A001_0000; // Example write address
+    S00_AXI_0_awaddr <= 39'h00_A001_0020; // Example write address
     S00_AXI_0_awvalid <= 1;
-    S00_AXI_0_wdata <= 512'(39'h04_0000_0000 | ( (39'h04_0000_0000 | DATA_LEN * 39'h40) << 64 )); // Example write data
-    S00_AXI_0_wstrb <= 64'h0000_0000_0000_FFFF; // All bytes are valid
-    S00_AXI_0_wlast <= 1;
+    S00_AXI_0_wdata <= 512'(128'h78000000438 << 256); // To align to 512 bit width of axi memory interface, 256 bit is shifted
+    S00_AXI_0_wstrb <= 64'h0000_FFFF_0000_0000; // All bytes are valid
     S00_AXI_0_wvalid <= 1;
-    S00_AXI_0_rready <= 1;
     S00_AXI_0_bready <= 1'b1;
     
     // Wait for AWREADY and then de-assert AWVALID
@@ -338,14 +354,45 @@ initial begin
     
     // Wait for WREADY and then de-assert WVALID
     wait(S00_AXI_0_wready);
+    S00_AXI_0_wlast <= 1;
     wait(~S00_AXI_0_wready);
     S00_AXI_0_wvalid <= 0;
+    S00_AXI_0_wlast <= 0;
     
     // Wait for BVALID and then de-assert BREADY
     wait(S00_AXI_0_bvalid);
     wait(~S00_AXI_0_bvalid);
     S00_AXI_0_bready <= 0;
     
+    #1000;
+    //////////////////////////////////////////////////////////////////////////////////
+    // Write to ImageController
+    //////////////////////////////////////////////////////////////////////////////////
+    S00_AXI_0_awaddr <= 39'h00_A001_0000; // Example write address
+    S00_AXI_0_awvalid <= 1;
+    S00_AXI_0_wdata <= 512'(39'h04_0000_0000 | ( (39'h04_0000_0000 | DATA_LEN * 39'h40) << 64 )); // Example write data
+    S00_AXI_0_wstrb <= 64'h0000_0000_0000_FFFF; // All bytes are valid
+    S00_AXI_0_wvalid <= 1;
+    S00_AXI_0_bready <= 1'b1;
+    
+    // Wait for AWREADY and then de-assert AWVALID
+    wait(S00_AXI_0_awready);
+    wait(~S00_AXI_0_awready);
+    S00_AXI_0_awvalid <= 0;
+    
+    // Wait for WREADY and then de-assert WVALID
+    wait(S00_AXI_0_wready);
+    S00_AXI_0_wlast <= 1;
+    wait(~S00_AXI_0_wready);
+    S00_AXI_0_wvalid <= 0;
+    S00_AXI_0_wlast <= 0;
+    
+    // Wait for BVALID and then de-assert BREADY
+    wait(S00_AXI_0_bvalid);
+    wait(~S00_AXI_0_bvalid);
+    S00_AXI_0_bready <= 0;
+    
+    #1000;
     //////////////////////////////////////////////////////////////////////////////////
     // Write AUTOSTART command to MasterController
     //////////////////////////////////////////////////////////////////////////////////

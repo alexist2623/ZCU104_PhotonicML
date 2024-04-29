@@ -162,6 +162,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     input  wire [BIT_WIDTH-1:0] cx,
     input  wire [BIT_HEIGHT-1:0] cy,
+    input  wire image_change,
     output wire [23:0] rgb
 );
 
@@ -363,6 +364,7 @@ ImageSender #(
     .image_sender_empty             (image_sender_empty),
     .image_width                    (image_width),
     .image_height                   (image_height),
+    .image_change                   (image_change),
     .clk_pixel                      (m_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),
