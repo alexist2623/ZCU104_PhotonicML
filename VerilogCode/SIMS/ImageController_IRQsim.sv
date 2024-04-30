@@ -72,6 +72,7 @@ reg                     image_change;
 wire                    irq_signal;
 
 reg [127:0]             wdata_buffer;
+reg                     write_data_resp;
 
 ZCU104_Main_blk_wrapper zcu104_main_blk_wrapper_inst (
     .S00_AXI_0_araddr                   (S00_AXI_0_araddr),
@@ -169,6 +170,7 @@ initial begin
     S00_AXI_0_wstrb <= 16'hffff;
     S00_AXI_0_wvalid <= 1'b0;
     s_axi_aresetn <= 1'b0;
+    write_data_resp <= 1'b0;
 
     #10000;
     s_axi_aresetn <= 1'b1;
@@ -391,6 +393,45 @@ initial begin
         // Wait for BVALID and then de-assert BREADY
         wait(S00_AXI_0_bvalid);
         S00_AXI_0_bready <= 0;
+        write_data_resp <= 1;
+    end
+end
+
+initial begin
+    forever begin
+        //////////////////////////////////////////////////////////////////////////////////
+        // Write to ImageController
+        //////////////////////////////////////////////////////////////////////////////////
+        wait(~write_data_resp);
+        wait(write_data_resp);
+        #8;
+        S00_AXI_0_awaddr <= 39'h00_A001_0040; // Example write address
+        S00_AXI_0_awvalid <= 1;
+        S00_AXI_0_wdata <= 128'(1);
+        S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
+        S00_AXI_0_wvalid <= 1;
+        S00_AXI_0_bready <= 1'b1;
+        S00_AXI_0_awlen <= 8'h0;
+        S00_AXI_0_wlast <= 0;
+        
+        // Wait for AWREADY and then de-assert AWVALID
+        wait(S00_AXI_0_awready);
+        wait(~S00_AXI_0_awready);
+        S00_AXI_0_awvalid <= 0;
+        
+        // Wait for WREADY and then de-assert WVALID
+        wait(S00_AXI_0_wready);
+        S00_AXI_0_wvalid <= 1;
+        S00_AXI_0_wlast <= 1;
+        
+        wait(~S00_AXI_0_wready);
+        S00_AXI_0_wvalid <= 0;
+        S00_AXI_0_wlast <= 0;
+        
+        // Wait for BVALID and then de-assert BREADY
+        wait(S00_AXI_0_bvalid);
+        S00_AXI_0_bready <= 0;
+        write_data_resp <= 0;
     end
 end
 

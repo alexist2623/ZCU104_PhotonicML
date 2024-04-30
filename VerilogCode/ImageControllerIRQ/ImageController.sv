@@ -18,10 +18,10 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter SAXI_ADDR_WIDTH               = 6,
+    parameter SAXI_ADDR_WIDTH               = 7,
     parameter SAXI_DATA_WIDTH               = 128,
     parameter AXI_STROBE_WIDTH              = SAXI_DATA_WIDTH >> 3,
-    parameter AXI_STROBE_LEN                = 4, // LOG(AXI_STROBE_WDITH)
+    parameter AXI_STROBE_LEN                = $clog2(AXI_STROBE_WIDTH),
     parameter FIFO_DEPTH                    = 512
 )
 (

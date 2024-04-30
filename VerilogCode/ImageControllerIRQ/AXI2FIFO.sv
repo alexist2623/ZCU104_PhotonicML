@@ -25,7 +25,7 @@ module AXI2FIFO
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH                    = 32,
+    parameter AXI_ADDR_WIDTH                    = 7,
     parameter AXI_DATA_WIDTH                    = 128,
     parameter AXI_STROBE_WIDTH                  = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN                    = 4, // LOG(AXI_STROBE_WDITH)
@@ -133,15 +133,16 @@ module AXI2FIFO
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 WRITE Address Space
 //////////////////////////////////////////////////////////////////////////////////
-localparam AXI_WRITE_FIFO        = AXI_ADDR_WIDTH'(6'h00);
-localparam AXI_FLUSH_FIFO        = AXI_ADDR_WIDTH'(6'h10);
-localparam AXI_WRITE_IMAGE_SIZE  = AXI_ADDR_WIDTH'(6'h20);
-localparam AXI_WRITE_DATA_BUFFER = AXI_ADDR_WIDTH'(6'h30);
+localparam AXI_WRITE_FIFO        = AXI_ADDR_WIDTH'(7'h00);
+localparam AXI_FLUSH_FIFO        = AXI_ADDR_WIDTH'(7'h10);
+localparam AXI_WRITE_IMAGE_SIZE  = AXI_ADDR_WIDTH'(7'h20);
+localparam AXI_WRITE_DATA_BUFFER = AXI_ADDR_WIDTH'(7'h30);
+localparam AXI_WRITE_DATA_DONE   = AXI_ADDR_WIDTH'(7'h40);
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 READ Address Space
 //////////////////////////////////////////////////////////////////////////////////
-localparam AXI_READ_DRAM_ADDR    = AXI_ADDR_WIDTH'(6'h00);
+localparam AXI_READ_DRAM_ADDR    = AXI_ADDR_WIDTH'(7'h00);
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
@@ -151,8 +152,9 @@ localparam WRITE_FIFO            = 4'h2;
 localparam WRITE_FLUSH_FIFO      = 4'h3;
 localparam WRITE_IMAGE_SIZE      = 4'h4;
 localparam WRITE_DATA_BUFFER     = 4'h5;
-localparam ERROR_STATE           = 4'h6;
-localparam WRITE_RESPONSE        = 4'h7;
+localparam WRITE_DATA_DONE       = 4'h6;
+localparam ERROR_STATE           = 4'h7;
+localparam WRITE_RESPONSE        = 4'h8;
 
 localparam READ_DRAM_ADDR        = 4'h1;
 localparam READ_ERROR_STATE      = 4'h2;
@@ -189,6 +191,12 @@ reg [15:0] axi_arid;
 reg [15:0] axi_aruser;
 
 //////////////////////////////////////////////////////////////////////////////////
+// Miscellaneous Data Buffer
+//////////////////////////////////////////////////////////////////////////////////
+reg dram_read_busy_buffer;  // This register buffer is used to set dram_read_busy 
+                            //value in AXI IDLE to guarantee AXI write transaction is ended
+
+//////////////////////////////////////////////////////////////////////////////////
 // AXI4 FSM State initialization
 // For simulation, each state was initiated to IDLE state.
 //////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +214,8 @@ assign s_axi_wready  = ((axi_state_write == WRITE_FIFO)
                         && (image_sender_full == 1'b0)) 
                         || (axi_state_write == WRITE_FLUSH_FIFO)
                         || (axi_state_write == WRITE_IMAGE_SIZE)
-                        || (axi_state_write == WRITE_DATA_BUFFER);
+                        || (axi_state_write == WRITE_DATA_BUFFER)
+                        || (axi_state_write == WRITE_DATA_DONE);
 assign s_axi_arready = (axi_state_read == IDLE);
 assign image_sender_reset = ~s_axi_aresetn;
 
@@ -235,6 +244,7 @@ always @(posedge s_axi_aclk) begin
         axi_awid <= 16'h0;
         axi_awuser <= 16'h0;
         dram_read_busy <= 1'b0;
+        dram_read_busy_buffer <= 1'b0;
     end
     
     else begin
@@ -249,8 +259,10 @@ always @(posedge s_axi_aclk) begin
                 axi_awuser <= 16'h0;
                 axi_awid <= 16'h0;
                 dram_read_data_valid <= 1'b0;
+                dram_read_busy <= dram_read_busy_buffer;
                 
                 if( dram_read_en == 1'b1 ) begin
+                    dram_read_busy_buffer <= 1'b1;
                     dram_read_busy <= 1'b1;
                 end
                 
@@ -332,6 +344,21 @@ always @(posedge s_axi_aclk) begin
                         axi_state_write <= WRITE_DATA_BUFFER;
                     end
                     
+                    else if( s_axi_awaddr == AXI_WRITE_DATA_DONE ) begin
+                        axi_waddr <= s_axi_awaddr;
+                        axi_waddr_base <= s_axi_awaddr;
+                        axi_wlen <= s_axi_awlen;
+                        axi_wsize <= s_axi_awsize;
+                        axi_wburst <= s_axi_awburst;
+                        axi_wlen_counter <= s_axi_awlen;
+                        axi_wshift_size <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count <= 8'h0;
+                        axi_awuser <= s_axi_awuser;
+                        axi_awid <= s_axi_awid;
+                        
+                        axi_state_write <= WRITE_DATA_DONE;
+                    end
+                    
                     else begin
                         axi_waddr <= AXI_ADDR_WIDTH'(0);
                         axi_waddr_base <= AXI_ADDR_WIDTH'(0);
@@ -409,7 +436,6 @@ always @(posedge s_axi_aclk) begin
                         dram_read_data_valid <= 1'b1;
                         if( s_axi_wlast == 1'b1 ) begin
                             axi_state_write <= WRITE_RESPONSE;
-                            dram_read_busy <= 1'b0;
                             dram_read_data_valid <= 1'b0;
                         end
                     end
@@ -421,6 +447,15 @@ always @(posedge s_axi_aclk) begin
                 else begin
                     dram_read_data <= AXI_DATA_WIDTH'(0);
                     dram_read_data_valid <= 1'b0;
+                end
+            end
+            
+            WRITE_DATA_DONE : begin
+                if( s_axi_wvalid == 1'b1 ) begin
+                    dram_read_busy_buffer <= 1'b0;
+                    if( s_axi_wlast == 1'b1 ) begin
+                        axi_state_write <= WRITE_RESPONSE;
+                    end
                 end
             end
             
