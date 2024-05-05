@@ -8,13 +8,13 @@ module ImageSender
     parameter SCREEN_HEIGHT                 = 1080,
     parameter int BIT_WIDTH                 = 12,
     parameter int BIT_HEIGHT                = 11,
-    parameter FIFO_DEPTH                    = 256,
+    parameter FIFO_DEPTH                    = 512,
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_ADDR_WIDTH                = 32,
-    parameter BUFFER_THRESHOLD              = 14,
+    parameter BUFFER_THRESHOLD              = 240,
     parameter DRAM_ADDR_WIDTH               = 39,
     parameter DRAM_DATA_WIDTH               = 128,
-    parameter DRAM_DATA_LEN                 = 4,
+    parameter DRAM_DATA_LEN                 = 240,
     parameter IMAGE_BUFFER_DEPTH            = DRAM_DATA_WIDTH,
     parameter IMAGE_CHANGE_TIME             = 10
 )
@@ -142,7 +142,6 @@ always@(posedge clk_pixel) begin
         image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);
         image_send_start <= 1'b0;
         image_change_buffer <= 1'b0;
-        dram_current_addr <= AXI_ADDR_WIDTH'(0);
         image_flush_trigger_buffer <= 1'b0;
     end
     else begin
@@ -153,7 +152,6 @@ always@(posedge clk_pixel) begin
             //////////////////////////////////////////////////////////////////////////////////
             if( image_discharge_en )begin
                 image_buffer_index <= image_buffer_index + 1;
-                dram_current_addr <= dram_current_addr + 1;
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
@@ -193,6 +191,7 @@ always@(posedge clk_pixel) begin
         dram_last_addr <= 64'h0;
         dram_read_en <= 1'b0;
         dram_read_len <= 8'h0;
+        dram_current_addr <= AXI_ADDR_WIDTH'(0);
     end
     else begin
         dram_read_en <= 1'b0;
@@ -214,6 +213,9 @@ always@(posedge clk_pixel) begin
                 dram_read_len <= 8'(DRAM_DATA_LEN);
                 dram_current_addr <= image_addr_lower;
             end
+        end
+        if( image_send_start == 1'b1 && image_discharge_en ) begin
+            dram_current_addr <= dram_current_addr + 1;
         end
     end
 end

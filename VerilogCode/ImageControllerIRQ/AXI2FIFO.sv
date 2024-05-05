@@ -127,7 +127,8 @@ module AXI2FIFO
     output reg  [DRAM_DATA_WIDTH - 1:0] dram_read_data,
     output reg  dram_read_data_valid,
     output reg  dram_write_busy,
-    output reg  dram_read_busy
+    output reg  dram_read_busy,
+    output reg  irq_signal
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +246,7 @@ always @(posedge s_axi_aclk) begin
         axi_awuser <= 16'h0;
         dram_read_busy <= 1'b0;
         dram_read_busy_buffer <= 1'b0;
+        irq_signal <= 1'b0;
     end
     
     else begin
@@ -264,6 +266,7 @@ always @(posedge s_axi_aclk) begin
                 if( dram_read_en == 1'b1 ) begin
                     dram_read_busy_buffer <= 1'b1;
                     dram_read_busy <= 1'b1;
+                    irq_signal <= 1'b1;
                 end
                 
                 if( s_axi_awvalid == 1'b1 ) begin
@@ -455,6 +458,7 @@ always @(posedge s_axi_aclk) begin
                     dram_read_busy_buffer <= 1'b0;
                     if( s_axi_wlast == 1'b1 ) begin
                         axi_state_write <= WRITE_RESPONSE;
+                        irq_signal <= 1'b0;
                     end
                 end
             end

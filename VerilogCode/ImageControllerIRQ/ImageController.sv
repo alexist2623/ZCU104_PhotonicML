@@ -99,7 +99,7 @@ module ImageController
     input  wire [BIT_HEIGHT-1:0] cy,
     input  wire image_change,
     output wire [23:0] rgb,
-    output reg  irq_signal
+    output wire irq_signal
 );
 
 
@@ -130,9 +130,6 @@ wire dram_read_data_valid;
 wire dram_write_busy;
 wire dram_read_busy;
 
-always@(posedge s_axi_aclk) begin
-    irq_signal <= dram_read_en;
-end
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI2FIFO Declaration
@@ -240,7 +237,8 @@ axi2fifo_0
     .dram_write_len                 (dram_write_len),
     .dram_write_en                  (dram_write_en),
     .dram_write_data                (dram_write_data),
-    .dram_write_busy                (dram_write_busy)
+    .dram_write_busy                (dram_write_busy),
+    .irq_signal                     (irq_signal)
 );
 
 //////////////////////////////////////////////////////////////////////////////////

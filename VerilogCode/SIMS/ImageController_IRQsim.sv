@@ -393,17 +393,10 @@ initial begin
         // Wait for BVALID and then de-assert BREADY
         wait(S00_AXI_0_bvalid);
         S00_AXI_0_bready <= 0;
-        write_data_resp <= 1;
-    end
-end
-
-initial begin
-    forever begin
         //////////////////////////////////////////////////////////////////////////////////
         // Write to ImageController
         //////////////////////////////////////////////////////////////////////////////////
-        wait(~write_data_resp);
-        wait(write_data_resp);
+        
         #8;
         S00_AXI_0_awaddr <= 39'h00_A001_0040; // Example write address
         S00_AXI_0_awvalid <= 1;
@@ -431,7 +424,6 @@ initial begin
         // Wait for BVALID and then de-assert BREADY
         wait(S00_AXI_0_bvalid);
         S00_AXI_0_bready <= 0;
-        write_data_resp <= 0;
     end
 end
 
