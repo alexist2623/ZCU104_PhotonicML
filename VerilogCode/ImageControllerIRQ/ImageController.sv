@@ -99,7 +99,9 @@ module ImageController
     input  wire [BIT_HEIGHT-1:0] cy,
     input  wire image_change,
     output wire [23:0] rgb,
-    output wire irq_signal
+    output wire irq_signal,
+    
+    output wire [127:0] debug_buffer_data
 );
 
 
@@ -261,7 +263,7 @@ ImageSender #(
     .image_sender_empty             (image_sender_empty),
     .image_width                    (image_width),
     .image_height                   (image_height),
-    .image_change                   (image_change),
+    .image_change                   (1'b0),
     .clk_pixel                      (s_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),
@@ -280,7 +282,9 @@ ImageSender #(
     .dram_write_len                 (dram_write_len),
     .dram_write_en                  (dram_write_en),
     .dram_write_data                (dram_write_data),
-    .dram_write_busy                (dram_write_busy)
+    .dram_write_busy                (dram_write_busy),
+    
+    .debug_buffer_data              (debug_buffer_data)
 );
 
 endmodule

@@ -144,6 +144,7 @@ localparam AXI_WRITE_DATA_DONE   = AXI_ADDR_WIDTH'(7'h40);
 // AXI4 READ Address Space
 //////////////////////////////////////////////////////////////////////////////////
 localparam AXI_READ_DRAM_ADDR    = AXI_ADDR_WIDTH'(7'h00);
+localparam AXI_READ_RESOLUTION   = AXI_ADDR_WIDTH'(7'h10);
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
@@ -158,7 +159,8 @@ localparam ERROR_STATE           = 4'h7;
 localparam WRITE_RESPONSE        = 4'h8;
 
 localparam READ_DRAM_ADDR        = 4'h1;
-localparam READ_ERROR_STATE      = 4'h2;
+localparam READ_RESOLUTION       = 4'h2;
+localparam READ_ERROR_STATE      = 4'h3;
 
 reg[3:0] axi_state_write;
 reg[3:0] axi_state_read;
@@ -345,6 +347,7 @@ always @(posedge s_axi_aclk) begin
                         axi_awid <= s_axi_awid;
                         
                         axi_state_write <= WRITE_DATA_BUFFER;
+                        
                     end
                     
                     else if( s_axi_awaddr == AXI_WRITE_DATA_DONE ) begin
@@ -436,10 +439,11 @@ always @(posedge s_axi_aclk) begin
                 if( dram_buffer_full == 1'b0 ) begin
                     if( s_axi_wvalid == 1'b1 ) begin
                         dram_read_data <= s_axi_wdata;
-                        dram_read_data_valid <= 1'b1;
+                        dram_read_data_valid <= 1'b1;                          
+                        irq_signal <= 1'b0;
                         if( s_axi_wlast == 1'b1 ) begin
                             axi_state_write <= WRITE_RESPONSE;
-                            dram_read_data_valid <= 1'b0;
+                            dram_read_data_valid <= 1'b0;  
                         end
                     end
                     else begin
@@ -449,7 +453,8 @@ always @(posedge s_axi_aclk) begin
                 end
                 else begin
                     dram_read_data <= AXI_DATA_WIDTH'(0);
-                    dram_read_data_valid <= 1'b0;
+                    dram_read_data_valid <= 1'b0;                          
+                    irq_signal <= 1'b0;
                 end
             end
             
@@ -458,7 +463,6 @@ always @(posedge s_axi_aclk) begin
                     dram_read_busy_buffer <= 1'b0;
                     if( s_axi_wlast == 1'b1 ) begin
                         axi_state_write <= WRITE_RESPONSE;
-                        irq_signal <= 1'b0;
                     end
                 end
             end
@@ -539,6 +543,9 @@ always @(posedge s_axi_aclk) begin
                     if( s_axi_araddr == AXI_READ_DRAM_ADDR ) begin
                         axi_state_read <= READ_DRAM_ADDR;
                     end
+                    else if( s_axi_araddr == AXI_READ_RESOLUTION ) begin
+                        axi_state_read <= READ_RESOLUTION;
+                    end
                     else begin
                         axi_state_read <= READ_ERROR_STATE;
                     end
@@ -546,6 +553,18 @@ always @(posedge s_axi_aclk) begin
             end
             READ_DRAM_ADDR: begin
                 s_axi_rdata <= {64'(dram_read_len), 64'(dram_read_addr)};
+                s_axi_rresp <= 2'b00;
+                s_axi_rvalid <= 1'b1;
+                s_axi_rid <= axi_arid;
+                axi_arlen <= axi_arlen - 1;
+                if( axi_arlen == 0 ) begin
+                    axi_state_read <= IDLE;
+                    s_axi_rlast <= 1'b1;
+                end
+            end
+            
+            READ_RESOLUTION: begin
+                s_axi_rdata <= {64'(0), 32'(image_width), 32'(image_height)};
                 s_axi_rresp <= 2'b00;
                 s_axi_rvalid <= 1'b1;
                 s_axi_rid <= axi_arid;

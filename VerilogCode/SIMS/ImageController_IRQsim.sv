@@ -252,11 +252,11 @@ initial begin
     #1000;
     
     //////////////////////////////////////////////////////////////////////////////////
-    // Write to ImageController
+    // Write Image Size Data to ImageController
     //////////////////////////////////////////////////////////////////////////////////
     S00_AXI_0_awaddr <= 39'h00_A001_0020; // Example write address
     S00_AXI_0_awvalid <= 1;
-    S00_AXI_0_wdata <= 128'h78000000438; // To align to 512 bit width of axi memory interface, 256 bit is shifted
+    S00_AXI_0_wdata <= 128'((100 << 32) | 100); // To align to 512 bit width of axi memory interface, 256 bit is shifted
     S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
     S00_AXI_0_wvalid <= 1;
     S00_AXI_0_bready <= 1'b1;
@@ -357,44 +357,42 @@ initial begin
         S00_AXI_0_rready <= 0;
         #8;
         //////////////////////////////////////////////////////////////////////////////////
-        // Write to ImageController
+        // Write Data to ImageController
         //////////////////////////////////////////////////////////////////////////////////
-        S00_AXI_0_awaddr <= 39'h00_A001_0030; // Example write address
-        S00_AXI_0_awvalid <= 1;
-        S00_AXI_0_wdata <= 128'(i);
-        S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
-        S00_AXI_0_wvalid <= 1;
-        S00_AXI_0_bready <= 1'b1;
-        S00_AXI_0_awlen <= 8'( ( wdata_buffer >> 64 ) - 1);
-        S00_AXI_0_wlast <= 0;
-        $display("%d : Write len: %h",i,  8'( ( wdata_buffer >> 64 ) - 1)); 
-        
-        // Wait for AWREADY and then de-assert AWVALID
-        wait(S00_AXI_0_awready);
-        wait(~S00_AXI_0_awready);
-        S00_AXI_0_awvalid <= 0;
-        
-        // Wait for WREADY and then de-assert WVALID
-        for( j = 0 ; j <= S00_AXI_0_awlen; j++) begin
+        for( j = 0 ; j < 625; j++ ) begin
+            S00_AXI_0_awaddr <= 39'h00_A001_0030; // Example write address
+            S00_AXI_0_awvalid <= 1;
+            S00_AXI_0_wdata <= 128'(i);
+            S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
+            S00_AXI_0_wvalid <= 1;
+            S00_AXI_0_bready <= 1'b1;
+            S00_AXI_0_awlen <= 8'(0);
+            S00_AXI_0_wlast <= 0;
+            
+            // Wait for AWREADY and then de-assert AWVALID
+            wait(S00_AXI_0_awready);
+            wait(~S00_AXI_0_awready);
+            S00_AXI_0_awvalid <= 0;
+            
+            // Wait for WREADY and then de-assert WVALID
             i = i + 1;
             S00_AXI_0_wdata <= 128'(i);
             wait(S00_AXI_0_wready);
             S00_AXI_0_wvalid <= 1;
-            if( j == S00_AXI_0_awlen) begin
-                S00_AXI_0_wlast <= 1;
-            end
+            S00_AXI_0_wlast <= 1;
             #8; // wait one cycle to remain wavlid high
+            
+            wait(~S00_AXI_0_wready);
+            S00_AXI_0_wvalid <= 0;
+            S00_AXI_0_wlast <= 0;
+            
+            // Wait for BVALID and then de-assert BREADY
+            wait(S00_AXI_0_bvalid);
+            S00_AXI_0_bready <= 0;
+            #8;
         end
-        
-        wait(~S00_AXI_0_wready);
-        S00_AXI_0_wvalid <= 0;
-        S00_AXI_0_wlast <= 0;
-        
-        // Wait for BVALID and then de-assert BREADY
-        wait(S00_AXI_0_bvalid);
-        S00_AXI_0_bready <= 0;
         //////////////////////////////////////////////////////////////////////////////////
-        // Write to ImageController
+        // Write to ImageController For Response
         //////////////////////////////////////////////////////////////////////////////////
         
         #8;

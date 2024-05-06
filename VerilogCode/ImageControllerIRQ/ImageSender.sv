@@ -11,12 +11,12 @@ module ImageSender
     parameter FIFO_DEPTH                    = 512,
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_ADDR_WIDTH                = 32,
-    parameter BUFFER_THRESHOLD              = 240,
+    parameter BUFFER_THRESHOLD              = 625, // number of axi write. so it should be counted as multiplication of 16 -> BUFFER_THRESHOLD * 16 Byte
     parameter DRAM_ADDR_WIDTH               = 39,
     parameter DRAM_DATA_WIDTH               = 128,
-    parameter DRAM_DATA_LEN                 = 240,
+    parameter DRAM_DATA_LEN                 = BUFFER_THRESHOLD,
     parameter IMAGE_BUFFER_DEPTH            = DRAM_DATA_WIDTH,
-    parameter IMAGE_CHANGE_TIME             = 10
+    parameter IMAGE_CHANGE_TIME             = 40
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,7 @@ module ImageSender
     output  reg dram_write_en,
     output  reg [DRAM_DATA_WIDTH - 1:0] dram_write_data,
     output wire dram_buffer_full,
+    output wire [127:0] debug_buffer_data,
     
     input  wire [DRAM_DATA_WIDTH - 1:0] dram_read_data,
     input  wire dram_read_data_valid,
@@ -73,6 +74,7 @@ reg  image_flush_trigger_buffer;
 
 reg  [BIT_WIDTH - 1:0] cx_buffer = 0;
 reg  [BIT_HEIGHT - 1:0] cy_buffer = 0;
+reg  coordinate_buffer_set = 0;
 
 reg  [DRAM_ADDR_WIDTH - 1:0] dram_current_addr;
 reg  [DRAM_ADDR_WIDTH - 1:0] dram_last_addr;
@@ -86,6 +88,7 @@ wire [IMAGE_BUFFER_DEPTH - 1:0] image_buffer_fifo_din;
 wire image_buffer_fifo_full;
 wire image_flush_trigger;
 wire image_initial_trigger;
+wire image_buffer_empty;
 
 wire dram_address_rd_en;
 
@@ -98,10 +101,11 @@ assign image_discharge_en       = ( ( (SCREEN_HEIGHT >> 1) - (image_height >> 1)
                                     && ( ( (SCREEN_WIDTH >> 1) - (image_width >> 1) <= cx_buffer ) && ( cx_buffer < (SCREEN_WIDTH >> 1) + (image_width >> 1) + image_width[0] ) )
                                     && (image_send_start == 1'b1); // discharge image only when cx, and cy is in image section
 assign image_buffer_fifo_rd_en  = image_discharge_en && (image_buffer_index == (IMAGE_BUFFER_LEN - 1));
-assign image_flush_trigger      = ( cx_buffer == (FRAME_WIDTH - 1) ) && ( cy_buffer == (FRAME_HEIGHT - 1 - IMAGE_CHANGE_TIME) );
+assign image_flush_trigger      = ( cx_buffer == (FRAME_WIDTH - 1) ) && ( cy_buffer == (FRAME_HEIGHT - 1 - IMAGE_CHANGE_TIME) ) && (coordinate_buffer_set == 1'b1);
 assign image_initial_trigger    = (auto_start == 1'b1 && image_send_start == 1'b0); // auto_start LOW -> HIGH sense signal
 assign dram_address_rd_en       = (image_flush_trigger && image_change_buffer);
 assign dram_buffer_full         = image_buffer_fifo_full;
+assign debug_buffer_data        = image_buffer;
 
 //////////////////////////////////////////////////////////////////////////////////
 // FIFO for Image Address
@@ -129,7 +133,7 @@ image_data_buffer_fifo image_data_buffer_fifo_0 ( // 128 width, 512 depth, 510 p
     .rd_en                              (image_buffer_fifo_rd_en),
     .dout                               (image_buffer),
     .prog_full                          (image_buffer_fifo_full),  // full -> prog_full to deal with full delay signal
-    .empty                              ()
+    .empty                              (image_buffer_empty)
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -155,12 +159,15 @@ always@(posedge clk_pixel) begin
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
+                if( image_buffer_empty == 1'b1 )begin
+                    rgb[23:0] <= 24'h00_ff_00;
+                end
                 if( image_buffer_index == IMAGE_BUFFER_WIDTH'(IMAGE_BUFFER_LEN - 1)) begin
                     image_buffer_index <= IMAGE_BUFFER_WIDTH'(0);
                 end
             end
             else begin
-                rgb[23:0] <= 24'h0;
+                rgb[23:0] <= 24'hff_00_00;
             end
             
             //////////////////////////////////////////////////////////////////////////////////
@@ -173,6 +180,9 @@ always@(posedge clk_pixel) begin
             else if( image_change == 1'b1 ) begin // To save image_change signal
                 image_change_buffer <= 1'b1;
             end
+        end
+        else begin
+            rgb[23:0] <= 24'h00_00_ff;
         end
         
         if( image_flush_trigger ) begin // sense auto_start when there is enough time to get image data from DRAM
@@ -209,7 +219,6 @@ always@(posedge clk_pixel) begin
             if( image_flush_trigger_buffer ) begin // To acquire image address value from fifo, one cycle delayed image_flush_trigger signal is used
                 dram_read_addr <= DRAM_ADDR_WIDTH'(image_addr_lower);
                 dram_last_addr <= DRAM_ADDR_WIDTH'(image_addr_lower + (DRAM_DATA_WIDTH >> 3) * DRAM_DATA_LEN);
-                dram_read_en <= 1'b1;
                 dram_read_len <= 8'(DRAM_DATA_LEN);
                 dram_current_addr <= image_addr_lower;
             end
@@ -227,11 +236,13 @@ always @(posedge clk_pixel) begin
     if (image_sender_reset) begin
         cx_buffer <= BIT_WIDTH'(0);
         cy_buffer <= BIT_HEIGHT'(0);
+        coordinate_buffer_set <= 1'b0;
     end
     else begin
         if( ( cx == CX_BUFFER_TRIGGER_VALUE ) && ( cy == CY_BUFFER_TRIGGER_VALUE ) ) begin
             cx_buffer <= BIT_WIDTH'(CX_BUFFER_SET_VALUE);
             cy_buffer <= BIT_HEIGHT'(CY_BUFFER_SET_VALUE);
+            coordinate_buffer_set <= 1'b1;
         end
         else begin
             cx_buffer <= (cx_buffer == FRAME_WIDTH-1'b1) ? BIT_WIDTH'(0) : cx_buffer + 1'b1;

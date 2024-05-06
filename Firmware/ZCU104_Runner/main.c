@@ -6,11 +6,14 @@
 #include "xstatus.h"
 #include "xscugic.h"
 #include "xil_util.h"
+#include "xtime_l.h"
 
 /* Define Interrupt ID for each function*/
 #define INT_ID_STOP_DISPLAY 		0x0
 #define INT_ID_RUN_DISPLAY 			0x1
 #define INT_ID_LOAD_SD_CARD			0x2
+#define SCREEN_WIDTH				100
+#define SCREEN_HEIGHT				100
 
 /*128 bit make macro*/
 #define MAKE128CONST(hi,lo) ((((__uint128_t)hi << 64) | (lo)))
@@ -43,10 +46,14 @@ static INLINE __uint128_t Xil_In128(UINTPTR Addr)
 #define PL_INTID					121
 #define MASTER_CONTROLLER_ADDR		0xA0000000U
 #define IMAGE_CONTROLLER_ADDR		0xA0010000U
-#define IMAGE_WRITE_TIME			15
+#define DATA_SAVE_MEM_ADDR			0x2000000U
+#define IMAGE_WRITE_TIME			625
+#define S_AXI_WDATA_SIZE			16
 
-static int j = 0;
-static int image_irq_ack = 0;
+// image_irq_ack variable should be declared as a volatile type to prevent
+// compile optimization.
+volatile int image_irq_ack = 0;
+XScuGic InterruptController;
 
 /************************** Function Prototypes ******************************/
 
@@ -68,11 +75,18 @@ void LowInterruptHandler(u32 CallbackRef);
 * @note		None.
 *
 ******************************************************************************/
+void XScuGic_ClearPending (u32 DistBaseAddress, u32 Int_Id)
+{
+	u8 Cpu_Id = (u8)XScuGic_GetCpuID();
+	XScuGic_WriteReg((DistBaseAddress), XSCUGIC_PENDING_CLR_OFFSET +
+			(((Int_Id) / 32U) * 4U), (0x00000001U << ((Int_Id) % 32U)));
+}
 
 void LowInterruptHandler(u32 CallbackRef)
 {
 	u32 BaseAddress;
 	u32 IntID;
+    u32 IntIDFull;
 	// CallbackRef is defined at calling function Xil_ExceptionRegisterHandler as a CPU_BASEADDR
 	BaseAddress = CallbackRef;
 
@@ -89,6 +103,7 @@ void LowInterruptHandler(u32 CallbackRef)
 
 	// Set End Of Inerrupt register (GICC_EOI)
 	XScuGic_WriteReg(BaseAddress, XSCUGIC_EOI_OFFSET, IntID);
+	//xil_printf("INT : %d\r\n",IntID);
 	__uint128_t a;
 
 	switch(IntID){
@@ -103,24 +118,52 @@ void LowInterruptHandler(u32 CallbackRef)
 			break;
 		case PL_INTID:
 			a = Xil_In128(IMAGE_CONTROLLER_ADDR);
-			xil_printf("PL WIRTE\r\n");
-			xil_printf("LOW   : %x\r\n",LOWER(a));
-			xil_printf("UPPER : %x\r\n",UPPER(a));
 			image_irq_ack = 1;
-			Xil_DCacheFlush();
-			for(int i = 0 ; i < IMAGE_WRITE_TIME; i++){
-				Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x30,MAKE128CONST(0x0,0xffffffffffffffff));
+			for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
+				Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x30, MAKE128CONST(MASK64BIT,MASK64BIT));
 			}
 			break;
 		default:
 			break;
 	}
+	//xil_printf("IRQ END\r\n");
+	return;
 }
 
 int main(void)
 {
 	xil_printf("CPU 1 turned on\r\n");
 
+	/////////////////////////////////////////////////////////////////////
+	// Initialize Device
+	/////////////////////////////////////////////////////////////////////
+
+	xil_printf("Waiting for command...\r\n");
+	xil_printf("Reset Controllers...\r\n");
+	Xil_Out128(MASTER_CONTROLLER_ADDR,MAKE128CONST(0,0b0010));
+	usleep(1);
+	xil_printf("Reset Controllers Done...\r\n");
+	Xil_Out128(MASTER_CONTROLLER_ADDR,MAKE128CONST(0,0b0000));
+
+
+	xil_printf("Write ADDR FIFO...\r\n");
+	Xil_Out128(IMAGE_CONTROLLER_ADDR,MAKE128CONST(
+			(uint64_t)(0x0000004000U) + (uint64_t)(SCREEN_WIDTH * SCREEN_HEIGHT * 8),
+			(uint64_t)0x0000004000U ) );
+
+	xil_printf("Write Display Resolution...\r\n");
+	Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x20,MAKE128CONST( 0, (((uint64_t)SCREEN_WIDTH) << 32) | SCREEN_HEIGHT ));
+
+	//Clear Pending
+	XScuGic_ClearPending(DIST_BASEADDR,PL_INTID);
+	/////////////////////////////////////////////////////////////////////
+	// Set Interrupt
+	/////////////////////////////////////////////////////////////////////
+
+	// Set Ineterrupt handler function which will be run at IRQ interrupt
+	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_IRQ_INT,
+								 (Xil_ExceptionHandler) LowInterruptHandler,
+								 (void *)CPU_BASEADDR);
 	// Set Interrupt Priority Mask resgister (GICC_PMR)
 	XScuGic_WriteReg(CPU_BASEADDR, XSCUGIC_CPU_PRIOR_OFFSET, 0xF0);
 	// Set CPU Interface Controller Register (GICC_CTLR)
@@ -133,33 +176,41 @@ int main(void)
 	XScuGic_WriteReg(DIST_BASEADDR, XSCUGIC_INT_CFG_OFFSET_CALC(PL_INTID), 0x0);
 	// Set INTID enable (GICD_ISENABLER)
 	XScuGic_EnableIntr(DIST_BASEADDR, PL_INTID);
-	// Set Ineterrupt handler function which will be run at IRQ interrupt
-	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_IRQ_INT,
-								 (Xil_ExceptionHandler) LowInterruptHandler,
-								 (void *)CPU_BASEADDR);
+	// Exception Enable
 	Xil_ExceptionEnable();
+	// Disable Nested Interrupts
+	//Xil_DisableNestedInterrupts();
 
 	xil_printf("GIC Controller initialized\r\n");
-	xil_printf("Waiting for command...\r\n");
-	xil_printf("Reset Controllers...\r\n");
-	Xil_Out128(MASTER_CONTROLLER_ADDR,MAKE128CONST(0,0b0110));
-	usleep(1);
-	xil_printf("Reset Controllers Done...\r\n");
-	Xil_Out128(MASTER_CONTROLLER_ADDR,MAKE128CONST(0,0b0000));
 
+	xil_printf("Read Resolution\r\n");
+	__uint128_t a;
+	a = Xil_In128(IMAGE_CONTROLLER_ADDR + 0x10);
+	int x;
+	int y;
+	x = 0xffff & (LOWER(a) >> 32);
+	y = 0xffff & LOWER(a);
+	xil_printf("X : %d, Y : %d\r\n",x,y);
 
-	xil_printf("Write ADDR FIFO...\r\n");
-	Xil_Out128(IMAGE_CONTROLLER_ADDR,MAKE128CONST( (0x0500000000U),  0x0400000000U ) );
-	xil_printf("Write Display Resolution...\r\n");
-	Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x20,MAKE128CONST( 0, (1920 << 32 | 1080) ) );
+	sleep(5);
 
-	sleep(20);
+	xil_printf("memory armed...\r\n");
+
 	xil_printf("Auto Start...\r\n");
+	sleep(1);
 	Xil_Out128(MASTER_CONTROLLER_ADDR,MAKE128CONST(0,0b1001));
+
+	int k = 0;
 	while(1){
-		if( image_irq_ack ){
+		if( image_irq_ack == 1 ){
 			image_irq_ack = 0;
 			Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x40, MAKE128CONST(0,1) );
+			//xil_printf("PL WRITE\r\n");
+			k++;
+		}
+		if( k == 60 ){
+			k = 0;
+			xil_printf("DONE\r\n");
 		}
 	}
 }
