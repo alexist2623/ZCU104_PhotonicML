@@ -71,6 +71,8 @@ reg  image_change_buffer;
 reg  [IMAGE_BUFFER_WIDTH-1:0] image_buffer_index;
 reg  image_buffer_fifo_wr_en;
 reg  image_flush_trigger_buffer;
+reg  image_read_en;
+reg  load_new_image;
 
 reg  [BIT_WIDTH - 1:0] cx_buffer = 0;
 reg  [BIT_HEIGHT - 1:0] cy_buffer = 0;
@@ -78,6 +80,7 @@ reg  coordinate_buffer_set = 0;
 
 reg  [DRAM_ADDR_WIDTH - 1:0] dram_current_addr;
 reg  [DRAM_ADDR_WIDTH - 1:0] dram_last_addr;
+reg  dram_read_en_buffer;
 
 wire image_buffer_fifo_rd_en;
 wire [IMAGE_BUFFER_DEPTH-1:0] image_buffer;
@@ -87,8 +90,9 @@ wire [63:0] image_addr_lower;
 wire [IMAGE_BUFFER_DEPTH - 1:0] image_buffer_fifo_din;
 wire image_buffer_fifo_full;
 wire image_flush_trigger;
-wire image_initial_trigger;
 wire image_buffer_empty;
+wire [IMAGE_BUFFER_DEPTH-1:0] image_old;
+wire [IMAGE_BUFFER_DEPTH-1:0] image_new;
 
 wire dram_address_rd_en;
 
@@ -102,10 +106,10 @@ assign image_discharge_en       = ( ( (SCREEN_HEIGHT >> 1) - (image_height >> 1)
                                     && (image_send_start == 1'b1); // discharge image only when cx, and cy is in image section
 assign image_buffer_fifo_rd_en  = image_discharge_en && (image_buffer_index == (IMAGE_BUFFER_LEN - 1));
 assign image_flush_trigger      = ( cx_buffer == (FRAME_WIDTH - 1) ) && ( cy_buffer == (FRAME_HEIGHT - 1 - IMAGE_CHANGE_TIME) ) && (coordinate_buffer_set == 1'b1);
-assign image_initial_trigger    = (auto_start == 1'b1 && image_send_start == 1'b0); // auto_start LOW -> HIGH sense signal
 assign dram_address_rd_en       = (image_flush_trigger && image_change_buffer);
 assign dram_buffer_full         = image_buffer_fifo_full;
 assign debug_buffer_data        = image_buffer;
+assign image_buffer             = (load_new_image == 1'b1)? image_new : image_old;
 
 //////////////////////////////////////////////////////////////////////////////////
 // FIFO for Image Address
@@ -125,14 +129,25 @@ image_address_fifo image_address_fifo_0 ( // 128 width, 512 depth, 500 program f
 //////////////////////////////////////////////////////////////////////////////////
 // FIFO for Image Data
 //////////////////////////////////////////////////////////////////////////////////
-image_data_buffer_fifo image_data_buffer_fifo_0 ( // 128 width, 512 depth, 510 program full
+image_data_save_buffer_fifo image_data_save_buffer_fifo_0 ( // 128 width, 2048 depth, 2000 program full. Image Buffer for Future
     .clk                                (clk_pixel),
-    .srst                               (image_sender_reset | image_sender_flush | image_flush_trigger ),  // rst -> srst 
+    .srst                               (image_sender_reset | image_sender_flush),  // rst -> srst 
     .din                                (dram_read_data),
     .wr_en                              (dram_read_data_valid),
-    .rd_en                              (image_buffer_fifo_rd_en),
-    .dout                               (image_buffer),
+    .rd_en                              (image_buffer_fifo_rd_en & load_new_image),
+    .dout                               (image_new),
     .prog_full                          (image_buffer_fifo_full),  // full -> prog_full to deal with full delay signal
+    .empty                              ()
+);
+
+image_data_reuse_buffer_fifo image_data_reuse_buffer_fifo_1 ( // 128 width, 2048 depth, 2000 program full
+    .clk                                (clk_pixel),
+    .srst                               (image_sender_reset | image_sender_flush ),  // rst -> srst 
+    .din                                (image_buffer),
+    .wr_en                              (image_buffer_fifo_rd_en),
+    .rd_en                              (image_buffer_fifo_rd_en & ~image_buffer_empty & ~load_new_image),
+    .dout                               (image_old),
+    .prog_full                          (),  // full -> prog_full to deal with full delay signal
     .empty                              (image_buffer_empty)
 );
 
@@ -147,6 +162,7 @@ always@(posedge clk_pixel) begin
         image_send_start <= 1'b0;
         image_change_buffer <= 1'b0;
         image_flush_trigger_buffer <= 1'b0;
+        image_read_en <= 1'b0;
     end
     else begin
         image_flush_trigger_buffer <= image_flush_trigger;
@@ -159,6 +175,9 @@ always@(posedge clk_pixel) begin
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
+                /*rgb[7:0]   <= image_buffer[7:0];
+                rgb[15:8]  <= image_buffer[7:0];
+                rgb[23:16] <= image_buffer[7:0];*/
                 if( image_buffer_empty == 1'b1 )begin
                     rgb[23:0] <= 24'h00_ff_00;
                 end
@@ -174,8 +193,9 @@ always@(posedge clk_pixel) begin
             // Image Change setting
             //////////////////////////////////////////////////////////////////////////////////
             if( image_flush_trigger ) begin // Change image data only when state reached end of image
-                image_change_buffer <= image_change;
-                image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);
+                image_change_buffer <= 1'b0;    // reset image_change_buffer
+                image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);   // reset buffer index
+                load_new_image <= image_change_buffer; // save image_change signal and maintain until image_flush_trigger signal
             end
             else if( image_change == 1'b1 ) begin // To save image_change signal
                 image_change_buffer <= 1'b1;
@@ -187,6 +207,9 @@ always@(posedge clk_pixel) begin
         
         if( image_flush_trigger ) begin // sense auto_start when there is enough time to get image data from DRAM
             image_send_start <= auto_start;
+            if( image_send_start == 1'b0 && auto_start == 1'b1 ) begin // Load New image when machine starts
+                load_new_image <= 1'b1;
+            end
         end
     end
 end
@@ -201,30 +224,17 @@ always@(posedge clk_pixel) begin
         dram_last_addr <= 64'h0;
         dram_read_en <= 1'b0;
         dram_read_len <= 8'h0;
+        dram_read_en_buffer <= 1'b0;
         dram_current_addr <= AXI_ADDR_WIDTH'(0);
     end
     else begin
         dram_read_en <= 1'b0;
-        if( image_send_start == 1'b1 && dram_read_busy ==1'b0) begin
-            if( ( dram_last_addr < DRAM_ADDR_WIDTH'(dram_current_addr + (DRAM_DATA_WIDTH >> 3) * BUFFER_THRESHOLD) ) && 
-                (dram_last_addr <= DRAM_ADDR_WIDTH'(image_addr_upper) ) && 
-                ~dram_read_busy && 
-                ~image_buffer_fifo_full) begin // 10 buffer data is read from DRAM before discharge
-                dram_read_addr <= DRAM_ADDR_WIDTH'(dram_last_addr);
-                dram_last_addr <= DRAM_ADDR_WIDTH'(dram_last_addr + (DRAM_DATA_WIDTH >> 3) * DRAM_DATA_LEN);
-                dram_read_en <= 1'b1;
-                dram_read_len <= 8'(DRAM_DATA_LEN);
-            end
-            
-            if( image_flush_trigger_buffer ) begin // To acquire image address value from fifo, one cycle delayed image_flush_trigger signal is used
-                dram_read_addr <= DRAM_ADDR_WIDTH'(image_addr_lower);
-                dram_last_addr <= DRAM_ADDR_WIDTH'(image_addr_lower + (DRAM_DATA_WIDTH >> 3) * DRAM_DATA_LEN);
-                dram_read_len <= 8'(DRAM_DATA_LEN);
-                dram_current_addr <= image_addr_lower;
-            end
+        if( dram_address_rd_en ) begin
+            dram_read_en_buffer <= 1'b1;
         end
-        if( image_send_start == 1'b1 && image_discharge_en ) begin
-            dram_current_addr <= dram_current_addr + 1;
+        if( ~dram_read_busy && ~image_buffer_fifo_full ) begin
+            dram_read_en <= dram_read_en_buffer;
+            dram_read_en_buffer <= 1'b0;
         end
     end
 end

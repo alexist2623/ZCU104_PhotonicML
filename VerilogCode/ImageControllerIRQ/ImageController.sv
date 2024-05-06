@@ -132,6 +132,8 @@ wire dram_read_data_valid;
 wire dram_write_busy;
 wire dram_read_busy;
 
+wire set_new_image;
+
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI2FIFO Declaration
@@ -240,6 +242,7 @@ axi2fifo_0
     .dram_write_en                  (dram_write_en),
     .dram_write_data                (dram_write_data),
     .dram_write_busy                (dram_write_busy),
+    .set_new_image                  (set_new_image),
     .irq_signal                     (irq_signal)
 );
 
@@ -263,7 +266,7 @@ ImageSender #(
     .image_sender_empty             (image_sender_empty),
     .image_width                    (image_width),
     .image_height                   (image_height),
-    .image_change                   (1'b0),
+    .image_change                   (set_new_image),
     .clk_pixel                      (s_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),

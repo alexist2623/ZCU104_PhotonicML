@@ -46,6 +46,8 @@ static INLINE __uint128_t Xil_In128(UINTPTR Addr)
 #define PL_INTID					121
 #define MASTER_CONTROLLER_ADDR		0xA0000000U
 #define IMAGE_CONTROLLER_ADDR		0xA0010000U
+#define IMAGE_DATA_DONE_ADDR		0xA0010030U
+#define IMAGE_DATA_WRITE_ADDR		0xA0010040U
 #define DATA_SAVE_MEM_ADDR			0x2000000U
 #define IMAGE_WRITE_TIME			625
 #define S_AXI_WDATA_SIZE			16
@@ -120,7 +122,7 @@ void LowInterruptHandler(u32 CallbackRef)
 			a = Xil_In128(IMAGE_CONTROLLER_ADDR);
 			image_irq_ack = 1;
 			for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
-				Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x30, MAKE128CONST(MASK64BIT,MASK64BIT));
+				Xil_Out128(IMAGE_DATA_WRITE_ADDR, MAKE128CONST(MASK64BIT,MASK64BIT));
 			}
 			break;
 		default:
@@ -183,34 +185,27 @@ int main(void)
 
 	xil_printf("GIC Controller initialized\r\n");
 
-	xil_printf("Read Resolution\r\n");
-	__uint128_t a;
-	a = Xil_In128(IMAGE_CONTROLLER_ADDR + 0x10);
-	int x;
-	int y;
-	x = 0xffff & (LOWER(a) >> 32);
-	y = 0xffff & LOWER(a);
-	xil_printf("X : %d, Y : %d\r\n",x,y);
-
-	sleep(5);
-
+	for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
+		Xil_DCacheFlush();
+		xil_printf("%d\r\n",i);
+		Xil_Out128(IMAGE_DATA_WRITE_ADDR, MAKE128CONST((uint64_t) 0xffff,(uint64_t) i) );
+	}
+	for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
+		Xil_DCacheFlush();
+		xil_printf("%d\r\n",i);
+		Xil_Out128(IMAGE_DATA_WRITE_ADDR, MAKE128CONST((uint64_t) 0xffff,(uint64_t) i) );
+	}
 	xil_printf("memory armed...\r\n");
 
 	xil_printf("Auto Start...\r\n");
 	sleep(1);
 	Xil_Out128(MASTER_CONTROLLER_ADDR,MAKE128CONST(0,0b1001));
 
-	int k = 0;
 	while(1){
 		if( image_irq_ack == 1 ){
 			image_irq_ack = 0;
-			Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x40, MAKE128CONST(0,1) );
-			//xil_printf("PL WRITE\r\n");
-			k++;
-		}
-		if( k == 60 ){
-			k = 0;
-			xil_printf("DONE\r\n");
+			Xil_Out128(IMAGE_DATA_DONE_ADDR, MAKE128CONST(0,1) );
+			xil_printf("PL WRITE\r\n");
 		}
 	}
 }

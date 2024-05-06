@@ -128,6 +128,8 @@ module AXI2FIFO
     output reg  dram_read_data_valid,
     output reg  dram_write_busy,
     output reg  dram_read_busy,
+    
+    output reg  set_new_image,
     output reg  irq_signal
 );
 
@@ -137,8 +139,9 @@ module AXI2FIFO
 localparam AXI_WRITE_FIFO        = AXI_ADDR_WIDTH'(7'h00);
 localparam AXI_FLUSH_FIFO        = AXI_ADDR_WIDTH'(7'h10);
 localparam AXI_WRITE_IMAGE_SIZE  = AXI_ADDR_WIDTH'(7'h20);
-localparam AXI_WRITE_DATA_BUFFER = AXI_ADDR_WIDTH'(7'h30);
-localparam AXI_WRITE_DATA_DONE   = AXI_ADDR_WIDTH'(7'h40);
+localparam AXI_WRITE_DATA_DONE   = AXI_ADDR_WIDTH'(7'h30);
+localparam AXI_WRITE_DATA_BUFFER = AXI_ADDR_WIDTH'(7'h40);
+localparam AXI_SET_NEW_IMAGE     = AXI_ADDR_WIDTH'(7'h50);
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 READ Address Space
@@ -155,8 +158,9 @@ localparam WRITE_FLUSH_FIFO      = 4'h3;
 localparam WRITE_IMAGE_SIZE      = 4'h4;
 localparam WRITE_DATA_BUFFER     = 4'h5;
 localparam WRITE_DATA_DONE       = 4'h6;
-localparam ERROR_STATE           = 4'h7;
-localparam WRITE_RESPONSE        = 4'h8;
+localparam SET_NEW_IMAGE         = 4'h7;
+localparam ERROR_STATE           = 4'h8;
+localparam WRITE_RESPONSE        = 4'h9;
 
 localparam READ_DRAM_ADDR        = 4'h1;
 localparam READ_RESOLUTION       = 4'h2;
@@ -218,7 +222,8 @@ assign s_axi_wready  = ((axi_state_write == WRITE_FIFO)
                         || (axi_state_write == WRITE_FLUSH_FIFO)
                         || (axi_state_write == WRITE_IMAGE_SIZE)
                         || (axi_state_write == WRITE_DATA_BUFFER)
-                        || (axi_state_write == WRITE_DATA_DONE);
+                        || (axi_state_write == WRITE_DATA_DONE)
+                        || (axi_state_write == SET_NEW_IMAGE);
 assign s_axi_arready = (axi_state_read == IDLE);
 assign image_sender_reset = ~s_axi_aresetn;
 
@@ -249,6 +254,7 @@ always @(posedge s_axi_aclk) begin
         dram_read_busy <= 1'b0;
         dram_read_busy_buffer <= 1'b0;
         irq_signal <= 1'b0;
+        set_new_image <= 1'b0;
     end
     
     else begin
@@ -365,6 +371,21 @@ always @(posedge s_axi_aclk) begin
                         axi_state_write <= WRITE_DATA_DONE;
                     end
                     
+                    else if( s_axi_awaddr == AXI_SET_NEW_IMAGE ) begin
+                        axi_waddr <= s_axi_awaddr;
+                        axi_waddr_base <= s_axi_awaddr;
+                        axi_wlen <= s_axi_awlen;
+                        axi_wsize <= s_axi_awsize;
+                        axi_wburst <= s_axi_awburst;
+                        axi_wlen_counter <= s_axi_awlen;
+                        axi_wshift_size <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count <= 8'h0;
+                        axi_awuser <= s_axi_awuser;
+                        axi_awid <= s_axi_awid;
+                        
+                        axi_state_write <= SET_NEW_IMAGE;
+                    end
+                    
                     else begin
                         axi_waddr <= AXI_ADDR_WIDTH'(0);
                         axi_waddr_base <= AXI_ADDR_WIDTH'(0);
@@ -443,7 +464,7 @@ always @(posedge s_axi_aclk) begin
                         irq_signal <= 1'b0;
                         if( s_axi_wlast == 1'b1 ) begin
                             axi_state_write <= WRITE_RESPONSE;
-                            dram_read_data_valid <= 1'b0;  
+                            dram_read_data_valid <= 1'b1;  
                         end
                     end
                     else begin
@@ -467,6 +488,15 @@ always @(posedge s_axi_aclk) begin
                 end
             end
             
+            SET_NEW_IMAGE : begin
+                if( s_axi_wvalid == 1'b1 ) begin
+                    if( s_axi_wlast == 1'b1 ) begin
+                        set_new_image <= 1'b1;
+                        axi_state_write <= WRITE_RESPONSE;
+                    end
+                end
+            end
+            
             ERROR_STATE: begin
                 if( s_axi_bready == 1'b1 ) begin
                     s_axi_bresp <= 2'b10;
@@ -478,6 +508,8 @@ always @(posedge s_axi_aclk) begin
             
             WRITE_RESPONSE: begin
                 image_sender_write <= 1'b0;
+                set_new_image <= 1'b0;
+                dram_read_data_valid <= 1'b0; 
                 image_sender_fifo_din <= AXI_DATA_WIDTH'(0);
                 if( s_axi_bready == 1'b1 ) begin
                     s_axi_bresp <= 2'b00;
