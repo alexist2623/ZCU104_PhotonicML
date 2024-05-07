@@ -11,7 +11,7 @@ module ImageSender
     parameter FIFO_DEPTH                    = 512,
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_ADDR_WIDTH                = 32,
-    parameter BUFFER_THRESHOLD              = 625, // number of axi write. so it should be counted as multiplication of 16 -> BUFFER_THRESHOLD * 16 Byte
+    parameter BUFFER_THRESHOLD              = 625,      // number of axi write. so it should be counted as multiplication of 16 -> BUFFER_THRESHOLD * 16 Byte
     parameter DRAM_ADDR_WIDTH               = 39,
     parameter DRAM_DATA_WIDTH               = 128,
     parameter DRAM_DATA_LEN                 = BUFFER_THRESHOLD,
@@ -175,9 +175,6 @@ always@(posedge clk_pixel) begin
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
-                /*rgb[7:0]   <= image_buffer[7:0];
-                rgb[15:8]  <= image_buffer[7:0];
-                rgb[23:16] <= image_buffer[7:0];*/
                 if( image_buffer_empty == 1'b1 )begin
                     rgb[23:0] <= 24'h00_ff_00;
                 end

@@ -104,6 +104,18 @@ wire invert;
 // See CEA-861-D for more specifics formats described below.
 generate
     case (VIDEO_ID_CODE)
+        0:
+        begin
+            assign frame_width = 800;
+            assign frame_height = 525;
+            assign screen_width = 640;
+            assign screen_height = 480;
+            assign hsync_pulse_start = 16;
+            assign hsync_pulse_size = 96;
+            assign vsync_pulse_start = 10;
+            assign vsync_pulse_size = 2;
+            assign invert = 1;
+        end
         1:
         begin
             assign frame_width = 800;
@@ -115,7 +127,7 @@ generate
             assign vsync_pulse_start = 10;
             assign vsync_pulse_size = 2;
             assign invert = 1;
-            end
+        end
         2, 3:
         begin
             assign frame_width = 858;
@@ -127,7 +139,7 @@ generate
             assign vsync_pulse_start = 9;
             assign vsync_pulse_size = 6;
             assign invert = 1;
-            end
+        end
         4:
         begin
             assign frame_width = 1650;
