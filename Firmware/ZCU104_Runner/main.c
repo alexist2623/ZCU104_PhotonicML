@@ -5,6 +5,7 @@
  * compile optimization.
  */
 volatile int image_irq_ack = 0;
+uint64_t k = 0x00;
 
 /*****************************************************************************/
 /**
@@ -74,6 +75,7 @@ void LowInterruptHandler(u32 CallbackRef)
 	 * Set End Of Inerrupt register (GICC_EOI)
 	 */
 	XScuGic_WriteReg(BaseAddress, XSCUGIC_EOI_OFFSET, IntID);
+	xil_printf("IntID %d\r\n",IntID);
 
 	switch(IntID){
 		case INT_ID_STOP_DISPLAY:
@@ -90,7 +92,11 @@ void LowInterruptHandler(u32 CallbackRef)
 			break;
 		case PL_INTID:
 			image_irq_ack = 1;
+			Xil_Out128(DEASSERT_IRQ_ADDR,MAKE128CONST(0,0b1));
 			write_80000_data(NULL);
+			break;
+		case INT_ID_SET_NEW_IMAGE:
+			Xil_Out128(SET_NEW_IMAGE_ADDR,MAKE128CONST(0,0b1));
 			break;
 		default:
 			break;
@@ -243,10 +249,21 @@ void write_80000_data(void * data_source_addr){
 	if( data_source_addr == NULL ){
 		for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
 			Xil_DCacheFlush();
-			xil_printf("%d\r\n",i);
+			/*Xil_Out128(IMAGE_DATA_WRITE_ADDR,
+					MAKE128CONST(
+							(uint64_t) ( k << 56 ) | (uint64_t) ( k << 48 ) |
+							(uint64_t) ( k << 40 ) | (uint64_t) ( k << 32 ) |
+							(uint64_t) ( k << 24 ) | (uint64_t) ( k << 16 ) |
+							(uint64_t) ( k <<  8 ) | (uint64_t)   k,
+							(uint64_t) ( k << 56 ) | (uint64_t) ( k << 48 ) |
+							(uint64_t) ( k << 40 ) | (uint64_t) ( k << 32 ) |
+							(uint64_t) ( k << 24 ) | (uint64_t) ( k << 16 ) |
+							(uint64_t) ( k <<  8 ) | (uint64_t)   k ) );*/
 			Xil_Out128(IMAGE_DATA_WRITE_ADDR,
-					MAKE128CONST((uint64_t) 0xffff,(uint64_t) i) );
+								MAKE128CONST((uint64_t) k * MASK64BIT, (uint64_t) k * MASK64BIT ));
 		}
+		k = (k+1)%2;
+		xil_printf("k : %d\r\n",k);
 	}
 	else{
 		volatile uint64_t * data_addr;

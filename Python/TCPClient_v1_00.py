@@ -12,9 +12,9 @@ import socket
 import numpy as np
 
 class TCP_Client:
-    def __init__(self, defaultIPAddress = '192.168.1.10', defaultTCPPort = 7):
-        self.IPAddress = defaultIPAddress
-        self.TCPPort = defaultTCPPort
+    def __init__(self, IPAddress = '192.168.1.10', TCPPort = 7):
+        self.IPAddress = IPAddress
+        self.TCPPort = TCPPort
 
 
     def connect(self):
@@ -61,27 +61,3 @@ class TCP_Client:
             unicode string: received string
         """
         return (self.socket.recv(10000).decode('latin-1'))
-
-class RFSoC:
-    def __init__(self):    
-        self.tcp = TCP_Client()
-        
-    def connect(self):
-        self.tcp.connect()
-        print("RFSoC is connected with TCP")
-        
-    def autoStart(self):
-        #TimeController
-        self.tcp.write("START")
-        a = self.tcp.read()
-        print(a)
-        
-        
-    def disconnect(self):
-        self.tcp.disconnect()
-    
-
-if __name__ == "__main__": 
-    RFSoC = RFSoC()
-    RFSoC.connect()
-    RFSoC.autoEnd()

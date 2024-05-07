@@ -369,73 +369,57 @@ initial begin
     
     #100;
     
-    i = 0;
-    forever begin
-        wait(irq_signal);
-        //////////////////////////////////////////////////////////////////////////////////
-        // Capture interrupt signal
-        //////////////////////////////////////////////////////////////////////////////////
-        S00_AXI_0_araddr <= 39'h00_A001_0000; // Example read address
-        S00_AXI_0_rready <= 1;
-        S00_AXI_0_arvalid <= 1;
-        
-        wait(S00_AXI_0_arready);
-        wait(~S00_AXI_0_arready);
-        S00_AXI_0_arvalid <= 0;
-        
-        wait(S00_AXI_0_rlast);
-        #8; // wait one clock cycle
-        wdata_buffer <= S00_AXI_0_rdata;
-        $display("Read data: %h", S00_AXI_0_rdata); 
-        S00_AXI_0_rready <= 0;
-        #8;
-        //////////////////////////////////////////////////////////////////////////////////
-        // Write Data to ImageController
-        //////////////////////////////////////////////////////////////////////////////////
-        for( j = 0 ; j < 625; j++ ) begin
-            S00_AXI_0_awaddr <= 39'h00_A001_0030; // Example write address
-            S00_AXI_0_awvalid <= 1;
-            S00_AXI_0_wdata <= 128'(i);
-            S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
-            S00_AXI_0_wvalid <= 1;
-            S00_AXI_0_bready <= 1'b1;
-            S00_AXI_0_awlen <= 8'(0);
-            S00_AXI_0_wlast <= 0;
-            
-            // Wait for AWREADY and then de-assert AWVALID
-            wait(S00_AXI_0_awready);
-            wait(~S00_AXI_0_awready);
-            S00_AXI_0_awvalid <= 0;
-            
-            // Wait for WREADY and then de-assert WVALID
-            i = i + 1;
-            S00_AXI_0_wdata <= 128'(i);
-            wait(S00_AXI_0_wready);
-            S00_AXI_0_wvalid <= 1;
-            S00_AXI_0_wlast <= 1;
-            #8; // wait one cycle to remain wavlid high
-            
-            wait(~S00_AXI_0_wready);
-            S00_AXI_0_wvalid <= 0;
-            S00_AXI_0_wlast <= 0;
-            
-            // Wait for BVALID and then de-assert BREADY
-            wait(S00_AXI_0_bvalid);
-            S00_AXI_0_bready <= 0;
-            #8;
-        end
-        //////////////////////////////////////////////////////////////////////////////////
-        // Write to ImageController For Response
-        //////////////////////////////////////////////////////////////////////////////////
-        
-        #8;
+    #40000000;
+    
+    image_change <= 1'b1;   
+    #10
+    image_change <= 1'b0;   
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // Deassert IRQ signal to ImageController
+    //////////////////////////////////////////////////////////////////////////////////
+    
+    wait(irq_signal);
+    #8;
+    S00_AXI_0_awaddr <= 39'h00_A001_0060; // Example write address
+    S00_AXI_0_awvalid <= 1;
+    S00_AXI_0_wdata <= 128'(1);
+    S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
+    S00_AXI_0_wvalid <= 1;
+    S00_AXI_0_bready <= 1'b1;
+    S00_AXI_0_awlen <= 8'h0;
+    S00_AXI_0_wlast <= 0;
+    
+    // Wait for AWREADY and then de-assert AWVALID
+    wait(S00_AXI_0_awready);
+    wait(~S00_AXI_0_awready);
+    S00_AXI_0_awvalid <= 0;
+    
+    // Wait for WREADY and then de-assert WVALID
+    wait(S00_AXI_0_wready);
+    S00_AXI_0_wvalid <= 1;
+    S00_AXI_0_wlast <= 1;
+    
+    wait(~S00_AXI_0_wready);
+    S00_AXI_0_wvalid <= 0;
+    S00_AXI_0_wlast <= 0;
+    
+    // Wait for BVALID and then de-assert BREADY
+    wait(S00_AXI_0_bvalid);
+    S00_AXI_0_bready <= 0;
+    
+    #8;
+    //////////////////////////////////////////////////////////////////////////////////
+    // Write Data to ImageController
+    //////////////////////////////////////////////////////////////////////////////////
+    for( j = 0 ; j < 625; j++ ) begin
         S00_AXI_0_awaddr <= 39'h00_A001_0040; // Example write address
         S00_AXI_0_awvalid <= 1;
-        S00_AXI_0_wdata <= 128'(1);
+        S00_AXI_0_wdata <= 128'(i);
         S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
         S00_AXI_0_wvalid <= 1;
         S00_AXI_0_bready <= 1'b1;
-        S00_AXI_0_awlen <= 8'h0;
+        S00_AXI_0_awlen <= 8'(0);
         S00_AXI_0_wlast <= 0;
         
         // Wait for AWREADY and then de-assert AWVALID
@@ -444,9 +428,12 @@ initial begin
         S00_AXI_0_awvalid <= 0;
         
         // Wait for WREADY and then de-assert WVALID
+        i = i + 1;
+        S00_AXI_0_wdata <= 128'(i);
         wait(S00_AXI_0_wready);
         S00_AXI_0_wvalid <= 1;
         S00_AXI_0_wlast <= 1;
+        #8; // wait one cycle to remain wavlid high
         
         wait(~S00_AXI_0_wready);
         S00_AXI_0_wvalid <= 0;
@@ -455,6 +442,108 @@ initial begin
         // Wait for BVALID and then de-assert BREADY
         wait(S00_AXI_0_bvalid);
         S00_AXI_0_bready <= 0;
+        #8;
+    end
+    
+    #40000000;
+    //////////////////////////////////////////////////////////////////////////////////
+    // Set New image IRQ signal to ImageController
+    //////////////////////////////////////////////////////////////////////////////////
+    #8;
+    S00_AXI_0_awaddr <= 39'h00_A001_0050; // Example write address
+    S00_AXI_0_awvalid <= 1;
+    S00_AXI_0_wdata <= 128'(1);
+    S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
+    S00_AXI_0_wvalid <= 1;
+    S00_AXI_0_bready <= 1'b1;
+    S00_AXI_0_awlen <= 8'h0;
+    S00_AXI_0_wlast <= 0;
+    
+    // Wait for AWREADY and then de-assert AWVALID
+    wait(S00_AXI_0_awready);
+    wait(~S00_AXI_0_awready);
+    S00_AXI_0_awvalid <= 0;
+    
+    // Wait for WREADY and then de-assert WVALID
+    wait(S00_AXI_0_wready);
+    S00_AXI_0_wvalid <= 1;
+    S00_AXI_0_wlast <= 1;
+    
+    wait(~S00_AXI_0_wready);
+    S00_AXI_0_wvalid <= 0;
+    S00_AXI_0_wlast <= 0;
+    
+    // Wait for BVALID and then de-assert BREADY
+    wait(S00_AXI_0_bvalid);
+    S00_AXI_0_bready <= 0;
+    //////////////////////////////////////////////////////////////////////////////////
+    // Deassert IRQ signal to ImageController
+    //////////////////////////////////////////////////////////////////////////////////
+    
+    wait(irq_signal);
+    #8;
+    S00_AXI_0_awaddr <= 39'h00_A001_0060; // Example write address
+    S00_AXI_0_awvalid <= 1;
+    S00_AXI_0_wdata <= 128'(1);
+    S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
+    S00_AXI_0_wvalid <= 1;
+    S00_AXI_0_bready <= 1'b1;
+    S00_AXI_0_awlen <= 8'h0;
+    S00_AXI_0_wlast <= 0;
+    
+    // Wait for AWREADY and then de-assert AWVALID
+    wait(S00_AXI_0_awready);
+    wait(~S00_AXI_0_awready);
+    S00_AXI_0_awvalid <= 0;
+    
+    // Wait for WREADY and then de-assert WVALID
+    wait(S00_AXI_0_wready);
+    S00_AXI_0_wvalid <= 1;
+    S00_AXI_0_wlast <= 1;
+    
+    wait(~S00_AXI_0_wready);
+    S00_AXI_0_wvalid <= 0;
+    S00_AXI_0_wlast <= 0;
+    
+    // Wait for BVALID and then de-assert BREADY
+    wait(S00_AXI_0_bvalid);
+    S00_AXI_0_bready <= 0;
+    
+    #8;
+    //////////////////////////////////////////////////////////////////////////////////
+    // Write Data to ImageController
+    //////////////////////////////////////////////////////////////////////////////////
+    for( j = 0 ; j < 625; j++ ) begin
+        S00_AXI_0_awaddr <= 39'h00_A001_0040; // Example write address
+        S00_AXI_0_awvalid <= 1;
+        S00_AXI_0_wdata <= 128'(i);
+        S00_AXI_0_wstrb <= 16'hFFFF; // All bytes are valid
+        S00_AXI_0_wvalid <= 1;
+        S00_AXI_0_bready <= 1'b1;
+        S00_AXI_0_awlen <= 8'(0);
+        S00_AXI_0_wlast <= 0;
+        
+        // Wait for AWREADY and then de-assert AWVALID
+        wait(S00_AXI_0_awready);
+        wait(~S00_AXI_0_awready);
+        S00_AXI_0_awvalid <= 0;
+        
+        // Wait for WREADY and then de-assert WVALID
+        i = i + 1;
+        S00_AXI_0_wdata <= 128'(i);
+        wait(S00_AXI_0_wready);
+        S00_AXI_0_wvalid <= 1;
+        S00_AXI_0_wlast <= 1;
+        #8; // wait one cycle to remain wavlid high
+        
+        wait(~S00_AXI_0_wready);
+        S00_AXI_0_wvalid <= 0;
+        S00_AXI_0_wlast <= 0;
+        
+        // Wait for BVALID and then de-assert BREADY
+        wait(S00_AXI_0_bvalid);
+        S00_AXI_0_bready <= 0;
+        #8;
     end
 end
 

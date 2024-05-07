@@ -34,6 +34,7 @@
 #define INT_ID_STOP_DISPLAY 		0x0
 #define INT_ID_RUN_DISPLAY 			0x1
 #define INT_ID_LOAD_SD_CARD			0x2
+#define INT_ID_SET_NEW_IMAGE		0x3
 
 #define MAKE128CONST(hi,lo) ((((__uint128_t)hi << 64) | (lo)))
 

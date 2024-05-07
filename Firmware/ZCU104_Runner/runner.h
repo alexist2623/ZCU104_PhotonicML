@@ -17,6 +17,7 @@
 #define INT_ID_STOP_DISPLAY 		0x0
 #define INT_ID_RUN_DISPLAY 			0x1
 #define INT_ID_LOAD_SD_CARD			0x2
+#define INT_ID_SET_NEW_IMAGE		0x3
 
 
 /************************** Constant Definitions *****************************/
@@ -36,6 +37,8 @@
 #define IMAGE_CONTROLLER_ADDR		0xA0010000U
 #define IMAGE_DATA_DONE_ADDR		0xA0010030U
 #define IMAGE_DATA_WRITE_ADDR		0xA0010040U
+#define SET_NEW_IMAGE_ADDR			0xA0010050U
+#define DEASSERT_IRQ_ADDR			0xA0010060U
 #define DATA_SAVE_MEM_ADDR			0x2000000U
 #define IMAGE_WRITE_TIME			625
 #define S_AXI_WDATA_SIZE			16

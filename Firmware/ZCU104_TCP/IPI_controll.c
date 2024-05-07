@@ -50,3 +50,19 @@ void IPI_load_sdcard(){
     XScuGic_WriteReg(DIST_BASEADDR, XSCUGIC_SFI_TRIG_OFFSET, 
             GIC_DEVICE_INT_MASK| INT_ID_LOAD_SD_CARD );
 }
+
+/*****************************************************************************/
+/**
+*
+* This function makes other processor to load new image
+* @param	None
+*
+* @return	None
+*
+* @note		None.
+*
+******************************************************************************/
+void IPI_set_new_image(){
+    XScuGic_WriteReg(DIST_BASEADDR, XSCUGIC_SFI_TRIG_OFFSET,
+            GIC_DEVICE_INT_MASK| INT_ID_SET_NEW_IMAGE );
+}

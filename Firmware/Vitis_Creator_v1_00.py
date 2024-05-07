@@ -8,148 +8,177 @@ import os
 import re
 import shutil
 import subprocess
+import argparse
+import json
 
-class Vitis_maker:
+# This is Vitis Mother
+class TVIM:
+    common_path : str = None
+    target_path : str = None
+    vitis_path : str = None
+    xsa_path : str = None
+    
+    tcl_code : str = ""
+    
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def SetClassVars(cls, **kwargs):
+        for key, value in kwargs.items():
+            setattr(cls, key, value)
+            
+    @classmethod
+    def ClearTCLCode(cls):
+        cls.tcl_code = ""
+
+# r'C:\Xilinx\Vitis\2020.2\bin\xsct.bat'
+class VitisMaker(TVIM):
     def __init__(self):
         print('make vitis project...')
-        # self.vitis_dir = r'E:\Xilinx\Vitis\2020.2\bin\xsct.bat'
-        # self.git_dir = r'E:\RFSoC\GIT'
-        self.vitis_dir = r'C:\Xilinx\Vitis\2020.2\bin\xsct.bat'
-        self.git_dir = r'C:\Jeonghyun\SNU_GIT'
-        self.tcl_commands = ''
-        self.xsa_dir = os.path.join(self.git_dir,'Vivado_prj_manager','Vitis_main','RFSoC_Main_blk_wrapper.xsa')
-        self.bsp_lib_dir = os.path.join(self.git_dir,r'RFSoC\RFSoC_Design_V1_1\VITIS\RFSoC_Firmware_plt\export\RFSoC_Firmware_plt\sw\RFSoC_Firmware_plt\standalone_domain\bsplib')
-        self.bsp_include_dir = os.path.join(self.git_dir,r'RFSoC\RFSoC_Design_V1_1\VITIS\RFSoC_Firmware_plt\export\RFSoC_Firmware_plt\sw\RFSoC_Firmware_plt\standalone_domain\bspinclude')
-        self.xilinx_include_dir = os.path.join(self.git_dir,r'Vivado_prj_manager\Compiler\Xilinx_Include')
-        self.skeleton_dir = os.path.join(self.git_dir,r'Vivado_prj_manager\Compiler\C_Code\skeleton_code')
-        self.TCP_firmware_dir = os.path.join(self.git_dir,'Vivado_prj_manager','Vitis_main','RFSoC_Firmware_0')
-        self.realtime_firmware_dir = os.path.join(self.git_dir,'Vivado_prj_manager','Vitis_main','RFSoC_Firmware_1')
-        self.realtime_linker_dir = os.path.join(self.git_dir,'Vivado_prj_manager','Vitis_main','RFSoC_Firmware_1_linker')
-        self.target_dir = os.path.join(self.git_dir,'RFSoC','RFSoC_Design_V1_1','VITIS')
+        self.platform_name : str = None
+        self.app : list(VitisAppMaker) = []
             
-        self.ensure_directory_exists(self.target_dir)
-    
-    def ensure_directory_exists(self, directory_dir):
-        if not os.path.exists(directory_dir):
-            try:
-                os.makedirs(directory_dir)
-                print(f"Directory {directory_dir} created.")
-            except OSError as error:
-                print(f"Error creating directory {directory_dir}: {error}")
-        else:
-            print(f"Directory {directory_dir} already exists.")
-        
-    def copy_bsp_include(self):
-        # Define the source directory and the destination path
-        source_directory = self.bsp_include_dir
-        destination_directory = os.path.join(self.xilinx_include_dir,'bspinclude')
-        
-        if os.path.exists(destination_directory):
-            shutil.rmtree(destination_directory)
-            print('Delete previous BSP include')
-            # Copy the entire directory
-        shutil.copytree(source_directory, destination_directory)
-        
-        print(f"BSP Include directory Copied the entire directory from {source_directory} to {destination_directory}.")
-        
-    def copy_bsp_lib(self):
-        # Define the source directory and the destination path
-        source_directory = self.bsp_lib_dir
-        destination_directory = os.path.join(self.xilinx_include_dir,'bsplib')
-        
-        # Copy the entire directory
-        if os.path.exists(destination_directory):
-            shutil.rmtree(destination_directory)
-            print('Delete previous bsp lib')
-        shutil.copytree(source_directory, destination_directory)
-        
-        print(f"BSP Lib directory Copied the entire directory from {source_directory} to {destination_directory}.")
-        
-    def run_vitis_tcl(self):
-        file_dir = f'{self.target_dir}/make_project.tcl'
-        self.tcl_commands = self.tcl_commands.replace('\\','/')
-        with open(file_dir, 'w') as tcl_file:
-            tcl_file.write(self.tcl_commands)
-        # Start Vitis in batch mode and pass the TCL commands as input
-        process = subprocess.Popen([self.vitis_dir, file_dir],
-                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, text=True, cwd=self.target_dir)
-    
-    
-        while process.poll() == None:
-            out = process.stdout.readline()
-            print(out, end='')
-            
-        # Wait for the process to complete
-        stdout, stderr = process.communicate()
-    
-        # Print the output and error messages
-        print(stdout)
-        print(stderr)
+        EnsureDirectoryExists(TVIM.target_path)
         
     def make_vitis_platform(self):
-        self.tcl_commands += f"""
-platform create -name "RFSoC_Firmware_plt" -hw "{self.xsa_dir}" -proc psu_cortexa53_0 -os standalone -arch 64-bit -fsbl-target psu_cortexa53_0
-platform read {os.path.join(self.target_dir,'RFSoC_Firmware_plt','platform.spr')}
-platform active {{RFSoC_Firmware_plt}}
-domain create -name {{psu_cortexa53_1}} -os {{standalone}} -proc {{psu_cortexa53_1}} -arch {{64-bit}} -display-name {{psu_cortexa53_1}} -desc {{}} -runtime {{cpp}}
-platform generate -domains psu_cortexa53_1 
-domain active standalone_domain
-domain active psu_cortexa53_1
+        TVIM.tcl_commands += (
+            f"platform create -name \"{self.platform_name}\" -hw"
+            f" \"{TVIM.xsa_path}\" -proc {self.app[0].proc} -os {self.app[0].os}"
+            f" -arch {self.app[0].arch} -fsbl-target {self.app[0].proc}\n"
+            "platform read"
+            f" {os.path.join(TVIM.target_dir,self.platform_name,'platform.spr')}\n"
+            f"platform active {{{self.platform_name}}}\n"
+        )
+    def make_vitis_Domain(self):
+        for app in self.app[1:]:
+            TVIM.tcl_commands += (
+                "domain create -name {{{app.domain}}} -os {{{app.os}}}"
+                " -proc {{{app.proc}}} -arch {{{app.arch}}} -display-name"
+                " {{{app.app_name}}} -desc {{}} -runtime {{{app.lang}}}\n"
+                "platform generate -domains {app.domain}\n"
+            )
+        TVIM.tcl_commands +=  f"domain active {self.app[0].os}_domain\n" 
+        
+        for app in self.app[1:]:
+            TVIM.tcl_commands += "domain active {app.domain}\n"
 
-platform write
-platform generate -domains 
-platform active RFSoC_Firmware_plt
-domain active standalone_domain
-bsp reload
-bsp setlib -name libmetal -ver 2.1
-bsp setlib -name lwip211 -ver 1.3
-bsp setlib -name xilpm -ver 3.2
-bsp config compiler "aarch64-none-elf-gcc"
-bsp write
-bsp reload
-catch {{bsp regenerate}}
-platform generate
-platform active RFSoC_Firmware_plt
-platform generate -domains
-        """
-        # domain create -name a53_Standalone -os standalone -proc psu_cortexa53_0
-        # platform generate -domains a53_standalone
+        TVIM.tcl_commands += (
+            "platform write\n"
+            "platform generate -domains\n" 
+        )
+        TVIM.tcl_commands +=  f"domain active {self.app[0].os}_domain\n"
+        TVIM.tcl_commands +=  "bsp reload\n"
+        for lib_name, lib_ver in self.app[0].libs.items():
+            TVIM.tcl_commands +=  f"bsp setlib -name {lib_name} -ver {lib_ver}\n"
+        TVIM.tcl_commands +=  (
+            "bsp config compiler \"aarch64-none-elf-gcc\"\n"
+            "bsp write\n"
+            "bsp reload\n"
+            "catch {{bsp regenerate}}\n"
+        )
         
-        self.tcl_commands += '\n'
-        
-    def get_all_files_in_directory(self, directory,file_type):
-        file_list = []
-        is_filetype = False
-        
-        for root, dirs, files in os.walk(directory):
-            for file in files:
-                for types_ in file_type:
-                    if file.endswith(types_):
-                        is_filetype = True
-                if is_filetype:
-                    file_list.append(os.path.join(root, file))
-                is_filetype = False
-        return file_list
+        for app in self.app[1:]:
+            TVIM.tcl_commands +=  f"domain active {app.os}_domain\n"
+            TVIM.tcl_commands +=  "bsp reload\n"
+            for lib_name, lib_ver in app.libs.items():
+                TVIM.tcl_commands +=  f"bsp setlib -name {lib_name} -ver {lib_ver}\n"
+            TVIM.tcl_commands +=  (
+                "bsp config compiler \"aarch64-none-elf-gcc\"\n"
+                "bsp write\n"
+                "bsp reload\n"
+                "catch {{bsp regenerate}}\n"
+            )
     
     def make_vitis_application(self):
-        self.tcl_commands += f"""
-app create -name RFSoC_Firmware_app -platform RFSoC_Firmware_plt -proc psu_cortexa53_0 -os standalone -lang C -template {{Empty Application}} -domain standalone_domain
-app create -name RealTime_Firmware_app -sysproj RFSoC_Firmware_app_system -proc psu_cortexa53_1 -os standalone -lang C -template {{Empty Application}} -domain psu_cortexa53_1
-importsources -name RFSoC_Firmware_app -path "{self.TCP_firmware_dir}" -soft-link
-importsources -name RealTime_Firmware_app -path "{self.realtime_firmware_dir}" -soft-link
-importsources -name RealTime_Firmware_app -path "{self.realtime_linker_dir}\lscript.ld"
-            """
-        
-        self.tcl_commands += '\n'
+        TVIM.tcl_commands += (
+            "app create -name {self.app[0].app_name}"
+            " -platform {self.platform_name} -proc {self.app[0].proc}"
+            " -os {self.app[0].os}"
+            " -lang {self.app[0].lang}"
+            " -template {{Empty Application}}"
+            " -domain {self.app[0].os}_domain\n"
+        )
+        TVIM.tcl_commands += (
+            "app create -name RealTime_Firmware_app -sysproj RFSoC_Firmware_app_system -proc psu_cortexa53_1 -os standalone -lang C -template {{Empty Application}} -domain psu_cortexa53_1\n"
+            "importsources -name RFSoC_Firmware_app -path \"{self.TCP_firmware_dir}\" -soft-link\n"
+            "importsources -name RealTime_Firmware_app -path \"{self.realtime_firmware_dir}\" -soft-link\n"
+            "importsources -name RealTime_Firmware_app -path \"{self.realtime_linker_dir}\lscript.ld\"\n"
+        )
         
     def set_workspace(self):
-        self.tcl_commands += f'setws \"{self.target_dir}\"'
-        self.tcl_commands += '\n'
-            
-if __name__ == "__main__":
-    vtm = Vitis_maker()
+        TVIM.tcl_commands += f"setws \"{self.target_dir}\"\n"
+        
+class VitisAppMaker(TVIM):
+    def __init__(self):
+        self.app_name : str = None
+        self.domain : str = None
+        self.lang : str = None
+        self.os : str = None
+        self.proc : str = None
+        self.arch : str = None
+        self.libs : list(dict[str:str]) = []
     
-    vtm.set_workspace()
-    vtm.make_vitis_platform()
-    vtm.make_vitis_application()
-    vtm.run_vitis_tcl()
+def SetGlobalNamespace(json_file) -> None:
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+    TVIM.SetClassVars(**data)
+    
+def main(args : argparse.Namespace) -> None:
+    # Use provided values or defaults
+    configuration = args.config if args.config else 'configuration.json'
+    verilog_json = (
+        args.verilog_json if args.verilog_json 
+        else 'vitis_json.json'
+    )
+
+    SetGlobalNamespace(configuration)
+    vm = VitisMaker(verilog_json)
+    vm.MakeTCL()
+    
+def RunVitisTCL(tcl_path) -> None:
+    process = subprocess.Popen(
+        [TVIM.vitis_path, "-mode", "batch", "-source", tcl_path],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+        universal_newlines=True, text=True
+    )
+    while process.poll() == None:
+        out = process.stdout.readline()
+        print(out, end='')
+    stdout, stderr = process.communicate()
+    print(stderr if stderr else 'Vitis ended with no error')
+    
+def CreateVitisMaker(json_file) -> VitisMaker:
+    with open(json_file, 'r') as file:
+        data = json.load(file)
+    vm = VitisMaker(**data['platform'])
+    for app_name, ip_data in data.get('app', {}).items():
+        app_maker = VitisAppMaker(**ip_data)
+        app_maker.app_name = app_name
+        vm.app.append(app_maker)
+    return vm
+
+def EnsureDirectoryExists(directory_path) -> None:
+    if not os.path.exists(directory_path):
+        try:
+            os.makedirs(directory_path)
+            print(f"Directory {directory_path} created.")
+        except OSError as error:
+            print(f"Error creating directory {directory_path}: {error}")
+    else:
+        print(f"Directory {directory_path} already exists.")
+        
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description=(
+            "Make Vitis project from json meta file"
+        )
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", 
+        help="Increase output verbosity"
+    )
+    parser.add_argument("-c", "--config", help="Configuration file name")
+    parser.add_argument("-f", "--vitis_json", help="Vitis JSON file name")
+    args = parser.parse_args()
+    main(args)

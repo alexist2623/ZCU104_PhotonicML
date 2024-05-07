@@ -70,6 +70,10 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 		xil_printf("LOAD SD CARD\r\n");
 		IPI_load_sdcard();
 	}
+	else if(strcmp(p->payload,"SET NEW IMAGE") == 0 ){
+		xil_printf("SET NEW IMAGE\r\n");
+		IPI_set_new_image();
+	}
 	else{
 		xil_printf("%s\r\n",p->payload);
 	}

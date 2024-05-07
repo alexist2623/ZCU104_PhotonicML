@@ -11,10 +11,8 @@ module ImageSender
     parameter FIFO_DEPTH                    = 512,
     parameter AXI_DATA_WIDTH                = 128,
     parameter AXI_ADDR_WIDTH                = 32,
-    parameter BUFFER_THRESHOLD              = 625,      // number of axi write. so it should be counted as multiplication of 16 -> BUFFER_THRESHOLD * 16 Byte
     parameter DRAM_ADDR_WIDTH               = 39,
     parameter DRAM_DATA_WIDTH               = 128,
-    parameter DRAM_DATA_LEN                 = BUFFER_THRESHOLD,
     parameter IMAGE_BUFFER_DEPTH            = DRAM_DATA_WIDTH,
     parameter IMAGE_CHANGE_TIME             = 40
 )
@@ -229,7 +227,7 @@ always@(posedge clk_pixel) begin
         if( dram_address_rd_en ) begin
             dram_read_en_buffer <= 1'b1;
         end
-        if( ~dram_read_busy && ~image_buffer_fifo_full ) begin
+        else if( ~dram_read_busy && ~image_buffer_fifo_full ) begin
             dram_read_en <= dram_read_en_buffer;
             dram_read_en_buffer <= 1'b0;
         end
