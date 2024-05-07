@@ -41,25 +41,43 @@ void print_app_header()
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
                                struct pbuf *p, err_t err)
 {
-	/* do not read the packet if we are not in ESTABLISHED state */
+	/*
+	 * do not read the packet if we are not in ESTABLISHED state
+	 */
 	if (!p) {
 		tcp_close(tpcb);
 		tcp_recv(tpcb, NULL);
 		return ERR_OK;
 	}
 
-	/* indicate that the packet has been received */
+	/*
+	 * indicate that the packet has been received
+	 */
 	tcp_recved(tpcb, p->len);
 
-	//TODO CODE AFTER CMD RECEIVE
-	if(strcmp(p->payload,"START") == 0 ){
-		xil_printf("START RECV\r\n");
+	/*
+	 * Command processing
+	 */
+	if(strcmp(p->payload,"START DISPLAY") == 0 ){
+		xil_printf("START DISPLAY\r\n");
+		IPI_run_display();
+	}
+	else if(strcmp(p->payload,"STOP DISPLAY") == 0 ){
+		xil_printf("STOP DISPLAY\r\n");
+		IPI_stop_display();
+	}
+	else if(strcmp(p->payload,"LOAD SD CARD") == 0 ){
+		xil_printf("LOAD SD CARD\r\n");
+		IPI_load_sdcard();
 	}
 	else{
 		xil_printf("%s\r\n",p->payload);
 	}
-	/* echo back the payload */
-	/* in this case, we assume that the payload is < TCP_SND_BUF */
+
+	/*
+	 * echo back the payload
+	 * in this case, we assume that the payload is < TCP_SND_BUF
+	 */
 	if (tcp_sndbuf(tpcb) > p->len) {
 		err = tcp_write(tpcb, p->payload, p->len, 1);
 	}
@@ -67,7 +85,9 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 		xil_printf("no space in tcp_sndbuf\n\r");
 	}
 
-	/* free the received pbuf */
+	/*
+	 * free the received pbuf
+	 */
 	pbuf_free(p);
 
 
@@ -78,14 +98,20 @@ err_t accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
 	static int connection = 1;
 
-	/* set the receive callback for this connection */
+	/*
+	 * set the receive callback for this connection
+	 */
 	tcp_recv(newpcb, recv_callback);
 
-	/* just use an integer number indicating the connection id as the
-	   callback argument */
+	/*
+	 * just use an integer number indicating the connection id as the
+	 * callback argument
+	 */
 	tcp_arg(newpcb, (void*)(UINTPTR)connection);
 
-	/* increment for subsequent accepted connections */
+	/*
+	 * increment for subsequent accepted connections
+	 */
 	connection++;
 
 	return ERR_OK;
