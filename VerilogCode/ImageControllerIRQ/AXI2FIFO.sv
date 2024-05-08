@@ -225,8 +225,8 @@ assign s_axi_wready  = ((axi_state_write == WRITE_FIFO)
                         || (axi_state_write == WRITE_IMAGE_SIZE)
                         || (axi_state_write == WRITE_DATA_BUFFER)
                         || (axi_state_write == WRITE_DATA_DONE)
-                        || (axi_state_write == SET_NEW_IMAGE
-                        || (axi_state_write == DEASSERT_IRQ));
+                        || (axi_state_write == SET_NEW_IMAGE)
+                        || (axi_state_write == DEASSERT_IRQ);
 assign s_axi_arready = (axi_state_read == IDLE);
 assign image_sender_reset = ~s_axi_aresetn;
 
@@ -481,7 +481,6 @@ always @(posedge s_axi_aclk) begin
                         dram_read_data_valid <= 1'b1;                          
                         if( s_axi_wlast == 1'b1 ) begin
                             axi_state_write <= WRITE_RESPONSE;
-                            dram_read_data_valid <= 1'b1;  
                         end
                     end
                     else begin
