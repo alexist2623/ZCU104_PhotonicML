@@ -82,5 +82,6 @@ class ZCU104:
 if __name__ == "__main__":
     zcu104 = ZCU104(IPAddress = '192.168.1.10', TCPPort = 7)
     zcu104.connect()
-    zcu104.setNewImage()
+    # zcu104.setNewImage()
+    zcu104.loadSDCard()
     zcu104.disconnect()

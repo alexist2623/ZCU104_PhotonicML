@@ -1,5 +1,6 @@
 #include "runner.h"
 
+uint64_t k = 0;
 /*****************************************************************************/
 /**
 *
@@ -13,7 +14,6 @@
 *
 ******************************************************************************/
 void deassert_irq(){
-	xil_printf("Deassert IRQ...\r\n");
 	Xil_Out128(DEASSERT_IRQ_ADDR,MAKE128CONST(0,0b1));
 }
 
@@ -30,7 +30,6 @@ void deassert_irq(){
 *
 ******************************************************************************/
 void set_new_image(){
-	xil_printf("Set New Image...\r\n");
     Xil_Out128(SET_NEW_IMAGE_ADDR,MAKE128CONST(0,0b1));
 }
 
@@ -47,7 +46,6 @@ void set_new_image(){
 *
 ******************************************************************************/
 void data_write_done(){
-	xil_printf("Send acknowledge signal...\r\n");
     Xil_Out128(IMAGE_DATA_DONE_ADDR,MAKE128CONST(0,0b1));
 }
 
@@ -65,9 +63,8 @@ void data_write_done(){
 *
 ******************************************************************************/
 void set_image_size(uint64_t width, uint64_t height){
-	xil_printf("Set image size to %d, %d...\r\n",width, height);
     Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x20,
-			MAKE128CONST( 0, (((uint64_t) width, ) << 32) | (uint64_t) height ));
+    		MAKE128CONST( 0, (((uint64_t) width ) << 32) | (uint64_t) height ));
 }
 
 /*****************************************************************************/
@@ -87,33 +84,45 @@ void write_80000_data(void * data_source_addr){
 	 * Send test image data to ImageController if data_source_addr == NULL
 	 */
 	if( data_source_addr == NULL ){
+		uint64_t value = (  (uint64_t) ( k << 56 ) | (uint64_t) ( k << 48 ) |
+							(uint64_t) ( k << 40 ) | (uint64_t) ( k << 32 ) |
+							(uint64_t) ( k << 24 ) | (uint64_t) ( k << 16 ) |
+							(uint64_t) ( k <<  8 ) | (uint64_t)   k);
+
 		for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
 			Xil_DCacheFlush();
-			/*Xil_Out128(IMAGE_DATA_WRITE_ADDR,
-					MAKE128CONST(
-							(uint64_t) ( k << 56 ) | (uint64_t) ( k << 48 ) |
-							(uint64_t) ( k << 40 ) | (uint64_t) ( k << 32 ) |
-							(uint64_t) ( k << 24 ) | (uint64_t) ( k << 16 ) |
-							(uint64_t) ( k <<  8 ) | (uint64_t)   k,
-							(uint64_t) ( k << 56 ) | (uint64_t) ( k << 48 ) |
-							(uint64_t) ( k << 40 ) | (uint64_t) ( k << 32 ) |
-							(uint64_t) ( k << 24 ) | (uint64_t) ( k << 16 ) |
-							(uint64_t) ( k <<  8 ) | (uint64_t)   k ) );*/
-			Xil_Out128(IMAGE_DATA_WRITE_ADDR,
-								MAKE128CONST((uint64_t) k * MASK64BIT, (uint64_t) k * MASK64BIT ));
+			Xil_Out128(IMAGE_DATA_WRITE_ADDR, MAKE128CONST(value,value) );
 		}
-		k = (k+1)%2;
-		xil_printf("k : %d\r\n",k);
+		k = (k+10)%256;
 	}
 	else{
-		volatile uint64_t * data_addr;
-		data_addr = (volatile uint64_t *) data_source_addr;
+		volatile uint8_t * data_addr;
+		data_addr = (volatile uint8_t *) data_source_addr;
+		uint64_t data_lower;
+		uint64_t data_uppper;
+
 		for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
 			Xil_DCacheFlush();
 			xil_printf("%d\r\n",i);
-			Xil_Out128(IMAGE_DATA_WRITE_ADDR,
-					MAKE128CONST((uint64_t) (data_addr + 2 * i + 1),
-							(uint64_t) (data_addr + 2 * i )) );
+			data_lower = ( (uint64_t) ( *(data_addr + 7) << 56 ) |
+						   (uint64_t) ( *(data_addr + 6) << 48 ) |
+						   (uint64_t) ( *(data_addr + 5) << 40 ) |
+						   (uint64_t) ( *(data_addr + 4) << 32 ) |
+						   (uint64_t) ( *(data_addr + 3) << 24 ) |
+						   (uint64_t) ( *(data_addr + 2) << 16 ) |
+						   (uint64_t) ( *(data_addr + 1) <<  8 ) |
+						   (uint64_t)   *(data_addr) );
+			data_addr = data_addr + 8;
+			data_uppper = ( (uint64_t) ( *(data_addr + 7) << 56 ) |
+							(uint64_t) ( *(data_addr + 6) << 48 ) |
+							(uint64_t) ( *(data_addr + 5) << 40 ) |
+							(uint64_t) ( *(data_addr + 4) << 32 ) |
+							(uint64_t) ( *(data_addr + 3) << 24 ) |
+							(uint64_t) ( *(data_addr + 2) << 16 ) |
+							(uint64_t) ( *(data_addr + 1) <<  8 ) |
+							(uint64_t)   *(data_addr) );
+			data_addr = data_addr + 8;
+			Xil_Out128(IMAGE_DATA_WRITE_ADDR, MAKE128CONST(data_uppper, data_lower) );
 		}
 	}
 	return;
