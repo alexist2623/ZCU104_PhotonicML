@@ -140,7 +140,8 @@ image_data_save_buffer_fifo image_data_save_buffer_fifo_0 ( // 128 width, 2048 d
 
 image_data_reuse_buffer_fifo image_data_reuse_buffer_fifo_1 ( // 128 width, 2048 depth, 2000 program full
     .clk                                (clk_pixel),
-    .srst                               (image_sender_reset | image_sender_flush ),  // rst -> srst 
+    // flsuh reuse fifo when load new image
+    .srst                               (image_sender_reset | image_sender_flush | (image_flush_trigger_buffer & load_new_image) ),  // rst -> srst 
     .din                                (image_buffer),
     .wr_en                              (image_buffer_fifo_rd_en),
     .rd_en                              (image_buffer_fifo_rd_en & ~image_buffer_empty & ~load_new_image),
@@ -148,6 +149,10 @@ image_data_reuse_buffer_fifo image_data_reuse_buffer_fifo_1 ( // 128 width, 2048
     .prog_full                          (),  // full -> prog_full to deal with full delay signal
     .empty                              (image_buffer_empty)
 );
+/*
+ * Declared for verification
+ */
+int i = 0;
 
 //////////////////////////////////////////////////////////////////////////////////
 // Image Buffer and Trigger Control
@@ -161,9 +166,11 @@ always@(posedge clk_pixel) begin
         image_change_buffer <= 1'b0;
         image_flush_trigger_buffer <= 1'b0;
         image_read_en <= 1'b0;
+        image_change_buffer <= 1'b0;
+        load_new_image <= 1'b0;
     end
     else begin
-        image_flush_trigger_buffer <= image_flush_trigger;
+        image_flush_trigger_buffer <= image_flush_trigger; // make 1 cycle delayed image_flush_trigger 
         if( image_send_start == 1'b1 ) begin // image_send_start is used instead of auto_start not to stop image send during video period
             //////////////////////////////////////////////////////////////////////////////////
             // Image Send
@@ -179,6 +186,11 @@ always@(posedge clk_pixel) begin
                 if( image_buffer_index == IMAGE_BUFFER_WIDTH'(IMAGE_BUFFER_LEN - 1)) begin
                     image_buffer_index <= IMAGE_BUFFER_WIDTH'(0);
                 end
+                /************************Simulation Code***************************/
+                i = i + 1;
+                $display("cx : %d, cy : %d, i : %d, rgb : %d, buffer index : %d",
+                    cx, cy, i, rgb[7:0], image_buffer_index);
+                /******************************************************************/
             end
             else begin
                 rgb[23:0] <= 24'hff_00_00;
@@ -188,7 +200,7 @@ always@(posedge clk_pixel) begin
             // Image Change setting
             //////////////////////////////////////////////////////////////////////////////////
             if( image_flush_trigger ) begin // Change image data only when state reached end of image
-                image_change_buffer <= 1'b0;    // reset image_change_buffer
+                image_change_buffer <= image_change;    // reset image_change_buffer
                 image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);   // reset buffer index
                 load_new_image <= image_change_buffer; // save image_change signal and maintain until image_flush_trigger signal
             end
