@@ -33,12 +33,15 @@
 #define DIST_BASEADDR				XPAR_SCUGIC_0_DIST_BASEADDR
 #define GIC_DEVICE_INT_MASK        	0x00010000
 #define PL_INTID					121
+
 #define MASTER_CONTROLLER_ADDR		0xA0000000U
 #define IMAGE_CONTROLLER_ADDR		0xA0010000U
+#define SET_IMAGE_SIZE              0xA0010020U
 #define IMAGE_DATA_DONE_ADDR		0xA0010030U
 #define IMAGE_DATA_WRITE_ADDR		0xA0010040U
 #define SET_NEW_IMAGE_ADDR			0xA0010050U
 #define DEASSERT_IRQ_ADDR			0xA0010060U
+
 #define DATA_SAVE_MEM_ADDR			0x2000000U
 #define IMAGE_WRITE_TIME			625
 #define S_AXI_WDATA_SIZE			16
@@ -63,13 +66,25 @@ static INLINE __uint128_t Xil_In128(UINTPTR Addr)
 }
 
 /********************* main Function Prototypes ******************************/
+void initialize_modules();
 
+/********************* InterruptControll Prototypes ****************************/
 void LowInterruptHandler(u32 CallbackRef);
 void XScuGic_ClearPending (u32 DistBaseAddress, u32 Int_Id);
-void initialize_modules();
 void initialize_interrupt();
+
+/**************** ImageControllerDriver Function Prototypes ******************/
+void deassert_irq();
 void write_80000_data(void * data_source_addr);
+void set_new_image();
+void data_write_done();
+void set_image_size(uint64_t width, uint64_t height);
+
+/**************** MasterControllerDriver Function Prototypes *****************/
 void auto_start();
+void auto_stop();
+void reset_enable();
+void reset_disable();
 
 /********************* sdcard.c Function Prototypes **************************/
 int init_sd_card(XSdPs *SdInstance, FATFS *FS_Instance);
