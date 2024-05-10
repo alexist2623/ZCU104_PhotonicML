@@ -81,10 +81,9 @@ int main(void)
 	/////////////////////////////////////////////////////////////////////
 	// Send 100x100 test image data to ImageController
 	/////////////////////////////////////////////////////////////////////
-	//write_80000_data(NULL);
-	//write_80000_data(NULL);
-	load_sd_card_data("test0000.bin");
-	load_sd_card_data("test0000.bin");
+	write_80000_data(NULL);
+	write_80000_data(NULL);
+	load_sd_card_data();
 	xil_printf("memory armed...\r\n");
 
 	/////////////////////////////////////////////////////////////////////
@@ -96,7 +95,6 @@ int main(void)
 		if( image_irq_ack == 1 ){
 			image_irq_ack = 0;
 			data_write_done();
-			xil_printf("PL WRITE\r\n");
 		}
 	}
 }
