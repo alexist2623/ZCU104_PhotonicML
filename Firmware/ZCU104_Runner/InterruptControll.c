@@ -45,6 +45,7 @@ void LowInterruptHandler(u32 CallbackRef)
 {
 	u32 BaseAddress;
 	u32 IntID;
+	static volatile uint8_t * data_addr = DATA_SAVE_MEM_ADDR;
 
 	/*
 	 * CallbackRef is defined at calling function Xil_ExceptionRegisterHandler
@@ -85,12 +86,13 @@ void LowInterruptHandler(u32 CallbackRef)
 			break;
 		case INT_ID_LOAD_SD_CARD:
 			xil_printf("LOAD SD CARD INT\r\n");
-			read_sd_card();
+			load_sd_card_data();
 			break;
 		case PL_INTID:
 			image_irq_ack = 1;
             deassert_irq();
-			write_80000_data(NULL);
+			write_80000_data(data_addr);
+			data_addr = data_addr + IMAGE_SIZE;
 			break;
 		case INT_ID_SET_NEW_IMAGE:
             set_new_image();
