@@ -17,12 +17,19 @@
 ******************************************************************************/
 static int sd_card_initialized = SD_CARD_NOT_INITIALIZED;
 
-int read_sd_card() {
+int load_sd_card_data() {
 	static XSdPs SdInstance;
     static FATFS FS_Instance;
     static FIL fil;
     static FRESULT f_res;
     static UINT br;
+	static volatile uint8_t * data_addr;
+	uint8_t data_num;
+	data_addr = (volatile uint8_t * )DATA_SAVE_MEM_ADDR;
+	uint8_t buffer[SD_CARD_READ_UNIT];
+	char file_name[16] = {'t', 'e', 's', 't', '0', '0',
+						  '0', '0', '.', 'b', 'i', 'n',
+						  '\0'};
 
     /*
      * Initialize SD card and mount file system
@@ -39,40 +46,39 @@ int read_sd_card() {
     /*
      * Open file to read
      */
-    f_res = f_open(&fil, "test0000.bin", FA_READ);
-    xil_printf("f_res : fil\r\n");
-    if (f_res) {
-    	xil_printf("FATAL ERROR : File dones not exist\r\n");
-        return XST_FAILURE;
-    }
+	Xil_DCacheFlush();
+    for( uint64_t i = 0; i < 1000; i++ ){
+    	file_name[4] = '0' + (char)((i/1000)%10);
+    	file_name[5] = '0' + (char)((i/100) %10);
+    	file_name[6] = '0' + (char)((i/10)  %10);
+    	file_name[7] = '0' + (char)(i       %10);
+		f_res = f_open(&fil, file_name, FA_READ);
+		if (f_res) {
+			xil_printf("FATAL ERROR : File dones not exist\r\n");
+			return XST_FAILURE;
+		}
 
-    /*
-     * Read data from file
-     * Note that
-     * FRESULT f_read (
-	 * FIL*  fp, 	Pointer to the file object
-	 * void* buff,	Pointer to data buffer
-	 * UINT  btr,	Number of bytes to read
-	 * UINT* br		Pointer to number of bytes read
-	 * )
-     */
-    uint8_t buffer[SD_CARD_READ_UNIT];
-    f_res = f_read(&fil, buffer, sizeof(buffer), &br);
+		/*
+		 * Read data from file
+		 * Note that
+		 * FRESULT f_read (
+		 * FIL*  fp, 	Pointer to the file object
+		 * void* buff,	Pointer to data buffer
+		 * UINT  btr,	Number of bytes to read
+		 * UINT* br		Pointer to number of bytes read
+		 * )
+		 */
+		f_res = f_read(&fil, buffer, sizeof(buffer), &br);
 
-    if (f_res || br == 0) {
-        f_close(&fil);
-        xil_printf("FATAL ERROR : File read failed\r\n");
-        return XST_FAILURE;
-    }
-
-    int j = 0;
-
-    for(int i = 0 ; i < SD_CARD_READ_UNIT ; i++ ){
-    	xil_printf("%d",buffer[i]);
-    	j++;
-    	if(j % 100 == 0 ){
-    		xil_printf("\r\n");
-    	}
+		if (f_res || br == 0) {
+			f_close(&fil);
+			xil_printf("FATAL ERROR : File read failed\r\n");
+			return XST_FAILURE;
+		}
+		for(uint64_t j = 0 ; j < SD_CARD_READ_UNIT; j++){
+			*(data_addr + j) = buffer[j];
+		}
+		data_addr = data_addr + SD_CARD_READ_UNIT;
     }
 
     /*
@@ -80,22 +86,50 @@ int read_sd_card() {
      */
     f_close(&fil);
 
-    xil_printf("\r\nSD CARD READ DONE\r\n");
+    xil_printf("\r\nSD CARD LOAD DONE\r\n");
 
     return XST_SUCCESS;
 }
 
+/*****************************************************************************/
+/**
+*
+* This function unmount SD Card from FPGA
+*
+* @param	None.
+*
+* @return	None.
+*
+* @note		None.
+*
+******************************************************************************/
 int umount_sd_card(){
 	f_mount(NULL, "", 0);
 	return XST_SUCCESS;
 }
 
-int load_sd_card_data(char * file_name){
+/*****************************************************************************/
+/**
+*
+* This function reads data from SD Card and send to ImageController.
+*
+* @param	None.
+*
+* @return	None.
+*
+* @note		None.
+*
+******************************************************************************/
+int read_sd_card(char * file_name){
 	static XSdPs SdInstance;
 	static FATFS FS_Instance;
 	static FIL fil;
 	static FRESULT f_res;
 	static UINT br;
+	static volatile uint8_t * data_addr;
+	uint8_t data_num;
+	data_addr = (volatile uint8_t * )DATA_SAVE_MEM_ADDR;
+	uint8_t buffer[SD_CARD_READ_UNIT];
 
 	/*
 	 * Initialize SD card and mount file system
@@ -128,7 +162,6 @@ int load_sd_card_data(char * file_name){
 	 * UINT* br		Pointer to number of bytes read
 	 * )
 	 */
-	uint8_t buffer[SD_CARD_READ_UNIT];
 	f_res = f_read(&fil, buffer, sizeof(buffer), &br);
 
 	if (f_res || br == 0) {
@@ -137,21 +170,10 @@ int load_sd_card_data(char * file_name){
 		return XST_FAILURE;
 	}
 
-	int j = 0;
-
-	for(int i = 0 ; i < SD_CARD_READ_UNIT ; i++ ){
-		xil_printf("%d",buffer[i]);
-		j++;
-		if(j % 100 == 0 ){
-			xil_printf("\r\n");
-		}
-	}
-
 	/*
 	 * Close the file
 	 */
 	f_close(&fil);
-	write_80000_data(buffer);
 
 	xil_printf("\r\nSD CARD READ DONE\r\n");
 
