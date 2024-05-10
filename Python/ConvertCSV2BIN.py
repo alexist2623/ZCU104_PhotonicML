@@ -29,7 +29,7 @@ def saveBinaryDataFromCSV(row_num, csv_file_path, output_folder):
             bin_file.write(byte_array)
 
 if __name__ == "__main__":
-    row_num = 0
     csv_file_path = 'MNIST_subset_1000_train.csv'
     output_folder = f'TEST_DATA'
-    saveBinaryDataFromCSV(row_num, csv_file_path, output_folder)
+    for row_num in range(1000):
+        saveBinaryDataFromCSV(row_num, csv_file_path, output_folder)
