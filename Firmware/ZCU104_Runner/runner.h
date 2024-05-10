@@ -47,6 +47,7 @@
 #define S_AXI_WDATA_SIZE			16
 #define SCREEN_WIDTH				100
 #define SCREEN_HEIGHT				100
+#define IMAGE_SIZE					10000 // 100 x 100 size image
 
 /************************** 128 bit make macro *******************************/
 #define MAKE128CONST(hi,lo) ((((__uint128_t)hi << 64) | (lo)))
@@ -88,6 +89,8 @@ void reset_disable();
 
 /********************* sdcard.c Function Prototypes **************************/
 int init_sd_card(XSdPs *SdInstance, FATFS *FS_Instance);
-int read_sd_card();
+int load_sd_card_data();
+int umount_sd_card();
+int read_sd_card(char * file_name);
 
 #endif
