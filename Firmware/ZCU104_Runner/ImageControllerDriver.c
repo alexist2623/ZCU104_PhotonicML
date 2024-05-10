@@ -100,28 +100,59 @@ void write_80000_data(void * data_source_addr){
 		data_addr = (volatile uint8_t *) data_source_addr;
 		uint64_t data_lower;
 		uint64_t data_uppper;
+		uint64_t data_00;
+		uint64_t data_01;
+		uint64_t data_02;
+		uint64_t data_03;
+		uint64_t data_04;
+		uint64_t data_05;
+		uint64_t data_06;
+		uint64_t data_07;
+		uint64_t data_08;
+		uint64_t data_09;
+		uint64_t data_10;
+		uint64_t data_11;
+		uint64_t data_12;
+		uint64_t data_13;
+		uint64_t data_14;
+		uint64_t data_15;
 
 		for( int i = 0 ; i < IMAGE_WRITE_TIME; i ++ ){
 			Xil_DCacheFlush();
-			xil_printf("%d\r\n",i);
-			data_lower = ( (uint64_t) ( *(data_addr + 7) << 56 ) |
-						   (uint64_t) ( *(data_addr + 6) << 48 ) |
-						   (uint64_t) ( *(data_addr + 5) << 40 ) |
-						   (uint64_t) ( *(data_addr + 4) << 32 ) |
-						   (uint64_t) ( *(data_addr + 3) << 24 ) |
-						   (uint64_t) ( *(data_addr + 2) << 16 ) |
-						   (uint64_t) ( *(data_addr + 1) <<  8 ) |
-						   (uint64_t)   *(data_addr) );
-			data_addr = data_addr + 8;
-			data_uppper = ( (uint64_t) ( *(data_addr + 7) << 56 ) |
-							(uint64_t) ( *(data_addr + 6) << 48 ) |
-							(uint64_t) ( *(data_addr + 5) << 40 ) |
-							(uint64_t) ( *(data_addr + 4) << 32 ) |
-							(uint64_t) ( *(data_addr + 3) << 24 ) |
-							(uint64_t) ( *(data_addr + 2) << 16 ) |
-							(uint64_t) ( *(data_addr + 1) <<  8 ) |
-							(uint64_t)   *(data_addr) );
-			data_addr = data_addr + 8;
+			data_00 = (uint64_t) ( *(data_addr +  0) & 0xff);
+			data_01 = (uint64_t) ( *(data_addr +  1) & 0xff);
+			data_02 = (uint64_t) ( *(data_addr +  2) & 0xff);
+			data_03 = (uint64_t) ( *(data_addr +  3) & 0xff);
+			data_04 = (uint64_t) ( *(data_addr +  4) & 0xff);
+			data_05 = (uint64_t) ( *(data_addr +  5) & 0xff);
+			data_06 = (uint64_t) ( *(data_addr +  6) & 0xff);
+			data_07 = (uint64_t) ( *(data_addr +  7) & 0xff);
+			data_08 = (uint64_t) ( *(data_addr +  8) & 0xff);
+			data_09 = (uint64_t) ( *(data_addr +  9) & 0xff);
+			data_10 = (uint64_t) ( *(data_addr + 10) & 0xff);
+			data_11 = (uint64_t) ( *(data_addr + 11) & 0xff);
+			data_12 = (uint64_t) ( *(data_addr + 12) & 0xff);
+			data_13 = (uint64_t) ( *(data_addr + 13) & 0xff);
+			data_14 = (uint64_t) ( *(data_addr + 14) & 0xff);
+			data_15 = (uint64_t) ( *(data_addr + 15) & 0xff);
+
+			data_lower = ( (uint64_t) ( data_07 << 56 ) |
+						   (uint64_t) ( data_06 << 48 ) |
+						   (uint64_t) ( data_05 << 40 ) |
+						   (uint64_t) ( data_04 << 32 ) |
+						   (uint64_t) ( data_03 << 24 ) |
+						   (uint64_t) ( data_02 << 16 ) |
+						   (uint64_t) ( data_01 <<  8 ) |
+						   (uint64_t) ( data_00 ) );
+			data_uppper = ((uint64_t) ( data_15 << 56 ) |
+						   (uint64_t) ( data_14 << 48 ) |
+						   (uint64_t) ( data_13 << 40 ) |
+						   (uint64_t) ( data_12 << 32 ) |
+						   (uint64_t) ( data_11 << 24 ) |
+						   (uint64_t) ( data_10 << 16 ) |
+						   (uint64_t) ( data_09 <<  8 ) |
+						   (uint64_t) ( data_08 ) );
+			data_addr = data_addr + 16;
 			Xil_Out128(IMAGE_DATA_WRITE_ADDR, MAKE128CONST(data_uppper, data_lower) );
 		}
 	}
