@@ -20,8 +20,8 @@ module SignalShifter
 
 localparam STATE_NUM                        = 4;
 localparam STATE_WIDTH                      = $clog2(STATE_NUM);
-localparam IDLE                             = STATE_WIDTH'(0);
-localparam DELAY_COUNT                      = STATE_WIDTH'(1);
+typedef enum logic [STATE_WIDTH:0] {IDLE, DELAY_COUNT} statetype;
+statetype signal_shifter_state;
 
 reg  input_signal_buffer1;
 reg  input_signal_buffer2;
@@ -31,7 +31,6 @@ reg  [DELAY_WIDTH-1:0] delay_counter_reg;
 reg  [EVENT_WIDTH-1:0] event_counter;
 reg  [EVENT_WIDTH-1:0] event_counter_reg;
 reg  event_polarity;
-reg  [STATE_WIDTH-1:0] signal_shifter_state;
 
 always_ff @(posedge clk) begin
     if( reset == 1'b1 )begin

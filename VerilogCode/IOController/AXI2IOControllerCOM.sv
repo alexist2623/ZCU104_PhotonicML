@@ -151,16 +151,6 @@ reg [15:0] axi_awuser;
 reg axi_wlast;
 
 //////////////////////////////////////////////////////////////////////////////////
-// AXI4 FSM State initialization
-// For simulation, each state was initiated to IDLE state.
-//////////////////////////////////////////////////////////////////////////////////
-
-initial begin
-    axi_state_write <= WRITE_IDLE;
-    axi_state_read <= READ_IDLE;
-end
-
-//////////////////////////////////////////////////////////////////////////////////
 // AXI4 Output Assign Logic
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -209,6 +199,7 @@ always_ff @(posedge s_axi_aclk) begin
         event_value <= EVENT_WIDTH'(0);
         event_set <= 1'b0;
         event_polarity_set <= 1'b0;
+        reset <= 1'b0;
         
         case(axi_state_write)
             WRITE_IDLE: begin
