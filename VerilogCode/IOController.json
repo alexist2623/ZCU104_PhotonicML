@@ -1,0 +1,11 @@
+{
+    "verilog" : {
+        "name" : "IOController",
+        "top": "IOController.sv",
+        "files" : [
+            "IOController/AXI2IOControllerCOM.sv",
+            "IOController/IOController.sv",
+            "IOController/SignalShifter.sv"
+        ]
+    }
+}
