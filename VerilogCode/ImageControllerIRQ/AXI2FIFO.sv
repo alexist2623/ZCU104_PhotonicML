@@ -236,7 +236,7 @@ assign image_sender_reset = ~s_axi_aresetn;
 // AXI transfer with only wlen signal does not work in below code.
 //////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge s_axi_aclk) begin
+always_ff @(posedge s_axi_aclk) begin
     if( s_axi_aresetn == 1'b0 ) begin
         axi_state_write <= IDLE;
         s_axi_bresp <= 2'b0;
