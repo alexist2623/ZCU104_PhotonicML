@@ -5,7 +5,8 @@
         "json_path" : [
             "HDMIController.json", 
             "ImageControllerIRQ.json",
-            "MasterController.json"
+            "MasterController.json",
+            "IOController.json"
         ],
         "output_ports" : [
         ],
