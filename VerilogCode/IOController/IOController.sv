@@ -4,9 +4,7 @@ module IOController
     // SignalShifter Interface
     //////////////////////////////////////////////////////////////////////////////////
     parameter MAX_DELAY                     = 1000000000,
-    parameter DELAY_WIDTH                   = $clog2(MAX_DELAY),
-    parameter MAX_EVENT                     = 10,
-    parameter EVENT_WIDTH                   = $clog2(MAX_EVENT),
+    parameter MAX_EVENT                     = 1000,
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +83,9 @@ module IOController
     output wire output_signal
 );
 
+localparam DELAY_WIDTH                      = $clog2(MAX_DELAY);
+localparam EVENT_WIDTH                      = $clog2(MAX_EVENT);
+
 wire reset;
 wire [DELAY_WIDTH-1:0] delay_value;
 wire delay_set;
@@ -98,8 +99,8 @@ AXI2IOControllerCOM #(
     .AXI_STROBE_WIDTH                       (AXI_STROBE_WIDTH),
     .AXI_STROBE_LEN                         (AXI_STROBE_LEN),
     .MAX_DELAY                              (MAX_DELAY),
-    .DELAY_WIDTH                            (DELAY_WIDTH),
     .MAX_EVENT                              (MAX_EVENT),
+    .DELAY_WIDTH                            (DELAY_WIDTH),
     .EVENT_WIDTH                            (EVENT_WIDTH)
 ) axi2iocontrollercom_0 (
     .s_axi_awaddr                           (s_axi_awaddr),
@@ -151,8 +152,8 @@ AXI2IOControllerCOM #(
 
 SignalShifter #(
     .MAX_DELAY                              (MAX_DELAY),
-    .DELAY_WIDTH                            (DELAY_WIDTH),
     .MAX_EVENT                              (MAX_EVENT),
+    .DELAY_WIDTH                            (DELAY_WIDTH),
     .EVENT_WIDTH                            (EVENT_WIDTH)
 ) signal_shifter_0 (
     .auto_start                             (auto_start),
