@@ -1,8 +1,8 @@
 module SignalShifter
 #(
-    parameter MAX_DELAY                     = 1000000000,
-    parameter DELAY_WIDTH                   = $clog2(MAX_DELAY),
+    parameter MAX_DELAY                     = 10000000,
     parameter MAX_EVENT                     = 10,
+    parameter DELAY_WIDTH                   = $clog2(MAX_DELAY),
     parameter EVENT_WIDTH                   = $clog2(MAX_EVENT)
 )
 (
