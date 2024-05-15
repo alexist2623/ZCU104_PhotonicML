@@ -35,6 +35,7 @@ module ImageSender
     output wire image_sender_full,
     output wire image_sender_empty,
     output  reg  [23:0] rgb,                             // rgb value
+    output  reg camera_exposure_start,
     //////////////////////////////////////////////////////////////////////////////////
     // DRAM Data Interface
     //////////////////////////////////////////////////////////////////////////////////
@@ -168,8 +169,10 @@ always_ff @(posedge clk_pixel) begin
         image_read_en <= 1'b0;
         image_change_buffer <= 1'b0;
         load_new_image <= 1'b0;
+        camera_exposure_start <= 1'b0;
     end
     else begin
+        camera_exposure_start <= 1'b0;
         image_flush_trigger_buffer <= image_flush_trigger; // make 1 cycle delayed image_flush_trigger 
         if( image_send_start == 1'b1 ) begin // image_send_start is used instead of auto_start not to stop image send during video period
             //////////////////////////////////////////////////////////////////////////////////
@@ -180,9 +183,7 @@ always_ff @(posedge clk_pixel) begin
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
-                if( image_buffer_empty == 1'b1 )begin
-                    rgb[23:0] <= 24'h00_ff_00;
-                end
+                
                 if( image_buffer_index == IMAGE_BUFFER_WIDTH'(IMAGE_BUFFER_LEN - 1)) begin
                     image_buffer_index <= IMAGE_BUFFER_WIDTH'(0);
                 end
@@ -203,6 +204,9 @@ always_ff @(posedge clk_pixel) begin
                 image_change_buffer <= image_change;    // reset image_change_buffer
                 image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);   // reset buffer index
                 load_new_image <= image_change_buffer; // save image_change signal and maintain until image_flush_trigger signal
+                if( load_new_image == 1'b1 ) begin
+                    camera_exposure_start <= 1'b1; // assert camera_exposure_start at only image transfer ended with new image
+                end
             end
             else if( image_change == 1'b1 ) begin // To save image_change signal
                 image_change_buffer <= 1'b1;

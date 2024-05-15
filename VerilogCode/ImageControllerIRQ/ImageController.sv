@@ -100,6 +100,7 @@ module ImageController
     input  wire image_change,
     output wire [23:0] rgb,
     output wire irq_signal,
+    output wire camera_exposure_start,
     
     output wire [127:0] debug_buffer_data
 );
@@ -267,6 +268,8 @@ ImageSender #(
     .image_width                    (image_width),
     .image_height                   (image_height),
     .image_change                   (set_new_image | image_change),
+    .camera_exposure_start          (camera_exposure_start),
+    
     .clk_pixel                      (s_axi_aclk),
     .auto_start                     (auto_start),
     .cx                             (cx),
