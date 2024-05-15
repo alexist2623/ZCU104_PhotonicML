@@ -153,23 +153,15 @@ localparam AXI_READ_RESOLUTION   = AXI_ADDR_WIDTH'(7'h10);
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
 //////////////////////////////////////////////////////////////////////////////////
-localparam IDLE                  = 4'h0;
-localparam WRITE_FIFO            = 4'h2;
-localparam WRITE_FLUSH_FIFO      = 4'h3;
-localparam WRITE_IMAGE_SIZE      = 4'h4;
-localparam WRITE_DATA_BUFFER     = 4'h5;
-localparam WRITE_DATA_DONE       = 4'h6;
-localparam SET_NEW_IMAGE         = 4'h7;
-localparam DEASSERT_IRQ          = 4'h8;
-localparam ERROR_STATE           = 4'h9;
-localparam WRITE_RESPONSE        = 4'hA;
+typedef enum logic [6:0] {WRITE_IDLE, WRITE_FIFO, WRITE_FLUSH_FIFO, 
+                         WRITE_IMAGE_SIZE, WRITE_DATA_BUFFER, WRITE_DATA_DONE, 
+                         SET_NEW_IMAGE, DEASSERT_IRQ, ERROR_STATE, 
+                         WRITE_RESPONSE} statetype_w;
+statetype_w axi_state_write;
 
-localparam READ_DRAM_ADDR        = 4'h1;
-localparam READ_RESOLUTION       = 4'h2;
-localparam READ_ERROR_STATE      = 4'h3;
-
-reg[3:0] axi_state_write;
-reg[3:0] axi_state_read;
+typedef enum logic [4:0] {READ_IDLE, READ_DRAM_ADDR, READ_RESOLUTION, 
+                         READ_ERROR_STATE} statetype_r;
+statetype_r axi_state_read;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI Data Buffer
@@ -203,22 +195,14 @@ reg [15:0] axi_aruser;
 // Miscellaneous Data Buffer
 //////////////////////////////////////////////////////////////////////////////////
 reg dram_read_busy_buffer;  // This register buffer is used to set dram_read_busy 
-                            //value in AXI IDLE to guarantee AXI write transaction is ended
+                            //value in AXI WRITE_IDLE to guarantee AXI write transaction is ended
 
-//////////////////////////////////////////////////////////////////////////////////
-// AXI4 FSM State initialization
-// For simulation, each state was initiated to IDLE state.
-//////////////////////////////////////////////////////////////////////////////////
-initial begin
-    axi_state_write <= IDLE;
-    axi_state_read <= IDLE;
-end
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Output Assign Logic
 //////////////////////////////////////////////////////////////////////////////////
 
-assign s_axi_awready = (axi_state_write == IDLE);
+assign s_axi_awready = (axi_state_write == WRITE_IDLE);
 assign s_axi_wready  = ((axi_state_write == WRITE_FIFO) 
                         && (image_sender_full == 1'b0)) 
                         || (axi_state_write == WRITE_FLUSH_FIFO)
@@ -227,7 +211,7 @@ assign s_axi_wready  = ((axi_state_write == WRITE_FIFO)
                         || (axi_state_write == WRITE_DATA_DONE)
                         || (axi_state_write == SET_NEW_IMAGE)
                         || (axi_state_write == DEASSERT_IRQ);
-assign s_axi_arready = (axi_state_read == IDLE);
+assign s_axi_arready = (axi_state_read == READ_IDLE);
 assign image_sender_reset = ~s_axi_aresetn;
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -238,7 +222,7 @@ assign image_sender_reset = ~s_axi_aresetn;
 
 always_ff @(posedge s_axi_aclk) begin
     if( s_axi_aresetn == 1'b0 ) begin
-        axi_state_write <= IDLE;
+        axi_state_write <= WRITE_IDLE;
         s_axi_bresp <= 2'b0;
         s_axi_bvalid <= 1'b0;
         axi_waddr <= AXI_ADDR_WIDTH'(0);
@@ -262,7 +246,7 @@ always_ff @(posedge s_axi_aclk) begin
     
     else begin
         case(axi_state_write)
-            IDLE: begin
+            WRITE_IDLE: begin
                 s_axi_bid <= 16'h0; // id value
                 image_sender_write <= 1'b0;
                 image_sender_flush <= 1'b0;
@@ -428,7 +412,7 @@ always_ff @(posedge s_axi_aclk) begin
                     axi_wlen_counter <= 8'h0;
                     axi_wshift_size <= 8'h0;
                     axi_wshift_count <= 8'h0;
-                    axi_state_write <= IDLE;
+                    axi_state_write <= WRITE_IDLE;
                     axi_awuser <= 16'h0;
                     axi_awid <= 16'h0;
                 end
@@ -525,7 +509,7 @@ always_ff @(posedge s_axi_aclk) begin
                 if( s_axi_bready == 1'b1 ) begin
                     s_axi_bresp <= 2'b10;
                     s_axi_bvalid <= 1'b1;
-                    axi_state_write <= IDLE;
+                    axi_state_write <= WRITE_IDLE;
                     s_axi_bid <= axi_awid;
                 end
             end
@@ -538,7 +522,7 @@ always_ff @(posedge s_axi_aclk) begin
                 if( s_axi_bready == 1'b1 ) begin
                     s_axi_bresp <= 2'b00;
                     s_axi_bvalid <= 1'b1;
-                    axi_state_write <= IDLE;
+                    axi_state_write <= WRITE_IDLE;
                     s_axi_bid <= axi_awid;
                 end
             end
@@ -551,7 +535,7 @@ end
 //////////////////////////////////////////////////////////////////////////////////
 always @(posedge s_axi_aclk) begin
     if( s_axi_aresetn == 1'b0 ) begin
-        axi_state_read <= IDLE;
+        axi_state_read <= READ_IDLE;
         s_axi_rdata <= AXI_DATA_WIDTH'(0);
         s_axi_rresp <= 2'b0;
         s_axi_rvalid <= 1'b0;
@@ -570,7 +554,7 @@ always @(posedge s_axi_aclk) begin
     
     else begin
         case(axi_state_read)
-            IDLE: begin
+            READ_IDLE: begin
                 s_axi_rdata <= AXI_DATA_WIDTH'(0);
                 s_axi_rresp <= 2'b0;
                 s_axi_rvalid <= 1'b0;
@@ -614,7 +598,7 @@ always @(posedge s_axi_aclk) begin
                 s_axi_rid <= axi_arid;
                 axi_arlen <= axi_arlen - 1;
                 if( axi_arlen == 0 ) begin
-                    axi_state_read <= IDLE;
+                    axi_state_read <= READ_IDLE;
                     s_axi_rlast <= 1'b1;
                 end
             end
@@ -626,7 +610,7 @@ always @(posedge s_axi_aclk) begin
                 s_axi_rid <= axi_arid;
                 axi_arlen <= axi_arlen - 1;
                 if( axi_arlen == 0 ) begin
-                    axi_state_read <= IDLE;
+                    axi_state_read <= READ_IDLE;
                     s_axi_rlast <= 1'b1;
                 end
             end
@@ -637,7 +621,7 @@ always @(posedge s_axi_aclk) begin
                 s_axi_rvalid <= 1'b1;
                 s_axi_rlast <= 1'b1;
                 s_axi_rid <= axi_arid;
-                axi_state_read <= IDLE;
+                axi_state_read <= READ_IDLE;
             end
         endcase
     end
