@@ -33,8 +33,8 @@ module AXI2IOControllerCOM
     // Signal Shifter Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
     parameter MAX_DELAY                     = 1000000000,
+    parameter MAX_EVENT                     = 1000,
     parameter DELAY_WIDTH                   = $clog2(MAX_DELAY),
-    parameter MAX_EVENT                     = 10,
     parameter EVENT_WIDTH                   = $clog2(MAX_EVENT)
 )
 (
