@@ -86,7 +86,7 @@ GTH_serializer mut (
 // Clock generation
 initial begin
     gtrefclk00_in_p = 0;
-    forever #3.2 gtrefclk00_in_p = ~gtrefclk00_in_p; // 74.25MHz clock period
+    forever #3.2 gtrefclk00_in_p = ~gtrefclk00_in_p; // 156.25MHz clock period
 end
 
 // Initial block for reset and input stimulus
@@ -106,5 +106,8 @@ initial begin
     r = 10'h3FF;
     g = 10'h1FF;
     b = 10'h0FF;
+    
+    #10000;
+    $finish;
 end
 endmodule
