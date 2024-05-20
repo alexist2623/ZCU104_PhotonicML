@@ -6,7 +6,8 @@
             "HDMIController.json", 
             "ImageControllerIRQ.json",
             "MasterController.json",
-            "GTH_serializer.json"
+            "GTH_serializer.json",
+            "IOController.json"
         ],
         "output_ports" : [
             "HDMI_TX0_N",
@@ -17,11 +18,13 @@
             "HDMI_TX2_P",
             "HDMI_TX_LVDS_OUT_P",
             "HDMI_TX_LVDS_OUT_N",
-            "HDMI_TX_EN"
+            "HDMI_TX_EN",
+            "PMOD0_0"
         ],
         "input_ports" : [
             "HDMI_DRU_CLOCK_C_P",
-            "HDMI_DRU_CLOCK_C_N"
+            "HDMI_DRU_CLOCK_C_N",
+            "PMOD1_0"
         ]
     },
     "bd_cell" : {
