@@ -5,10 +5,10 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // ImageSender Interface
     //////////////////////////////////////////////////////////////////////////////////
-    parameter FRAME_WIDTH                   = 2200,
-    parameter FRAME_HEIGHT                  = 1125,
-    parameter SCREEN_WIDTH                  = 1920,
-    parameter SCREEN_HEIGHT                 = 1080,
+    parameter FRAME_WIDTH                   = 1344,
+    parameter FRAME_HEIGHT                  = 806,
+    parameter SCREEN_WIDTH                  = 1024,
+    parameter SCREEN_HEIGHT                 = 768,
     parameter int BIT_WIDTH                 = 12,
     parameter int BIT_HEIGHT                = 11,
     parameter IMAGE_WIDTH                   = 100,
@@ -252,6 +252,10 @@ axi2fifo_0
 //////////////////////////////////////////////////////////////////////////////////
     
 ImageSender #(
+    .FRAME_WIDTH                    (FRAME_WIDTH),
+    .FRAME_HEIGHT                   (FRAME_HEIGHT),
+    .SCREEN_WIDTH                   (SCREEN_WIDTH),
+    .SCREEN_HEIGHT                  (SCREEN_HEIGHT),
     .BIT_WIDTH                      (BIT_WIDTH),
     .BIT_HEIGHT                     (BIT_HEIGHT),
     .FIFO_DEPTH                     (FIFO_DEPTH),

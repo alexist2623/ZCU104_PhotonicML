@@ -34,11 +34,11 @@ localparam EXPOSURE_START_AXI_SET_EVENT           = 39'h00_A003_0020;
 localparam EXPOSURE_END_AXI_SET_DELAY             = 39'h00_A002_0010;
 localparam EXPOSURE_END_AXI_SET_EVENT             = 39'h00_A002_0020;
 localparam int START_X                            = 0;
-localparam int START_Y                            = 1000;
+localparam int START_Y                            = 760;
 localparam BIT_WIDTH                              = 12;
-localparam BIT_HEIGHT                             = 12;
-localparam FRAME_WIDTH                            = 2200;
-localparam FRAME_HEIGHT                           = 1125;
+localparam BIT_HEIGHT                             = 11;
+localparam FRAME_WIDTH                            = 1344;
+localparam FRAME_HEIGHT                           = 806;
 
 reg [38:0]              S00_AXI_0_araddr;
 reg [1:0]               S00_AXI_0_arburst;
@@ -158,11 +158,11 @@ initial begin
 end
 
 //////////////////////////////////////////////////////////////////////////////////
-// Clock generation for clk_pixel (148.5MHz)
+// Clock generation for clk_pixel (65MHz)
 //////////////////////////////////////////////////////////////////////////////////
 initial begin
     clk_pixel = 0;
-    forever #3.367 clk_pixel = ~clk_pixel; // Toggle every 3.367ns for 148.5MHz clock
+    forever #7.692 clk_pixel = ~clk_pixel; // Toggle every 3.367ns for 148.5MHz clock
 end
 
 

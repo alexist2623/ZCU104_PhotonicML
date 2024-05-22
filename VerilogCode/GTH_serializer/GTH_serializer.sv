@@ -22,8 +22,8 @@ module GTH_serializer (
     output wire clk_pixel
 );
 
-reg [59:0] gtwiz_userdata_tx_in; //74.25MHz
-reg [59:0] gtwiz_userdata_tx_in_buffer; //148.5MHz
+reg [59:0] gtwiz_userdata_tx_in; //32.5MHz
+reg [59:0] gtwiz_userdata_tx_in_buffer; //65MHz
 reg phase = 1'b0;
 reg s_axi_resetn_buffer1;
 reg s_axi_resetn_buffer2;
@@ -46,9 +46,10 @@ wire locked;
 wire underflow;
 wire gtwiz_reset_clk_freerun_in_locked;
 
-wire txoutclk_internal; //148.5MHz
-wire txoutclk_div2; // 74.25MHz
-wire txoutclk_delayed; // delayed 148.5MHz
+wire txoutclk_internal; //65MHz
+wire txoutclk_internal_buffer; // 65MHz output from BUFG_GT
+wire txoutclk_div2; // 32.5MHz
+wire txoutclk_delayed; // delayed 65MHz
 wire [0:0] gtwiz_reset_clk_freerun_in;
 wire [2:0] txusrclk_int;
 wire [2:0] txusrclk2_int;
@@ -173,9 +174,9 @@ OBUFDS #(
 
 GTH_serializer_async_fifo GTH_serializer_async_fifo_0
 (
-    .wr_clk                                  (txoutclk_internal), //148.5MHz
-    .rd_clk                                  (txoutclk_div2), //74.25MHz
-    .srst                                    (~clk_pixel_resetn_buffer2), //148.5MHz
+    .wr_clk                                  (txoutclk_internal), //65MHz
+    .rd_clk                                  (txoutclk_div2), //32.5MHz5
+    .srst                                    (~clk_pixel_resetn_buffer2), //65MHz
     .underflow                               (underflow),
     .wr_rst_busy                             (),
     .rd_rst_busy                             (),
@@ -191,20 +192,21 @@ BUFG_GT #(
    .SIM_DEVICE                               ("ULTRASCALE_PLUS")
 )
 BUFG_GT_inst_0 (
-   .O                                        (txoutclk_internal),
+   .O                                        (txoutclk_internal_buffer), // 65MHz
    .CE                                       (1'b1),
    .CEMASK                                   (1'b0),
    .CLR                                      (reset),
    .CLRMASK                                  (1'b0),
    .DIV                                      (3'b000),
-   .I                                        (txoutclk_int[0])
+   .I                                        (txoutclk_int[0]) // 65MHz clock from GTH txoutclk
 );
 
 clk_wiz_0 clk_wiz_0(
     .reset                                   (reset),
-    .clk_in1                                 (txoutclk_internal),
+    .clk_in1                                 (txoutclk_internal_buffer),
     .clk_out1                                (txoutclk_delayed),
     .clk_out2                                (txoutclk_div2),
+    .clk_out3                                (txoutclk_internal),
     .locked                                  (locked)
 );
 

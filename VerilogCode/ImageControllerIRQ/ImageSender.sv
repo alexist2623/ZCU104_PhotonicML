@@ -2,10 +2,10 @@
 
 module ImageSender
 #(
-    parameter FRAME_WIDTH                   = 2200,
-    parameter FRAME_HEIGHT                  = 1125,
-    parameter SCREEN_WIDTH                  = 1920,
-    parameter SCREEN_HEIGHT                 = 1080,
+    parameter FRAME_WIDTH                   = 1344,
+    parameter FRAME_HEIGHT                  = 806,
+    parameter SCREEN_WIDTH                  = 1024,
+    parameter SCREEN_HEIGHT                 = 768,
     parameter int BIT_WIDTH                 = 12,
     parameter int BIT_HEIGHT                = 11,
     parameter FIFO_DEPTH                    = 512,
@@ -14,7 +14,7 @@ module ImageSender
     parameter DRAM_ADDR_WIDTH               = 39,
     parameter DRAM_DATA_WIDTH               = 128,
     parameter IMAGE_BUFFER_DEPTH            = DRAM_DATA_WIDTH,
-    parameter IMAGE_CHANGE_TIME             = 40
+    parameter IMAGE_CHANGE_TIME             = 30
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +194,7 @@ always_ff @(posedge clk_pixel) begin
                 /******************************************************************/
             end
             else begin
-                rgb[23:0] <= 24'hff_00_00;
+                rgb[23:0] <= 24'h00_00_00;
             end
             
             //////////////////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ always_ff @(posedge clk_pixel) begin
             end
         end
         else begin
-            rgb[23:0] <= 24'h00_00_ff;
+            rgb[23:0] <= 24'h00_00_00;
         end
         
         if( image_flush_trigger ) begin // sense auto_start when there is enough time to get image data from DRAM

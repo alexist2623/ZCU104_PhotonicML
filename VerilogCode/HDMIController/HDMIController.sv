@@ -7,7 +7,7 @@ module HDMIController
     // Defaults to 1920x1080 which should be supported by almost if not all HDMI sinks.
     // See README.md or CEA-861-D for enumeration of video id codes.
     // Pixel repetition, interlaced scans and other special output modes are not implemented (yet).
-    parameter int VIDEO_ID_CODE = 16,
+    parameter int VIDEO_ID_CODE = 0,
 
     // The IT content bit indicates that image samples are generated in an ad-hoc
     // manner (e.g. directly from values in a framebuffer, as by a PC video
@@ -18,22 +18,22 @@ module HDMIController
     //
     // This flag also tends to cause receivers to treat RGB values as full
     // range (0-255).
-    parameter bit IT_CONTENT = 1'b1,
+    parameter bit IT_CONTENT                = 1'b1,
 
     // Defaults to minimum bit lengths required to represent positions.
     // Modify these parameters if you have alternate desired bit lengths.
-    parameter int BIT_WIDTH = VIDEO_ID_CODE < 4 ? 10 : VIDEO_ID_CODE == 4 ? 11 : 12,
-    parameter int BIT_HEIGHT = VIDEO_ID_CODE == 16 ? 11: 10,
+    parameter int BIT_WIDTH                 = 12,
+    parameter int BIT_HEIGHT                = 11,
 
     // A true HDMI signal sends auxiliary data (i.e. audio, preambles) which prevents it from being parsed by DVI signal sinks.
     // HDMI signal sinks are fortunately backwards-compatible with DVI signals.
     // Enable this flag if the output should be a DVI signal. You might want to do this to reduce resource usage or if you're only outputting video.
-    parameter bit DVI_OUTPUT = 1'b0,
+    parameter bit DVI_OUTPUT                = 1'b0,
 
     // **All parameters below matter ONLY IF you plan on sending auxiliary data (DVI_OUTPUT == 1'b0)**
 
     // Specify the refresh rate in Hz you are using for audio calculations
-    parameter real VIDEO_REFRESH_RATE = 60,
+    parameter real VIDEO_REFRESH_RATE       = 60,
 
     // As specified in Section 7.3, the minimal audio requirements are met: 16-bit or more L-PCM audio at 32 kHz, 44.1 kHz, or 48 kHz.
     // See Table 7-4 or README.md for an enumeration of sampling frequencies supported by HDMI.
@@ -41,7 +41,7 @@ module HDMIController
 
     // Some HDMI sinks will show the source product description below to users (i.e. in a list of inputs instead of HDMI 1, HDMI 2, etc.).
     // If you care about this, change it below.
-    parameter bit [8*8-1:0] VENDOR_NAME = 64'h556E6B6E6F776E00, // Must be 8 bytes null-padded 7-bit ASCII "Unkonwn"
+    parameter bit [8*8-1:0] VENDOR_NAME     = 64'h556E6B6E6F776E00, // Must be 8 bytes null-padded 7-bit ASCII "Unkonwn"
     parameter bit [8*16-1:0] PRODUCT_DESCRIPTION = 128'h46504741000000000000000000000000, // Must be 16 bytes null-padded 7-bit ASCII "FPGA"
     parameter bit [7:0] SOURCE_DEVICE_INFORMATION = 8'h00, // See README.md or CTA-861-G for the list of valid codes
 
@@ -57,7 +57,7 @@ module HDMIController
     // generating a signal from scratch instead of processing an
     // external signal.
     parameter int START_X = 0,
-    parameter int START_Y = 1080
+    parameter int START_Y = 768
 )
 (
     input wire clk_pixel,
@@ -106,10 +106,10 @@ generate
     case (VIDEO_ID_CODE)
         0:
         begin
-            assign frame_width = 800;
-            assign frame_height = 525;
-            assign screen_width = 640;
-            assign screen_height = 480;
+            assign frame_width = 1344;
+            assign frame_height = 806;
+            assign screen_width = 1024;
+            assign screen_height = 768;
             assign hsync_pulse_start = 16;
             assign hsync_pulse_size = 96;
             assign vsync_pulse_start = 10;
@@ -218,7 +218,8 @@ always_comb begin
     end
 end
 
-localparam real VIDEO_RATE = (VIDEO_ID_CODE == 1 ? 25.2E6
+localparam real VIDEO_RATE = (VIDEO_ID_CODE == 0 ? 65.0E6
+    : VIDEO_ID_CODE == 1 ? 25.2E6
     : VIDEO_ID_CODE == 2 || VIDEO_ID_CODE == 3 ? 27.027E6
     : VIDEO_ID_CODE == 4 ? 74.25E6
     : VIDEO_ID_CODE == 16 ? 148.5E6
