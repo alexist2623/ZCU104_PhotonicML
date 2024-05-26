@@ -80,41 +80,41 @@ module HDMIController
     // 0,0 = 0,0 in video
     // the frame includes extra space for sending auxiliary data
 );
+localparam int NUM_CHANNELS = 3;
 
 wire reset;
 wire [BIT_WIDTH-1:0] frame_width;
 wire [BIT_HEIGHT-1:0] frame_height;
 wire [BIT_WIDTH-1:0] screen_width;
 wire [BIT_HEIGHT-1:0] screen_height;
-assign reset = ~clk_pixel_resetn;
-
-localparam int NUM_CHANNELS = 3;
 wire [9:0] tmds_internal [NUM_CHANNELS-1:0];
+wire [BIT_WIDTH-1:0] hsync_pulse_start, hsync_pulse_size;
+wire [BIT_HEIGHT-1:0] vsync_pulse_start, vsync_pulse_size;
+wire invert;
+logic hsync;
+logic vsync;
+
+assign reset = ~clk_pixel_resetn;
 assign tmds0_10bit[9:0] = tmds_internal[0][9:0];
 assign tmds1_10bit[9:0] = tmds_internal[1][9:0];
 assign tmds2_10bit[9:0] = tmds_internal[2][9:0];
 
-logic hsync;
-logic vsync;
 
-wire [BIT_WIDTH-1:0] hsync_pulse_start, hsync_pulse_size;
-wire [BIT_HEIGHT-1:0] vsync_pulse_start, vsync_pulse_size;
-wire invert;
 
 // See CEA-861-D for more specifics formats described below.
 generate
     case (VIDEO_ID_CODE)
-        0:
+        0: // VIDEO_ID_CODE = 0 is specified for 1024 x 768 60 Hz display for SLM device
         begin
             assign frame_width = 1344;
             assign frame_height = 806;
             assign screen_width = 1024;
             assign screen_height = 768;
             assign hsync_pulse_start = 16;
-            assign hsync_pulse_size = 96;
+            assign hsync_pulse_size = 136;
             assign vsync_pulse_start = 10;
-            assign vsync_pulse_size = 2;
-            assign invert = 1;
+            assign vsync_pulse_size = 6;
+            assign invert = 0;
         end
         1:
         begin
@@ -218,7 +218,7 @@ always_comb begin
     end
 end
 
-localparam real VIDEO_RATE = (VIDEO_ID_CODE == 0 ? 65.0E6
+localparam real VIDEO_RATE = (VIDEO_ID_CODE == 0 ? 65.0E6 // 65MHz for 1024 x 768 60Hz Display
     : VIDEO_ID_CODE == 1 ? 25.2E6
     : VIDEO_ID_CODE == 2 || VIDEO_ID_CODE == 3 ? 27.027E6
     : VIDEO_ID_CODE == 4 ? 74.25E6
