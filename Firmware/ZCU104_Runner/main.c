@@ -33,6 +33,16 @@ void initialize_modules(){
 	 */
     reset_disable();
 
+    /*
+     * Write Delay time, event time to IO Controller
+     * unit is cycle of PL side and number of pulse,
+     * not a real time(not a s, us, ns)
+     */
+
+    set_camera_exposure_start_delay(100000);
+    set_camera_exposure_start_event(1);
+    set_camera_exposure_end_delay(0);
+    set_camera_exposure_end_event(10);
 
 	xil_printf("Write ADDR FIFO...\r\n");
 	/*
