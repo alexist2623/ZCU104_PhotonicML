@@ -2,8 +2,8 @@
 
 module ImageSender
 #(
-    parameter FRAME_WIDTH                   = 1344,
-    parameter FRAME_HEIGHT                  = 806,
+    parameter FRAME_WIDTH                   = 1376,
+    parameter FRAME_HEIGHT                  = 810,
     parameter SCREEN_WIDTH                  = 1024,
     parameter SCREEN_HEIGHT                 = 768,
     parameter int BIT_WIDTH                 = 12,
@@ -160,7 +160,7 @@ int i = 0;
 //////////////////////////////////////////////////////////////////////////////////
 always_ff @(posedge clk_pixel) begin
     if( image_sender_reset == 1'b1 ) begin
-        rgb <= 24'hff_ff_ff;
+        rgb <= 24'h00_00_00;
         
         image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);
         image_send_start <= 1'b0;

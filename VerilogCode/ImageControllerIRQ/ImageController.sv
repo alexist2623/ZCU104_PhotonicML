@@ -5,8 +5,8 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // ImageSender Interface
     //////////////////////////////////////////////////////////////////////////////////
-    parameter FRAME_WIDTH                   = 1344,
-    parameter FRAME_HEIGHT                  = 806,
+    parameter FRAME_WIDTH                   = 1376,
+    parameter FRAME_HEIGHT                  = 810,
     parameter SCREEN_WIDTH                  = 1024,
     parameter SCREEN_HEIGHT                 = 768,
     parameter int BIT_WIDTH                 = 12,

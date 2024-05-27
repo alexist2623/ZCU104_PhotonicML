@@ -106,14 +106,14 @@ generate
     case (VIDEO_ID_CODE)
         0: // VIDEO_ID_CODE = 0 is specified for 1024 x 768 60 Hz display for SLM device
         begin
-            assign frame_width = 1344;
-            assign frame_height = 806;
+            assign frame_width = 1376;
+            assign frame_height = 810;
             assign screen_width = 1024;
             assign screen_height = 768;
-            assign hsync_pulse_start = 16;
-            assign hsync_pulse_size = 136;
-            assign vsync_pulse_start = 10;
-            assign vsync_pulse_size = 6;
+            assign hsync_pulse_start = 48;
+            assign hsync_pulse_size = 48;
+            assign vsync_pulse_start = 4;
+            assign vsync_pulse_size = 3;
             assign invert = 0;
         end
         1:
@@ -218,7 +218,7 @@ always_comb begin
     end
 end
 
-localparam real VIDEO_RATE = (VIDEO_ID_CODE == 0 ? 65.0E6 // 65MHz for 1024 x 768 60Hz Display
+localparam real VIDEO_RATE = (VIDEO_ID_CODE == 0 ? 67.0E6 // 67MHz for 1024 x 768 60Hz Display
     : VIDEO_ID_CODE == 1 ? 25.2E6
     : VIDEO_ID_CODE == 2 || VIDEO_ID_CODE == 3 ? 27.027E6
     : VIDEO_ID_CODE == 4 ? 74.25E6
