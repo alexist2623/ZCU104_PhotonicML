@@ -3,7 +3,7 @@
 
 module packet_picker
 #(
-    parameter int VIDEO_ID_CODE = 4,
+    parameter int VIDEO_ID_CODE = 0,
     parameter real VIDEO_RATE = 0,
     parameter bit IT_CONTENT = 1'b0,
     parameter bit [8*8-1:0] VENDOR_NAME = 0,
