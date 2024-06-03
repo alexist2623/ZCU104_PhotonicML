@@ -62,6 +62,7 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 	 */
 	substring(
 		cmd_str,
+		p->payload,
 		string_count(p->payload,1,'#')+1,
 		string_count(p->payload,2,'#')
 	);
@@ -85,12 +86,12 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 	else if(strcmp(cmd_str,"SET_TEST") == 0 ){
 		xil_printf("SET TEST\r\n");
 		IPI_set_test(
-			get_param(p->payload, 1, 2),
 			get_param(p->payload, 2, 3),
 			get_param(p->payload, 3, 4),
 			get_param(p->payload, 4, 5),
 			get_param(p->payload, 5, 6),
-			get_param(p->payload, 6, 7));
+			get_param(p->payload, 6, 7),
+			get_param(p->payload, 7, 8));
 	}
 	else{
 		xil_printf("UNKNOWN COMMAND : %s\r\n",p->payload);

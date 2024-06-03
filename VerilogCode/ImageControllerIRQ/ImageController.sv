@@ -135,7 +135,12 @@ wire dram_read_busy;
 
 wire set_new_image;
 
-
+wire test_mode;
+wire [7:0] test_data;
+wire [BIT_WIDTH-1:0] test_start_X;
+wire [BIT_HEIGHT-1:0] test_start_Y;
+wire [BIT_WIDTH-1:0] test_end_X;
+wire [BIT_HEIGHT-1:0] test_end_Y;
 //////////////////////////////////////////////////////////////////////////////////
 // AXI2FIFO Declaration
 //////////////////////////////////////////////////////////////////////////////////
@@ -244,6 +249,14 @@ axi2fifo_0
     .dram_write_data                (dram_write_data),
     .dram_write_busy                (dram_write_busy),
     .set_new_image                  (set_new_image),
+    
+    .test_mode                      (test_mode),
+    .test_data                      (test_data),
+    .test_start_X                   (test_start_X),
+    .test_start_Y                   (test_start_Y),
+    .test_end_X                     (test_end_X),
+    .test_end_Y                     (test_end_Y),
+    
     .irq_signal                     (irq_signal)
 );
 
@@ -293,6 +306,13 @@ ImageSender #(
     .dram_write_en                  (dram_write_en),
     .dram_write_data                (dram_write_data),
     .dram_write_busy                (dram_write_busy),
+    
+    .test_mode_input                (test_mode),
+    .test_data_input                (test_data),
+    .test_start_X_input             (test_start_X),
+    .test_start_Y_input             (test_start_Y),
+    .test_end_X_input               (test_end_X),
+    .test_end_Y_input               (test_end_Y),
     
     .debug_buffer_data              (debug_buffer_data)
 );

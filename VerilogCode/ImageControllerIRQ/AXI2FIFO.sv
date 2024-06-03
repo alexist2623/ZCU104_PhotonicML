@@ -130,6 +130,12 @@ module AXI2FIFO
     output reg  dram_read_busy,
     
     output reg  set_new_image,
+    output reg  test_mode,
+    output reg  [7:0] test_data,
+    output reg  [BIT_WIDTH-1:0] test_start_X,
+    output reg  [BIT_HEIGHT-1:0] test_start_Y,
+    output reg  [BIT_WIDTH-1:0] test_end_X,
+    output reg  [BIT_HEIGHT-1:0] test_end_Y,
     output reg  irq_signal
 );
 
@@ -143,6 +149,7 @@ localparam AXI_WRITE_DATA_DONE   = AXI_ADDR_WIDTH'(7'h30);
 localparam AXI_WRITE_DATA_BUFFER = AXI_ADDR_WIDTH'(7'h40);
 localparam AXI_SET_NEW_IMAGE     = AXI_ADDR_WIDTH'(7'h50);
 localparam AXI_DEASSERT_IRQ      = AXI_ADDR_WIDTH'(7'h60);
+localparam AXI_SET_TEST          = AXI_ADDR_WIDTH'(7'h70);
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 READ Address Space
@@ -156,7 +163,7 @@ localparam AXI_READ_RESOLUTION   = AXI_ADDR_WIDTH'(7'h10);
 typedef enum logic [6:0] {WRITE_IDLE, WRITE_FIFO, WRITE_FLUSH_FIFO, 
                          WRITE_IMAGE_SIZE, WRITE_DATA_BUFFER, WRITE_DATA_DONE, 
                          SET_NEW_IMAGE, DEASSERT_IRQ, ERROR_STATE, 
-                         WRITE_RESPONSE} statetype_w;
+                         WRITE_RESPONSE, SET_TEST} statetype_w;
 statetype_w axi_state_write;
 
 typedef enum logic [4:0] {READ_IDLE, READ_DRAM_ADDR, READ_RESOLUTION, 
@@ -210,7 +217,8 @@ assign s_axi_wready  = ((axi_state_write == WRITE_FIFO)
                         || (axi_state_write == WRITE_DATA_BUFFER)
                         || (axi_state_write == WRITE_DATA_DONE)
                         || (axi_state_write == SET_NEW_IMAGE)
-                        || (axi_state_write == DEASSERT_IRQ);
+                        || (axi_state_write == DEASSERT_IRQ)
+                        || (axi_state_write == SET_TEST);
 assign s_axi_arready = (axi_state_read == READ_IDLE);
 assign image_sender_reset = ~s_axi_aresetn;
 
@@ -238,9 +246,19 @@ always_ff @(posedge s_axi_aclk) begin
         s_axi_bid <= 16'h0; // id value
         axi_awid <= 16'h0;
         axi_awuser <= 16'h0;
+        
         dram_read_busy <= 1'b0;
         dram_read_busy_buffer <= 1'b0;
+        
+        test_mode <= 1'b0;
+        test_data <= 8'h00;
+        test_start_X <= BIT_WIDTH'(0);
+        test_start_Y <= BIT_HEIGHT'(0);
+        test_end_X <= BIT_WIDTH'(0);
+        test_end_Y <= BIT_HEIGHT'(0);
+        
         irq_signal <= 1'b0;
+        
         set_new_image <= 1'b0;
     end
     
@@ -388,6 +406,21 @@ always_ff @(posedge s_axi_aclk) begin
                         axi_state_write <= DEASSERT_IRQ;
                     end
                     
+                    else if( s_axi_awaddr == AXI_SET_TEST ) begin
+                        axi_waddr <= s_axi_awaddr;
+                        axi_waddr_base <= s_axi_awaddr;
+                        axi_wlen <= s_axi_awlen;
+                        axi_wsize <= s_axi_awsize;
+                        axi_wburst <= s_axi_awburst;
+                        axi_wlen_counter <= s_axi_awlen;
+                        axi_wshift_size <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count <= 8'h0;
+                        axi_awuser <= s_axi_awuser;
+                        axi_awid <= s_axi_awid;
+                        
+                        axi_state_write <= SET_TEST;
+                    end
+                    
                     else begin
                         axi_waddr <= AXI_ADDR_WIDTH'(0);
                         axi_waddr_base <= AXI_ADDR_WIDTH'(0);
@@ -500,6 +533,21 @@ always_ff @(posedge s_axi_aclk) begin
                 if( s_axi_wvalid == 1'b1 ) begin
                     if( s_axi_wlast == 1'b1 ) begin                      
                         irq_signal <= 1'b0;
+                        axi_state_write <= WRITE_RESPONSE;
+                    end
+                end
+            end
+            
+            SET_TEST : begin
+                if( s_axi_wvalid == 1'b1 ) begin
+                    if( s_axi_wlast == 1'b1 ) begin   
+                        test_mode <= s_axi_wdata[63];
+                        test_data <= s_axi_wdata[48 +:8];
+                        test_start_X <= s_axi_wdata[36 +:BIT_WIDTH];
+                        test_start_Y <= s_axi_wdata[24 +:BIT_HEIGHT];
+                        test_end_X <= s_axi_wdata[12 +:BIT_WIDTH];
+                        test_end_Y <= s_axi_wdata[0 +:BIT_HEIGHT];
+                                           
                         axi_state_write <= WRITE_RESPONSE;
                     end
                 end

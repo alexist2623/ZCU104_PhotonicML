@@ -194,6 +194,13 @@ always_ff @(posedge clk_pixel) begin
         image_change_buffer <= 1'b0;
         load_new_image <= 1'b0;
         camera_exposure_start <= 1'b0;
+        
+        test_mode <= 1'b0;
+        test_data <= 8'h00;
+        test_start_X <= BIT_WIDTH'(0);
+        test_start_Y <= BIT_HEIGHT'(0);
+        test_end_X <= BIT_WIDTH'(0);
+        test_end_Y <= BIT_HEIGHT'(0);
     end
     else begin
         camera_exposure_start <= 1'b0;
