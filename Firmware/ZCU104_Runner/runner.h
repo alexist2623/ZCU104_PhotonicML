@@ -18,6 +18,7 @@
 #define INT_ID_RUN_DISPLAY 				0x1
 #define INT_ID_LOAD_SD_CARD				0x2
 #define INT_ID_SET_NEW_IMAGE			0x3
+#define INT_ID_SET_TEST					0x4
 
 
 /************************** Constant Definitions *****************************/
@@ -50,6 +51,7 @@
 #define IMAGE_DATA_WRITE_ADDR			(XPAR_IMAGECONTROLLER_0_BASEADDR | 0x40U)
 #define SET_NEW_IMAGE_ADDR				(XPAR_IMAGECONTROLLER_0_BASEADDR | 0x50U)
 #define DEASSERT_IRQ_ADDR				(XPAR_IMAGECONTROLLER_0_BASEADDR | 0x60U)
+#define SET_TEST_ADDR					(XPAR_IMAGECONTROLLER_0_BASEADDR | 0x70U)
 
 #define DATA_SAVE_MEM_ADDR				0x2000000U
 #define IMAGE_WRITE_TIME				625

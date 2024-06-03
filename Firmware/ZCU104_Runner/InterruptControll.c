@@ -97,6 +97,9 @@ void LowInterruptHandler(u32 CallbackRef)
 		case INT_ID_SET_NEW_IMAGE:
             set_new_image();
 			break;
+		case INT_ID_SET_TEST:
+			set_test();
+			break;
 		default:
 			break;
 	}

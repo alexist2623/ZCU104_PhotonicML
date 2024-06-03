@@ -63,10 +63,27 @@ void data_write_done(){
 *
 ******************************************************************************/
 void set_image_size(uint64_t width, uint64_t height){
-    Xil_Out128(IMAGE_CONTROLLER_ADDR + 0x20,
+    Xil_Out128(SET_IMAGE_SIZE,
     		MAKE128CONST( 0, (((uint64_t) width ) << 32) | (uint64_t) height ));
 }
-
+/*****************************************************************************/
+/**
+*
+* This function send test data to ImageController
+*
+* @param	width : width of image
+*           height : height of image
+*
+* @return	None.
+*
+* @note		None.
+*
+******************************************************************************/
+void set_test(){
+	volatile uint64_t * temp_addr = (volatile uint64_t *) DATA_SAVE_MEM_ADDR;
+    Xil_Out128(SET_TEST_ADDR,
+    		MAKE128CONST( 0, *(temp_addr)));
+}
 /*****************************************************************************/
 /**
 *
