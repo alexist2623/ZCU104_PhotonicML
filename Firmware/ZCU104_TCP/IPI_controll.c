@@ -66,3 +66,31 @@ void IPI_set_new_image(){
     XScuGic_WriteReg(DIST_BASEADDR, XSCUGIC_SFI_TRIG_OFFSET,
             GIC_DEVICE_INT_MASK| INT_ID_SET_NEW_IMAGE );
 }
+
+/*****************************************************************************/
+/**
+*
+* This function sets test parameters of FPGA
+* @param	None
+*
+* @return	None
+*
+* @note		None.
+*
+******************************************************************************/
+void IPI_set_test(uint64_t test_mode, uint64_t test_data, uint64_t start_X,
+							uint64_t start_Y, uint64_t end_X, uint64_t end_Y){
+	volatile uint64_t * data_addr = (volatile uint64_t *) DATA_SAVE_MEM_ADDR;
+
+	/*
+	 * Flush cache to make sure to transfer data
+	 */
+	Xil_DCacheFlush();
+	Xil_ICacheInvalidate();
+
+	* data_addr = (	(test_mode & 0x1) << 63 | ( test_data & 0xff ) << 48
+					| (start_X & 0xfff) << 36 | (start_Y & 0xfff) << 24
+					| (end_X & 0xfff) << 12 | (end_Y & 0xfff) );
+    XScuGic_WriteReg(DIST_BASEADDR, XSCUGIC_SFI_TRIG_OFFSET,
+            GIC_DEVICE_INT_MASK| INT_ID_SET_TEST );
+}
