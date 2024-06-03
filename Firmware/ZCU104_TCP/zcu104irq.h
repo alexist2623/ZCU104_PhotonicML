@@ -35,6 +35,10 @@
 #define INT_ID_RUN_DISPLAY 			0x1
 #define INT_ID_LOAD_SD_CARD			0x2
 #define INT_ID_SET_NEW_IMAGE		0x3
+#define INT_ID_SET_TEST				0x4
+
+/************************ Define address for IPI *****************************/
+#define DATA_SAVE_MEM_ADDR			0x2000000U
 
 #define MAKE128CONST(hi,lo) ((((__uint128_t)hi << 64) | (lo)))
 
@@ -58,5 +62,18 @@ void lwip_init();
 void IPI_stop_display();
 void IPI_run_display();
 void IPI_load_sdcard();
+void IPI_set_new_image();
+void IPI_set_test(uint64_t test_mode, uint64_t test_data, uint64_t start_X,
+							uint64_t start_Y, uint64_t end_X, uint64_t end_Y);
+
+/***************************** lexer functions ********************************/
+int64_t get_param(char *inst, int64_t start_index, int64_t end_index);
+
+/************************ string process functions ****************************/
+int64_t string2int64(char* str);
+int64_t string_count(char* str, int64_t pos, char spc);
+char * substring(char * str_dest,char * str,int64_t start,int64_t end);
+char * int642str(int64_t val, char * str_dest);
+int64_t wolc_strcmp(char * str1, char * str2);
 
 #endif
