@@ -57,7 +57,7 @@ void initialize_modules(){
 	/*
 	 * Set ImageResolution of data discharging from ImageController
 	 */
-set_image_size((uint64_t)SCREEN_WIDTH, (uint64_t)SCREEN_HEIGHT);
+	set_image_size((uint64_t)SCREEN_WIDTH, (uint64_t)SCREEN_HEIGHT);
 
 	return;
 }
