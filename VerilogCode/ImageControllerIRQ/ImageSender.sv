@@ -53,7 +53,16 @@ module ImageSender
     input  wire [DRAM_DATA_WIDTH - 1:0] dram_read_data,
     input  wire dram_read_data_valid,
     input  wire dram_write_busy,
-    input  wire dram_read_busy
+    input  wire dram_read_busy,
+    //////////////////////////////////////////////////////////////////////////////////
+    // DRAM Data Interface
+    //////////////////////////////////////////////////////////////////////////////////
+    input  wire test_mode_input,
+    input  wire [7:0] test_data_input,
+    input  wire [BIT_WIDTH-1:0] test_start_X_input,
+    input  wire [BIT_HEIGHT-1:0] test_start_Y_input,
+    input  wire [BIT_WIDTH-1:0] test_end_X_input,
+    input  wire [BIT_HEIGHT-1:0] test_end_Y_input
 );
 
 localparam BYTE_SIZE = 8;
@@ -81,6 +90,13 @@ reg  [DRAM_ADDR_WIDTH - 1:0] dram_current_addr;
 reg  [DRAM_ADDR_WIDTH - 1:0] dram_last_addr;
 reg  dram_read_en_buffer;
 
+reg  test_mode;
+reg  [7:0] test_data;
+reg  [BIT_WIDTH-1:0] test_start_X;
+reg  [BIT_HEIGHT-1:0] test_start_Y;
+reg  [BIT_WIDTH-1:0] test_end_X;
+reg  [BIT_HEIGHT-1:0] test_end_Y;
+
 wire image_buffer_fifo_rd_en;
 wire [IMAGE_BUFFER_DEPTH-1:0] image_buffer;
 wire image_discharge_en;
@@ -95,6 +111,8 @@ wire [IMAGE_BUFFER_DEPTH-1:0] image_new;
 
 wire dram_address_rd_en;
 
+wire test_image_discharge_en;
+
 // for 10 x 10 size frame, 2 x 2 size image
 // only 4, 5 index of image should be discharged
 // so 10 >> 1 - 2 >> 1 = 4, 10 >> 1 + 2 >> 1 = 6
@@ -103,6 +121,11 @@ wire dram_address_rd_en;
 assign image_discharge_en       = ( ( (SCREEN_HEIGHT >> 1) - (image_height >> 1) <= cy_buffer ) && ( cy_buffer < (SCREEN_HEIGHT >> 1) + (image_height >> 1) + image_height[0] ) ) 
                                     && ( ( (SCREEN_WIDTH >> 1) - (image_width >> 1) <= cx_buffer ) && ( cx_buffer < (SCREEN_WIDTH >> 1) + (image_width >> 1) + image_width[0] ) )
                                     && (image_send_start == 1'b1); // discharge image only when cx, and cy is in image section
+assign test_image_discharge_en  = ((test_start_X <= cx_buffer) 
+                                    && (test_start_Y <= cy_buffer) 
+                                    && (cx_buffer <= test_end_X) 
+                                    && (cy_buffer <= test_end_Y)
+                                    && (image_send_start == 1'b1) );
 assign image_buffer_fifo_rd_en  = image_discharge_en && (image_buffer_index == (IMAGE_BUFFER_LEN - 1));
 assign image_flush_trigger      = ( cx_buffer == (FRAME_WIDTH - 1) ) && ( cy_buffer == (FRAME_HEIGHT - 1 - IMAGE_CHANGE_TIME) ) && (coordinate_buffer_set == 1'b1);
 assign dram_address_rd_en       = (image_flush_trigger && image_change_buffer);
@@ -161,6 +184,7 @@ int i = 0;
 always_ff @(posedge clk_pixel) begin
     if( image_sender_reset == 1'b1 ) begin
         rgb <= 24'h00_00_00;
+        test_data <= 8'h0;
         
         image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);
         image_send_start <= 1'b0;
@@ -178,12 +202,11 @@ always_ff @(posedge clk_pixel) begin
             //////////////////////////////////////////////////////////////////////////////////
             // Image Send
             //////////////////////////////////////////////////////////////////////////////////
-            if( image_discharge_en )begin
+            if( image_discharge_en && ~test_mode)begin
                 image_buffer_index <= image_buffer_index + 1;
                 rgb[7:0]   <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[15:8]  <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
                 rgb[23:16] <= image_buffer[image_buffer_index * BYTE_SIZE +: BYTE_SIZE];
-                
                 if( image_buffer_index == IMAGE_BUFFER_WIDTH'(IMAGE_BUFFER_LEN - 1)) begin
                     image_buffer_index <= IMAGE_BUFFER_WIDTH'(0);
                 end
@@ -192,6 +215,11 @@ always_ff @(posedge clk_pixel) begin
                 $display("cx : %d, cy : %d, i : %d, rgb : %d, buffer index : %d",
                     cx, cy, i, rgb[7:0], image_buffer_index);
                 /******************************************************************/
+            end
+            else if( test_image_discharge_en && test_mode) begin
+                rgb[7:0] <= test_data[7:0];
+                rgb[15:8] <= test_data[7:0];
+                rgb[23:16] <= test_data[7:0];
             end
             else begin
                 rgb[23:0] <= 24'h00_00_00;
@@ -204,9 +232,18 @@ always_ff @(posedge clk_pixel) begin
                 image_change_buffer <= image_change;    // reset image_change_buffer
                 image_buffer_index <= IMAGE_BUFFER_DEPTH'(0);   // reset buffer index
                 load_new_image <= image_change_buffer; // save image_change signal and maintain until image_flush_trigger signal
+                
                 if( load_new_image == 1'b1 ) begin
                     camera_exposure_start <= 1'b1; // assert camera_exposure_start at only image transfer ended with new image
                 end
+                
+                // test datas are updated in image flush timming
+                test_mode <= test_mode_input;
+                test_data <= test_data_input;
+                test_start_X <= test_start_X_input;
+                test_start_Y <= test_start_Y_input;
+                test_end_X <= test_end_X_input;
+                test_end_Y <= test_end_Y_input;
             end
             else if( image_change == 1'b1 ) begin // To save image_change signal
                 image_change_buffer <= 1'b1;
