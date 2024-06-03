@@ -41,6 +41,8 @@ void print_app_header()
 err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
                                struct pbuf *p, err_t err)
 {
+	char * cmd_str;
+
 	/*
 	 * do not read the packet if we are not in ESTABLISHED state
 	 */
@@ -58,24 +60,40 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 	/*
 	 * Command processing
 	 */
-	if(strcmp(p->payload,"START DISPLAY") == 0 ){
-		xil_printf("START DISPLAY\r\n");
+	substring(
+		cmd_str,
+		string_count(p->payload,1,'#')+1,
+		string_count(p->payload,2,'#')
+	);
+
+	if(strcmp(cmd_str,"START_DISPLAY") == 0 ){
+		xil_printf("#START DISPLAY\r\n");
 		IPI_run_display();
 	}
-	else if(strcmp(p->payload,"STOP DISPLAY") == 0 ){
+	else if(strcmp(cmd_str,"STOP_DISPLAY") == 0 ){
 		xil_printf("STOP DISPLAY\r\n");
 		IPI_stop_display();
 	}
-	else if(strcmp(p->payload,"LOAD SD CARD") == 0 ){
+	else if(strcmp(cmd_str,"LOAD_SD_CARD") == 0 ){
 		xil_printf("LOAD SD CARD\r\n");
 		IPI_load_sdcard();
 	}
-	else if(strcmp(p->payload,"SET NEW IMAGE") == 0 ){
+	else if(strcmp(cmd_str,"SET_NEW_IMAGE") == 0 ){
 		xil_printf("SET NEW IMAGE\r\n");
 		IPI_set_new_image();
 	}
+	else if(strcmp(cmd_str,"SET_TEST") == 0 ){
+		xil_printf("SET TEST\r\n");
+		IPI_set_test(
+			get_param(p->payload, 1, 2),
+			get_param(p->payload, 2, 3),
+			get_param(p->payload, 3, 4),
+			get_param(p->payload, 4, 5),
+			get_param(p->payload, 5, 6),
+			get_param(p->payload, 6, 7));
+	}
 	else{
-		xil_printf("%s\r\n",p->payload);
+		xil_printf("UNKNOWN COMMAND : %s\r\n",p->payload);
 	}
 
 	/*
