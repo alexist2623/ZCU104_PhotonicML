@@ -4,11 +4,7 @@
         "top": "HDMIController.sv",
         "files" : [
             "HDMIController/HDMIController.sv",
-            "HDMIController/auxiliary_video_information_info_frame.sv",
-            "HDMIController/packet_assembler.sv",
-            "HDMIController/packet_picker.sv",
-            "HDMIController/source_product_description_info_frame.sv",
-            "HDMIController/tmds_channel.sv"
+            "HDMIController/tmds_encoder.sv"
         ]
     }
 }
