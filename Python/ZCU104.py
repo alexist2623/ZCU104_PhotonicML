@@ -106,8 +106,16 @@ class ZCU104:
 if __name__ == "__main__":
     zcu104 = ZCU104(IPAddress = '192.168.1.10', TCPPort = 7)
     zcu104.connect()
-    # zcu104.setNewImage()
-    # zcu104.loadSDCard()
-    zcu104.setTest(1,255,0,0,550,434)
-    # zcu104.setTest(1,255,0,0,1023,767)
+    X = 200
+    Y = 484
+    SIZE = 100
+    # zcu104.setTest(1,255,1,1,524,395)
+    # zcu104.setTest(1,255,500,373,524,395)
+    # zcu104.setTest(1,255,X-SIZE,Y-SIZE,X+SIZE,Y+SIZE)
+    zcu104.setTest(1,0,0,0,1023,767)
+    for j in range(7):
+        for i in range(256):
+            time.sleep(0.03)
+            zcu104.setTest(1,i,0,0,1023,767)
+    zcu104.setTest(1,0,0,0,1023,767)
     zcu104.disconnect()
