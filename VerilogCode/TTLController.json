@@ -1,0 +1,10 @@
+{
+    "verilog" : {
+        "name" : "TTLController",
+        "top": "TTLController.sv",
+        "files" : [
+            "TTLController/AXI2COM.sv",
+            "TTLController/TTLController.sv"
+        ]
+    }
+}
