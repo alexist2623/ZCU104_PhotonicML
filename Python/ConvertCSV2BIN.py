@@ -58,13 +58,13 @@ def saveBinaryDataFromCSV(row_num, csv_file_path, output_folder):
         row = next(islice(reader, row_num, row_num + 1), None)
         row_number = row[0]
         binary_data = row[1:]
-        for i in range(len(binary_data)):
-            if int(binary_data[i]) == 0:
-                binary_data[i] = 50
-            else:
-                binary_data[i] = 200
+        # for i in range(len(binary_data)):
+        #     if int(binary_data[i]) == 0:
+        #         binary_data[i] = 50
+        #     else:
+        #         binary_data[i] = 200
             
-        # j = 0
+        j = 0
         # for b in binary_data:
         #     if int(b) == 255:
         #         print(str(1)+' ', end = '')
@@ -79,6 +79,6 @@ def saveBinaryDataFromCSV(row_num, csv_file_path, output_folder):
 
 if __name__ == "__main__":
     csv_file_path = 'MNIST_subset_1000_train.csv'
-    output_folder = f'TEST_DATA0_10'
+    output_folder = f'TEST_DATA_MNIST'
     for row_num in range(1000):
-        make01BinaryDataFromCSV(row_num, csv_file_path, output_folder)
+        saveBinaryDataFromCSV(row_num, csv_file_path, output_folder)
