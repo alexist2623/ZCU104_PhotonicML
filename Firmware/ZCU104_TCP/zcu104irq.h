@@ -36,6 +36,8 @@
 #define INT_ID_LOAD_SD_CARD			0x2
 #define INT_ID_SET_NEW_IMAGE		0x3
 #define INT_ID_SET_TEST				0x4
+#define INT_ID_SET_CAM_EXP_SATRT	0x5
+#define INT_ID_SET_CAM_EXP_END		0x6
 
 /************************ Define address for IPI *****************************/
 #define DATA_SAVE_MEM_ADDR			0x2000000U
@@ -64,7 +66,9 @@ void IPI_run_display();
 void IPI_load_sdcard();
 void IPI_set_new_image();
 void IPI_set_test(uint64_t test_mode, uint64_t test_data, uint64_t start_X,
-							uint64_t start_Y, uint64_t end_X, uint64_t end_Y);
+				  uint64_t start_Y, uint64_t end_X, uint64_t end_Y);
+void IPI_set_cam_exp_start(uint64_t polarity, uint64_t event, uint64_t delay);
+void IPI_set_cam_exp_end(uint64_t polarity, uint64_t event, uint64_t delay);
 
 /***************************** lexer functions ********************************/
 int64_t get_param(char *inst, int64_t start_index, int64_t end_index);

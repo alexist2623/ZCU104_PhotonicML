@@ -91,7 +91,12 @@ wire [DELAY_WIDTH-1:0] delay_value;
 wire delay_set;
 wire [EVENT_WIDTH-1:0] event_value;
 wire event_set;
-wire event_polarity_set;
+wire input_event_polarity_set;
+wire input_event_polarity_value;
+wire output_event_polarity_set;
+wire output_event_polarity_value;
+wire [63:0] timer_value;
+wire timer_set;
 
 AXI2IOControllerCOM #(
     .AXI_ADDR_WIDTH                         (AXI_ADDR_WIDTH),
@@ -147,7 +152,12 @@ AXI2IOControllerCOM #(
     .delay_set                              (delay_set),
     .event_value                            (event_value),
     .event_set                              (event_set),
-    .event_polarity_set                     (event_polarity_set)
+    .input_event_polarity_set               (input_event_polarity_set),
+    .input_event_polarity_value             (input_event_polarity_value),
+    .output_event_polarity_set              (output_event_polarity_set),
+    .output_event_polarity_value            (output_event_polarity_value),
+    .timer_value                            (timer_value),
+    .timer_set                              (timer_set)
 );
 
 SignalShifter #(
@@ -163,7 +173,12 @@ SignalShifter #(
     .delay_set                              (delay_set),
     .event_value                            (event_value),
     .event_set                              (event_set),
-    .event_polarity_set                     (event_polarity_set),
+    .input_event_polarity_set               (input_event_polarity_set),
+    .input_event_polarity_value             (input_event_polarity_value),
+    .output_event_polarity_set              (output_event_polarity_set),
+    .output_event_polarity_value            (output_event_polarity_value),
+    .timer_value                            (timer_value),
+    .timer_set                              (timer_set),
     .input_signal                           (input_signal),
     .output_signal                          (output_signal)
 );

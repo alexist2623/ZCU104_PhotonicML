@@ -71,8 +71,7 @@ void set_image_size(uint64_t width, uint64_t height){
 *
 * This function send test data to ImageController
 *
-* @param	width : width of image
-*           height : height of image
+* @param	None.
 *
 * @return	None.
 *

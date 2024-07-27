@@ -107,7 +107,12 @@ module AXI2IOControllerCOM
     output reg  delay_set,
     output reg  [EVENT_WIDTH-1:0] event_value,
     output reg  event_set,
-    output reg  event_polarity_set
+    output reg  input_event_polarity_set,
+    output reg  input_event_polarity_value,
+    output reg  output_event_polarity_set,
+    output reg  output_event_polarity_value,
+    output reg  [63:0] timer_value,
+    output reg  timer_set
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +195,12 @@ always_ff @(posedge s_axi_aclk) begin
         delay_set <= 1'b0;
         event_value <= EVENT_WIDTH'(0);
         event_set <= 1'b0;
-        event_polarity_set <= 1'b0;
+        input_event_polarity_set <= 1'b0;
+        output_event_polarity_set <= 1'b0;
+        input_event_polarity_value <= 1'b0;
+        output_event_polarity_value <= 1'b0;
+        timer_value <= 64'h0;
+        timer_set <= 1'b0;
     end
     
     else begin
@@ -198,7 +208,9 @@ always_ff @(posedge s_axi_aclk) begin
         delay_set <= 1'b0;
         event_value <= EVENT_WIDTH'(0);
         event_set <= 1'b0;
-        event_polarity_set <= 1'b0;
+        input_event_polarity_set <= 1'b0;
+        output_event_polarity_set <= 1'b0;
+        timer_set <= 1'b0;
         reset <= 1'b0;
         
         case(axi_state_write)
@@ -321,8 +333,15 @@ always_ff @(posedge s_axi_aclk) begin
             
             WRITE_POLARITY : begin
                 if( s_axi_wvalid == 1'b1 ) begin
-                    event_polarity_set <= s_axi_wdata[0];
-                    $display("POLARITY SET TO %d",s_axi_wdata[0]);
+                    input_event_polarity_value <= s_axi_wdata[63];
+                    output_event_polarity_value <= s_axi_wdata[62];
+                    input_event_polarity_set <= 1'b1;
+                    output_event_polarity_set <= 1'b1;
+                    timer_value <= s_axi_wdata[61:0];
+                    timer_set <= 1'b1;
+                    $display("INPUT POLARITY SET TO %d",s_axi_wdata[63]);
+                    $display("OUTPUT POLARITY SET TO %d",s_axi_wdata[62]);
+                    $display("TIMER SET TO %d",s_axi_wdata[61:0]);
                     
                     if( s_axi_wlast == 1'b1 ) begin
                         axi_state_write <= WRITE_RESPONSE;

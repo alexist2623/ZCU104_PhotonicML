@@ -102,27 +102,42 @@ class ZCU104:
         a = self.tcp.read()
         print(a)
         
+    def setCameraExposureStart(
+        self,
+        input_polarity : int,
+        output_polarity : int,
+        timer : int,
+        event : int,
+        delay : int
+    ) -> None:
+        self.tcp.write(f"#SET_CAM_EXP_START#{input_polarity}#{output_polarity}#{timer}#{event}#{delay}#")
+        a = self.tcp.read()
+        print(a)
+        
+    def setCameraExposureEnd(
+        self,
+        input_polarity : int,
+        output_polarity : int,
+        timer : int,
+        event : int,
+        delay : int
+    ) -> None:
+        self.tcp.write(f"#SET_CAM_EXP_END#{input_polarity}#{output_polarity}#{timer}#{event}#{delay}#")
+        a = self.tcp.read()
+        print(a)
         
 if __name__ == "__main__":
     zcu104 = ZCU104(IPAddress = '192.168.1.10', TCPPort = 7)
     zcu104.connect()
-    X = 512
-    Y = 384
-    SIZE =30
-    # zcu104.setTest(1,255,0,0,524,395)
-    # zcu104.setTest(1,255,500,373,524,395)
-    # zcu104.setTest(1,255,X-SIZE,Y-SIZE,X+SIZE,Y+SIZE)
-    # zcu104.setTest(1,0,0,0,1023,767)
-    # for j in range(7):
-    #     for i in range(256):
-    #         time.sleep(0.03)
-    #         zcu104.setTest(1,i,0,0,1023,767)
-    # zcu104.setTest(1,0,0,0,1023,767)
-    start_time = time.time()
-    for i in range(1000):
-        time.sleep(0.05)
-        zcu104.setNewImage()
+    zcu104.startDisplay()
+    # start_time = time.time()
+    # for i in range(200):
+    #     time.sleep(1.00)
+    #     zcu104.setNewImage()
+    
     zcu104.disconnect()
-    end_time = time.time()  # 종료 시간 기록
-    execution_time = end_time - start_time
-    print(execution_time)
+    
+    # end_time = time.time()  # 종료 시간 기록
+    
+    # execution_time = end_time - start_time
+    # print(execution_time)

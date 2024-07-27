@@ -31,14 +31,16 @@ localparam IMAGE_CONTROLLER_AXI_SET_NEW_IMAGE     = 39'h00_A001_0050;
 localparam IMAGE_CONTROLLER_AXI_DEASSERT_IRQ      = 39'h00_A001_0060;
 localparam EXPOSURE_START_AXI_SET_DELAY           = 39'h00_A003_0010;
 localparam EXPOSURE_START_AXI_SET_EVENT           = 39'h00_A003_0020;
+localparam EXPOSURE_START_AXI_SET_POL             = 39'h00_A003_0030;
 localparam EXPOSURE_END_AXI_SET_DELAY             = 39'h00_A002_0010;
 localparam EXPOSURE_END_AXI_SET_EVENT             = 39'h00_A002_0020;
+localparam EXPOSURE_END_AXI_SET_POL               = 39'h00_A002_0030;
 localparam int START_X                            = 0;
 localparam int START_Y                            = 760;
 localparam BIT_WIDTH                              = 12;
 localparam BIT_HEIGHT                             = 11;
-localparam FRAME_WIDTH                            = 1344;
-localparam FRAME_HEIGHT                           = 806;
+localparam FRAME_WIDTH                            = 1376;
+localparam FRAME_HEIGHT                           = 810;
 
 reg [38:0]              S00_AXI_0_araddr;
 reg [1:0]               S00_AXI_0_arburst;
@@ -239,31 +241,35 @@ endtask
 // IRQ procedure task
 //////////////////////////////////////////////////////////////////////////////////
 task automatic IRQ_procedure();
-    int k = 0;
+    int k = 1250;
     //////////////////////////////////////////////////////////////////////////////////
     // Deassert IRQ signal to ImageController
     //////////////////////////////////////////////////////////////////////////////////
-    
-    wait(irq_signal);
-    #8;
-    axi_write(IMAGE_CONTROLLER_AXI_DEASSERT_IRQ, 128'(1)); // Example write address
-    #8;
-    
-    //////////////////////////////////////////////////////////////////////////////////
-    // Write Data to ImageController
-    //////////////////////////////////////////////////////////////////////////////////
-    for( k = 0 ; k < 625; k++ ) begin
-        axi_write(IMAGE_CONTROLLER_AXI_WRITE_DATA_BUFFER, 128'(k));
-        $display("write %d th data",k);
-        k = k + 1;
-        #8;
-    end
-    
-    //////////////////////////////////////////////////////////////////////////////////
-    // Write Data Done to ImageController
-    //////////////////////////////////////////////////////////////////////////////////
-    #8;
-    axi_write(IMAGE_CONTROLLER_AXI_WRITE_DATA_DONE, 128'(1));
+    fork
+        forever begin
+            $display("IRQ Fork");
+            wait(irq_signal);
+            #8;
+            axi_write(IMAGE_CONTROLLER_AXI_DEASSERT_IRQ, 128'(1)); // Example write address
+            #8;
+            
+            //////////////////////////////////////////////////////////////////////////////////
+            // Write Data to ImageController
+            //////////////////////////////////////////////////////////////////////////////////
+            for( k = 0 ; k < 625; k++ ) begin
+                axi_write(IMAGE_CONTROLLER_AXI_WRITE_DATA_BUFFER, 128'(k));
+                $display("write %d th data",k);
+                k = k + 1;
+                #8;
+            end
+            
+            //////////////////////////////////////////////////////////////////////////////////
+            // Write Data Done to ImageController
+            //////////////////////////////////////////////////////////////////////////////////
+            #8;
+            axi_write(IMAGE_CONTROLLER_AXI_WRITE_DATA_DONE, 128'(1));
+        end
+    join_none    
 endtask
 
 initial begin
@@ -306,6 +312,12 @@ initial begin
     s_axi_aresetn <= 1'b1;
     #10000;
     
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // IRQ Start
+    //////////////////////////////////////////////////////////////////////////////////
+    IRQ_procedure();
+    
     //////////////////////////////////////////////////////////////////////////////////
     // Write ASSERT RESET command to MasterController
     //////////////////////////////////////////////////////////////////////////////////
@@ -335,6 +347,13 @@ initial begin
     #1000;
     
     //////////////////////////////////////////////////////////////////////////////////
+    // Write Polarity to Exposure Start
+    ////////////////////////////////////////////////////////////////////////////////// 
+    axi_write(EXPOSURE_START_AXI_SET_POL,128'(0 << 63 | 1 << 62 | 1));
+    $display("SET EXPOSURE_START POLARITY");
+    #1000;
+    
+    //////////////////////////////////////////////////////////////////////////////////
     // Write Delay time to Exposure End
     //////////////////////////////////////////////////////////////////////////////////
     axi_write(EXPOSURE_END_AXI_SET_DELAY,128'(0));
@@ -344,8 +363,15 @@ initial begin
     //////////////////////////////////////////////////////////////////////////////////
     // Write Event time to Exposure End
     //////////////////////////////////////////////////////////////////////////////////
-    axi_write(EXPOSURE_END_AXI_SET_EVENT,128'(10));
+    axi_write(EXPOSURE_END_AXI_SET_EVENT,128'(1));
     $display("SET EXPOSURE_END EVENT");
+    #1000;
+     
+    //////////////////////////////////////////////////////////////////////////////////
+    // Write Polarity to Exposure Start
+    ////////////////////////////////////////////////////////////////////////////////// 
+    axi_write(EXPOSURE_END_AXI_SET_POL,128'(0 << 63 | 1 << 62 | 1000));
+    $display("SET EXPOSURE_END POLARITY");
     #1000;
     
     //////////////////////////////////////////////////////////////////////////////////
@@ -360,7 +386,7 @@ initial begin
     axi_write(MASTER_CONTROLLER_AXI_CMD, 128'(39'h04_0000_0000 | ( (39'h04_0000_0000 | 1920*1080) << 64 )));
     
     //////////////////////////////////////////////////////////////////////////////////
-    //Write DATA to ImageController
+    //Write First DATA to ImageController
     //////////////////////////////////////////////////////////////////////////////////
     for( j = 0 ; j < 625; j++ ) begin
         axi_write(IMAGE_CONTROLLER_AXI_WRITE_DATA_BUFFER, 128'(i));
@@ -369,7 +395,7 @@ initial begin
         #8;
     end
     //////////////////////////////////////////////////////////////////////////////////
-    //Write DATA to ImageController
+    //Write Second DATA to ImageController
     //////////////////////////////////////////////////////////////////////////////////
     for( j = 0 ; j < 625; j++ ) begin
         axi_write(IMAGE_CONTROLLER_AXI_WRITE_DATA_BUFFER, 128'(i));
@@ -382,18 +408,20 @@ initial begin
     // Write AUTOSTART command to MasterController
     //////////////////////////////////////////////////////////////////////////////////
     axi_write(MASTER_CONTROLLER_AXI_CMD, 128'(4'b1001)); // Example write address
-    #40000000;
+    $display("Auto Start");
+    #4000;
     
     //////////////////////////////////////////////////////////////////////////////////
     // External Image Change Signal
     //////////////////////////////////////////////////////////////////////////////////
-    for( j = 0 ; j < 10 ; j ++ ) begin
+    // Wait for coordinate set
+    #18000000;
+    
+    for( j = 0 ; j < 4000 ; j ++ ) begin
         generate_random_signal();
+        $display("%d th random signal",j);
+        #100000;
     end
-    
-    IRQ_procedure();
-    #40000000;
-    
     //////////////////////////////////////////////////////////////////////////////////
     // Set New image IRQ signal to ImageController
     //////////////////////////////////////////////////////////////////////////////////
@@ -402,7 +430,6 @@ initial begin
     //////////////////////////////////////////////////////////////////////////////////
     // Deassert IRQ signal to ImageController
     //////////////////////////////////////////////////////////////////////////////////
-    IRQ_procedure();
     
     $display("wait for 1frame discharges");
     #40000000;

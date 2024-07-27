@@ -94,6 +94,12 @@ void LowInterruptHandler(u32 CallbackRef)
 			write_80000_data(data_addr);
 			data_addr = data_addr + IMAGE_SIZE;
 			break;
+		case INT_ID_SET_CAM_EXP_SATRT:
+			set_camera_exposure_start();
+			break;
+		case INT_ID_SET_CAM_EXP_END:
+			set_camera_exposure_end();
+			break;
 		case INT_ID_SET_NEW_IMAGE:
             set_new_image();
 			break;

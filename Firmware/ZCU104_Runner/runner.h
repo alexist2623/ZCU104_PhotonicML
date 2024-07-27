@@ -19,6 +19,8 @@
 #define INT_ID_LOAD_SD_CARD				0x2
 #define INT_ID_SET_NEW_IMAGE			0x3
 #define INT_ID_SET_TEST					0x4
+#define INT_ID_SET_CAM_EXP_SATRT		0x5
+#define INT_ID_SET_CAM_EXP_END			0x6
 
 
 /************************** Constant Definitions *****************************/
@@ -101,10 +103,12 @@ void reset_disable();
 /***************** IOControllerDriver Function Prototypes ********************/
 void set_camera_exposure_start_delay(uint64_t delay_value);
 void set_camera_exposure_start_event(uint64_t event_value);
-void set_camera_exposure_start_polarity(uint64_t polarity_value);
+void set_camera_exposure_end_polarity(uint64_t input_polarity_value, uint64_t output_polarity_value, uint64_t timer_value);
 void set_camera_exposure_end_delay(uint64_t delay_value);
 void set_camera_exposure_end_event(uint64_t event_value);
-void set_camera_exposure_end_polarity(uint64_t polarity_value);
+void set_camera_exposure_start_polarity(uint64_t input_polarity_value, uint64_t output_polarity_value, uint64_t timer_value);
+void set_camera_exposure_start();
+void set_camera_exposure_end();
 
 /********************* sdcard.c Function Prototypes **************************/
 int init_sd_card(XSdPs *SdInstance, FATFS *FS_Instance);

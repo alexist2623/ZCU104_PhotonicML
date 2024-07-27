@@ -93,6 +93,20 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 			get_param(p->payload, 6, 7),
 			get_param(p->payload, 7, 8));
 	}
+	else if(strcmp(cmd_str,"SET_CAM_EXP_START") == 0 ){
+		xil_printf("SET_CAM_EXP_START\r\n");
+		IPI_set_cam_exp_start(
+			get_param(p->payload, 2, 3),
+			get_param(p->payload, 3, 4),
+			get_param(p->payload, 4, 5));
+	}
+	else if(strcmp(cmd_str,"SET_CAM_EXP_END") == 0 ){
+		xil_printf("SET_CAM_EXP_END\r\n");
+		IPI_set_cam_exp_end(
+			get_param(p->payload, 2, 3),
+			get_param(p->payload, 3, 4),
+			get_param(p->payload, 4, 5));
+		}
 	else{
 		xil_printf("UNKNOWN COMMAND : %s\r\n",p->payload);
 	}

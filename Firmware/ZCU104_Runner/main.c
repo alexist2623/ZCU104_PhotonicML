@@ -39,10 +39,12 @@ void initialize_modules(){
      * not a real time(not a s, us, ns)
      */
 
-    set_camera_exposure_start_delay(100000);
+    set_camera_exposure_start_delay(2010000);
     set_camera_exposure_start_event(1);
-    set_camera_exposure_end_delay(0);
-    set_camera_exposure_end_event(10);
+    set_camera_exposure_end_delay(2010000);
+    set_camera_exposure_end_event(1);
+    set_camera_exposure_end_polarity(0,0,1);
+    set_camera_exposure_start_polarity(0,1,10000);
 
 	xil_printf("Write ADDR FIFO...\r\n");
 	/*
@@ -97,9 +99,9 @@ int main(void)
 	xil_printf("memory armed...\r\n");
 
 	/////////////////////////////////////////////////////////////////////
-	// Auto Start
+	// Wait
 	/////////////////////////////////////////////////////////////////////
-	auto_start();
+	xil_printf("Send start signal to start machine...\r\n");
 
 	while(1){
 		if( image_irq_ack == 1 ){
