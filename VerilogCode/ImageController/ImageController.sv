@@ -5,10 +5,10 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // ImageSender Interface
     //////////////////////////////////////////////////////////////////////////////////
-    parameter FRAME_WIDTH                   = 2200,
-    parameter FRAME_HEIGHT                  = 1125,
-    parameter SCREEN_WIDTH                  = 1920,
-    parameter SCREEN_HEIGHT                 = 1080,
+    parameter FRAME_WIDTH                   = 1376,
+    parameter FRAME_HEIGHT                  = 810,
+    parameter SCREEN_WIDTH                  = 1024,
+    parameter SCREEN_HEIGHT                 = 768,
     parameter int BIT_WIDTH                 = 12,
     parameter int BIT_HEIGHT                = 11,
     parameter IMAGE_WIDTH                   = 100,
@@ -16,6 +16,7 @@ module ImageController
     //////////////////////////////////////////////////////////////////////////////////
     // DRAM Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
+    parameter DRAM_ADDR_WIDTH               = 39,
     parameter DRAM_DATA_WIDTH               = 512,
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton

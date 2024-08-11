@@ -42,15 +42,15 @@ module DRAM_Controller
     output  reg [7:0] m_axi_awlen,
     output  reg m_axi_awvalid,
     output  reg [15:0] m_axi_awuser, // added to resolve wrapping error
-    input  wire m_axi_awready,                                                        //Note that ready signal is wire
+    input   wire m_axi_awready,                                                        //Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Write Response
     //////////////////////////////////////////////////////////////////////////////////
     output  reg m_axi_bready,
-    input  wire [1:0] m_axi_bresp,
-    input  wire m_axi_bvalid,
-    input  wire [15:0] m_axi_bid, // added to resolve wrapping error
+    input   wire [1:0] m_axi_bresp,
+    input   wire m_axi_bvalid,
+    input   wire [15:0] m_axi_bid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Data Write
@@ -59,7 +59,7 @@ module DRAM_Controller
     output  reg [AXI_STROBE_WIDTH - 1:0] m_axi_wstrb,
     output  reg m_axi_wvalid,
     output  reg m_axi_wlast,
-    input  wire m_axi_wready,                                                        //Note that ready signal is wire
+    input   wire m_axi_wready,                                                        //Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Address Read
@@ -71,39 +71,39 @@ module DRAM_Controller
     output  reg m_axi_arvalid,
     output  reg [15:0] m_axi_arid, // added to resolve wrapping error
     output  reg [15:0] m_axi_aruser, // added to resolve wrapping error
-    input  wire m_axi_arready,
-    input  wire [15:0] m_axi_rid, // added to resolve wrapping error
+    input   wire m_axi_arready,
+    input   wire [15:0] m_axi_rid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Data Read
     //////////////////////////////////////////////////////////////////////////////////
     output  reg m_axi_rready,
-    input  wire [AXI_DATA_WIDTH - 1:0] m_axi_rdata,
-    input  wire [1:0] m_axi_rresp,
-    input  wire m_axi_rvalid,
-    input  wire m_axi_rlast,
+    input   wire [AXI_DATA_WIDTH - 1:0] m_axi_rdata,
+    input   wire [1:0] m_axi_rresp,
+    input   wire m_axi_rvalid,
+    input   wire m_axi_rlast,
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Clock
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire m_axi_aclk,
+    input   wire m_axi_aclk,
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Master Reset
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire m_axi_aresetn,
+    input   wire m_axi_aresetn,
     
     //////////////////////////////////////////////////////////////////////////////////
     // DRAM Data Interface
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire [AXI_ADDR_WIDTH - 1:0] dram_read_addr,
-    input  wire [7:0] dram_read_len,
-    input  wire dram_read_en,
+    input   wire [AXI_ADDR_WIDTH - 1:0] dram_read_addr,
+    input   wire [7:0] dram_read_len,
+    input   wire dram_read_en,
     
-    input  wire [AXI_ADDR_WIDTH - 1:0] dram_write_addr,
-    input  wire [7:0] dram_write_len,
-    input  wire dram_write_en,
-    input  wire [AXI_DATA_WIDTH - 1:0] dram_write_data,
+    input   wire [AXI_ADDR_WIDTH - 1:0] dram_write_addr,
+    input   wire [7:0] dram_write_len,
+    input   wire dram_write_en,
+    input   wire [AXI_DATA_WIDTH - 1:0] dram_write_data,
     
     output  reg [DRAM_DATA_WIDTH - 1:0] dram_read_data,
     output  reg dram_read_data_valid,
@@ -112,56 +112,36 @@ module DRAM_Controller
 );
 
 //////////////////////////////////////////////////////////////////////////////////
-// AXI4 WRITE Address Space
-//////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////
-// AXI4 READ Address Space
-//////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
 //////////////////////////////////////////////////////////////////////////////////
-localparam AXI_STATE_LEN         = 6;
+typedef enum logic [6:0] {
+    WRITE_IDLE, 
+    WRITE_DRAM, 
+    WRITE_DRAM_WDATA, 
+    WRITE_DRAM_RESP,
+    WRITE_ERROR_STATE} statetype_w;
+statetype_w axi_state_write;
 
-localparam IDLE                  = AXI_STATE_LEN'(6'h0);
-localparam WRITE_DRAM            = AXI_STATE_LEN'(6'h1);
-localparam WRITE_DRAM_WDATA      = AXI_STATE_LEN'(6'h11);
-localparam WRITE_DRAM_RESP       = AXI_STATE_LEN'(6'h21);
-localparam READ_DRAM             = AXI_STATE_LEN'(6'h1);
-localparam READ_DRAM_RDATA       = AXI_STATE_LEN'(6'h2);
-localparam ERROR_STATE           = AXI_STATE_LEN'(6'hc);
-
-reg [AXI_STATE_LEN - 1:0] axi_state_write;
-reg [AXI_STATE_LEN - 1:0] axi_state_read;
+typedef enum logic [4:0] {
+    READ_IDLE, 
+    READ_DRAM, 
+    READ_DRAM_RDATA, 
+    READ_ERROR_STATE} statetype_r;
+statetype_r axi_state_read;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI Data Buffer
 //////////////////////////////////////////////////////////////////////////////////
     
 //////////////////////////////////////////////////////////////////////////////////
-// AXI4 FSM State initialization
-// For simulation, each state was initiated to IDLE state.
-//////////////////////////////////////////////////////////////////////////////////
-initial begin
-    axi_state_write <= IDLE;
-    axi_state_read <= IDLE;
-end
-
-//////////////////////////////////////////////////////////////////////////////////
-// AXI4 Output Assign Logic
-//////////////////////////////////////////////////////////////////////////////////
-
-
-//////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write FSM
 // In AXI write, wlast signal has to be actived to end sending data. Note that 
 // AXI transfer with only wlen signal does not work in below code.
 //////////////////////////////////////////////////////////////////////////////////
 
-always @(posedge m_axi_aclk) begin
+always_ff @(posedge m_axi_aclk) begin
     if( m_axi_aresetn == 1'b0 ) begin
-        axi_state_write <= IDLE;
+        axi_state_write <= WRITE_IDLE;
         m_axi_awaddr <= AXI_ADDR_WIDTH'(2'h0);
         m_axi_awid <= 16'h0; 
         m_axi_awburst <= 2'h0;
@@ -180,8 +160,8 @@ always @(posedge m_axi_aclk) begin
     
     else begin
         case(axi_state_write)
-            IDLE: begin
-                axi_state_write <= IDLE;
+            WRITE_IDLE: begin
+                axi_state_write <= WRITE_IDLE;
                 m_axi_awaddr <= AXI_ADDR_WIDTH'(0);
                 m_axi_awid <= 16'h0; 
                 m_axi_awburst <= 2'h0;
@@ -257,10 +237,10 @@ always @(posedge m_axi_aclk) begin
                 if( m_axi_bvalid == 1'b1 ) begin
                     m_axi_bready <= 1'b0;
                     if( m_axi_bresp == 2'b00 ) begin
-                        axi_state_write <= IDLE;
+                        axi_state_write <= WRITE_IDLE;
                     end
                     else begin
-                        axi_state_write <= ERROR_STATE;
+                        axi_state_write <= WRITE_ERROR_STATE;
                     end
                 end
             end
@@ -269,8 +249,8 @@ always @(posedge m_axi_aclk) begin
             // Error Handle
             //////////////////////////////////////////////////////////////////////////////////
             
-            ERROR_STATE: begin
-                axi_state_write <= IDLE;
+            WRITE_ERROR_STATE: begin
+                axi_state_write <= WRITE_IDLE;
                 m_axi_awaddr <= AXI_ADDR_WIDTH'(0);
                 m_axi_awid <= 16'h0; 
                 m_axi_awburst <= 2'h0;
@@ -293,9 +273,9 @@ end
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Read FSM
 //////////////////////////////////////////////////////////////////////////////////
-always @(posedge m_axi_aclk) begin
+always_ff @(posedge m_axi_aclk) begin
     if( m_axi_aresetn == 1'b0 ) begin
-        axi_state_read <= IDLE;
+        axi_state_read <= READ_IDLE;
         
         m_axi_arburst <= 2'h0;
         m_axi_arlen <= 8'h0;
@@ -313,8 +293,8 @@ always @(posedge m_axi_aclk) begin
     else begin
         dram_read_data_valid <= 1'b0;
         case(axi_state_read)
-            IDLE: begin
-                axi_state_read <= IDLE;
+            READ_IDLE: begin
+                axi_state_read <= READ_IDLE;
                 
                 m_axi_arburst <= 2'h0;
                 m_axi_arlen <= 8'h0;
@@ -364,19 +344,19 @@ always @(posedge m_axi_aclk) begin
                         if( m_axi_rlast == 1'b1 ) begin
                             m_axi_rready <= 1'b0;
                             if( m_axi_rresp == 2'b0 ) begin
-                                axi_state_read <= IDLE;
+                                axi_state_read <= READ_IDLE;
                                 dram_read_busy <= 1'b0;
                                 dram_read_data_valid <= 1'b1;
                             end
                             else begin
-                                axi_state_read <= ERROR_STATE;
+                                axi_state_read <= READ_ERROR_STATE;
                             end
                         end
                     end
                 end
             end
-            ERROR_STATE: begin
-                axi_state_read <= IDLE;
+            READ_ERROR_STATE: begin
+                axi_state_read <= READ_IDLE;
                 
                 m_axi_arburst <= 2'h0;
                 m_axi_arlen <= 8'h0;

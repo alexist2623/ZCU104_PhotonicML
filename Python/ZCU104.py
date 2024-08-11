@@ -126,15 +126,32 @@ class ZCU104:
         a = self.tcp.read()
         print(a)
         
+    def setTTL(
+            self,
+            ttl_list : list[int]
+        ) -> None:
+        indexes : int = 0
+        for index in ttl_list:
+            indexes = ( indexes | (1 << index) ) & 0xffffffff
+        self.tcp.write(f"#SET_TTL#{indexes}#")
+        a = self.tcp.read()
+        print(a)
+
 if __name__ == "__main__":
     zcu104 = ZCU104(IPAddress = '192.168.1.10', TCPPort = 7)
     zcu104.connect()
-    zcu104.startDisplay()
+    # zcu104.startDisplay()
     # start_time = time.time()
     # for i in range(200):
     #     time.sleep(1.00)
     #     zcu104.setNewImage()
     
+    ch = 3
+    for i in range(32):
+        print(i)
+        if i != ch:
+            zcu104.setTTL([i])
+    zcu104.setTTL([33])
     zcu104.disconnect()
     
     # end_time = time.time()  # 종료 시간 기록

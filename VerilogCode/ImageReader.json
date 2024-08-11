@@ -1,0 +1,14 @@
+{
+    "verilog" : {
+        "name" : "ImageReader",
+        "top": "ImageReader.sv",
+        "top_module_name" : "ImageReader",
+        "gen_ip" : "False",
+        "files" : [
+            "ImageReader/ImageReader.sv",
+            "ImageReader/rx_channel_1to7.v",
+            "ImageReader/rx_clkgen_1to7.v",
+            "ImageReader/rx_sipo_1to7.v"
+        ]
+    }
+}
