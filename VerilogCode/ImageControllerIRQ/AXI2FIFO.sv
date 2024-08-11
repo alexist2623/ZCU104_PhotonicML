@@ -160,14 +160,25 @@ localparam AXI_READ_RESOLUTION   = AXI_ADDR_WIDTH'(7'h10);
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
 //////////////////////////////////////////////////////////////////////////////////
-typedef enum logic [6:0] {WRITE_IDLE, WRITE_FIFO, WRITE_FLUSH_FIFO, 
-                         WRITE_IMAGE_SIZE, WRITE_DATA_BUFFER, WRITE_DATA_DONE, 
-                         SET_NEW_IMAGE, DEASSERT_IRQ, ERROR_STATE, 
-                         WRITE_RESPONSE, SET_TEST} statetype_w;
+typedef enum logic [6:0] {
+    WRITE_IDLE, 
+    WRITE_FIFO, 
+    WRITE_FLUSH_FIFO, 
+    WRITE_IMAGE_SIZE, 
+    WRITE_DATA_BUFFER, 
+    WRITE_DATA_DONE, 
+    SET_NEW_IMAGE, 
+    DEASSERT_IRQ, 
+    ERROR_STATE, 
+    WRITE_RESPONSE, 
+    SET_TEST} statetype_w;
 statetype_w axi_state_write;
 
-typedef enum logic [4:0] {READ_IDLE, READ_DRAM_ADDR, READ_RESOLUTION, 
-                         READ_ERROR_STATE} statetype_r;
+typedef enum logic [4:0] {
+    READ_IDLE, 
+    READ_DRAM_ADDR, 
+    READ_RESOLUTION, 
+    READ_ERROR_STATE} statetype_r;
 statetype_r axi_state_read;
 
 //////////////////////////////////////////////////////////////////////////////////

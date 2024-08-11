@@ -17,7 +17,7 @@ module uart
 
 // Calculate number of clock cycles per bit
 localparam integer BAUD_DIV = CLK_FREQ / BAUD_RATE;
-localparam integer HALF_BAUD_DIV = BAUD_DIV / 2;
+localparam integer HALF_BAUD_DIV = BAUD_DIV >> 1;
 
 // Transmit logic
 reg [3:0] tx_bit_cnt;
@@ -31,13 +31,15 @@ always_ff @(posedge clk) begin
         tx_bit_cnt <= 0;
         tx_clk_div <= 0;
         tx_shift_reg <= 10'b1111111111;
-    end else begin
+    end 
+    else begin
         if (tx_start && !tx_busy) begin
             tx_busy <= 1'b1;
             tx_shift_reg <= {1'b1, tx_data, 1'b0}; // Load shift register with start bit, data, stop bit
             tx_bit_cnt <= 0;
             tx_clk_div <= 0;
-        end else if (tx_busy) begin
+        end 
+        else if (tx_busy) begin
             if (tx_clk_div < BAUD_DIV - 1) begin
                 tx_clk_div <= tx_clk_div + 1;
             end else begin
@@ -55,9 +57,9 @@ always_ff @(posedge clk) begin
 end
 
 // Receive logic
-reg [3:0] rx_bit_cnt;
+reg [3:0]  rx_bit_cnt;
 reg [12:0] rx_clk_div;
-reg [9:0] rx_shift_reg;
+reg [9:0]  rx_shift_reg;
 reg        rx_sample_flag;
 
 always_ff @(posedge clk) begin
@@ -68,12 +70,15 @@ always_ff @(posedge clk) begin
         rx_clk_div <= 0;
         rx_shift_reg <= 10'b0;
         rx_sample_flag <= 0;
-    end else begin
+    end 
+    
+    else begin
         if (!rx_sample_flag && !rx_serial) begin
             // Start bit detected
             rx_clk_div <= HALF_BAUD_DIV;
             rx_sample_flag <= 1'b1;
-        end else if (rx_sample_flag) begin
+        end 
+        else if (rx_sample_flag) begin
             if (rx_clk_div < BAUD_DIV - 1) begin
                 rx_clk_div <= rx_clk_div + 1;
             end else begin
@@ -88,7 +93,8 @@ always_ff @(posedge clk) begin
                     rx_data <= rx_shift_reg[8:1]; // Capture received data
                 end
             end
-        end else begin
+        end 
+        else begin
             rx_ready <= 0;
         end
     end

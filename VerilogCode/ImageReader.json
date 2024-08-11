@@ -6,6 +6,8 @@
         "gen_ip" : "False",
         "files" : [
             "ImageReader/ImageReader.sv",
+            "ImageReader/AXI2UART.sv",
+            "ImageReader/UART.sv",
             "ImageReader/rx_channel_1to7.v",
             "ImageReader/rx_clkgen_1to7.v",
             "ImageReader/rx_sipo_1to7.v"
