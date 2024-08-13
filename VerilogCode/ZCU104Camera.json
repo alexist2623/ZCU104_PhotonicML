@@ -3,29 +3,11 @@
         "project_name" : "ZCU104_Main",
         "axi_offset" : "0xA0000000",
         "json_path" : [
-            "HDMIController.json", 
-            "ImageControllerIRQ.json",
-            "MasterController.json",
-            "GTH_serializer.json",
-            "IOController.json",
             "ImageReader.json"
         ],
         "output_ports" : [
-            "HDMI_TX0_N",
-            "HDMI_TX1_N",
-            "HDMI_TX2_N",
-            "HDMI_TX0_P",
-            "HDMI_TX1_P",
-            "HDMI_TX2_P",
-            "HDMI_TX_LVDS_OUT_P",
-            "HDMI_TX_LVDS_OUT_N",
-            "HDMI_TX_EN",
-            "PMOD0_0"
         ],
         "input_ports" : [
-            "HDMI_DRU_CLOCK_C_P",
-            "HDMI_DRU_CLOCK_C_N",
-            "PMOD1_0"
         ]
     },
     "bd_cell" : {
