@@ -81,6 +81,7 @@ module Image2DRAM
     //////////////////////////////////////////////////////////////////////////////////
     // Cameralink interface
     //////////////////////////////////////////////////////////////////////////////////
+    input  wire clink_X_clk,
     input  wire [7:0]  d0,
     input  wire [7:0]  d1,
     input  wire [7:0]  d2,
@@ -163,7 +164,8 @@ BufferGearBox #(
     .DRAM_DATA_WIDTH                (DRAM_DATA_WIDTH)
 ) buffer_gearbox_inst (
     .reset                          (~m_axi_aresetn),
-    .clink_X_clk                    (m_axi_aclk),
+    .m_axi_aclk                     (m_axi_aclk),
+    .clink_X_clk                    (clink_X_clk),
     .d0                             (d0),
     .d1                             (d1),
     .d2                             (d2),

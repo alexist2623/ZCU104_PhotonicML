@@ -6,6 +6,7 @@ module BufferGearBox
 )
 (
     input  wire reset,
+    input  wire m_axi_aclk,
     input  wire clink_X_clk,
     input  wire [7:0]  d0,
     input  wire [7:0]  d1,
@@ -20,7 +21,6 @@ module BufferGearBox
     output reg  dram_write_en,
     output reg  [DRAM_ADDR_WIDTH - 1:0] dram_write_addr,
     input  wire dram_write_busy,
-    input  wire dram_ctrl_clk
 );
 
 localparam BUFFER_SIZE           = DRAM_DATA_WIDTH * 3;
@@ -48,7 +48,7 @@ assign async_fifo_buffer_write = fval & dval & lval;
 async_fifo_generator async_fifo_inst (
     .srst       (reset),
     .wr_clk     (clink_X_clk),
-    .rd_clk     (dram_ctrl_clk), 
+    .rd_clk     (m_axi_aclk), 
     .din        (async_fifo_input),
     .wr_en      (async_fifo_write),
     .re_en      (dram_write_en),
@@ -58,7 +58,7 @@ async_fifo_generator async_fifo_inst (
 );
 
 // DRAM interface
-always_ff @(posedge clink_X_clk) begin
+always_ff @(posedge m_axi_aclk) begin
     if( reset ) begin
         dram_write_addr     <= DRAM_ADDR_BASE;
         dram_next_addr      <= DRAM_ADDR_BASE;
