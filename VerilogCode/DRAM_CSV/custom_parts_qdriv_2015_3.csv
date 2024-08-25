@@ -1,0 +1,2 @@
+Part type,Part name,Performance type,Memory Read Latency,Memory Write Latency,Burst length,Address width,Memory speed grade,Memory density,Memory device width,Data bits per strobe,Data bits per dk,IO Voltages,Data widths,Min period,Max period
+Components,custom_qdriv_xp_x36,XP,8,5,2,21,1066,144Mb,36,9,18,1.2V,36,938,3333

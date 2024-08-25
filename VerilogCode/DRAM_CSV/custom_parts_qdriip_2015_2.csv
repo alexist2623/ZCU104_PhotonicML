@@ -1,0 +1,4 @@
+Part type,Part name,Memory Read Latency,Burst length,Address width,Memory speed grade,Memory density,Memory device width,Data bits per strobe,IO Voltages,Data widths,Min period,Max period
+Components,QDRIIP_CUSTOM,2.5,4,20,633,72Mb,18,18,1.5V,"18,36",1580,8400
+Components,QDRIIP_CUSTOM2,2,2,21,550,144Mb,18,18,1.5V,"18,36",1819,8400
+Components,QDRIIP_CUSTOM3,2.5,4,19,633,36Mb,36,36,1.5V,36,1580,8400

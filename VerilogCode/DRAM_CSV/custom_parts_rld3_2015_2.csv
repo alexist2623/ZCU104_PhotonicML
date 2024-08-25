@@ -1,0 +1,4 @@
+Part type,Part name,Data mask,Row width,Bank width,CS width,CK width,Memory speed grade,Memory density,Memory device width,Data bits per strobe,IO Voltages,Data widths,Min period,Max period,burst length
+Components,RLD3_CUSTOM,1,20,4,1,1,093E,576Mb,18,18,1.2V,"18,36",938,1250,4
+Components,RLD3_CUSTOM1,0,20,4,1,1,107,576Mb,18,18,1.2V,"18,36",1072,1250,8
+Components,RLD3_CUSTOM2,1,20,4,1,1,125,576Mb,36,36,1.2V,36,1250,1250,2

@@ -1,0 +1,16 @@
+{
+    "verilog" : {
+        "name" : "CameraLinkInterface",
+        "top": "CameraLinkInterface.sv",
+        "top_module_name" : "CameraLinkInterface",
+        "gen_ip" : "False",
+        "files" : [
+            "CameraLinkInterface/CameraLinkInterface.sv",
+            "CameraLinkInterface/AXI2UART.sv",
+            "CameraLinkInterface/UART.sv",
+            "CameraLinkInterface/rx_channel_1to7.v",
+            "CameraLinkInterface/rx_clkgen_1to7.v",
+            "CameraLinkInterface/rx_sipo_1to7.v"
+        ]
+    }
+}
