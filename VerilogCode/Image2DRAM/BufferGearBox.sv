@@ -1,13 +1,8 @@
 module BufferGearBox
 #(
-    parameter DRAM_ADDR_LEN         = 32,
+    parameter DRAM_ADDR_WIDTH       = 32,
     parameter DRAM_ADDR_BASE        = 32'h80000000, // should be fixed
-    parameter DRAM_DATA_SIZE        = 512,
-    parameter BUFFER_SIZE           = DRAM_DATA_SIZE * 3,
-    parameter BUFFER_SIZE_WIDTH     = $clog2(BUFFER_SIZE),
-    parameter INPUT_DATA_SIZE       = 24, // 8-bit * 3
-    parameter INPUT_NUM             = BUFFER_SIZE / INPUT_DATA_SIZE,
-    parameter INPUT_NUM_WIDTH       = $clog2(INPUT_NUM)
+    parameter DRAM_DATA_WIDTH       = 512
 )
 (
     input  wire reset,
@@ -19,17 +14,25 @@ module BufferGearBox
     input  wire dval,
     input  wire lval,
 
-    output wire [BUFFER_SIZE - 1:0] async_fifo_out,
+    output wire [DRAM_DATA_WIDTH - 1:0] async_fifo_out,
+    output wire async_fifo_empty,
+
     output reg  dram_write_en,
-    output reg  [DRAM_ADDR_LEN - 1:0] dram_write_addr,
-    input  wire dram_write_busy
+    output reg  [DRAM_ADDR_WIDTH - 1:0] dram_write_addr,
+    input  wire dram_write_busy,
+    input  wire dram_ctrl_clk
 );
-reg  [DRAM_ADDR_LEN - 1:0] dram_next_addr;
 
+localparam BUFFER_SIZE           = DRAM_DATA_WIDTH * 3;
+localparam BUFFER_SIZE_WIDTH     = $clog2(BUFFER_SIZE);
+localparam INPUT_DATA_SIZE       = 24; // 8-bit * 3
+localparam INPUT_NUM             = BUFFER_SIZE / INPUT_DATA_SIZE;
+localparam INPUT_NUM_WIDTH       = $clog2(INPUT_NUM);
 
+reg  [DRAM_ADDR_WIDTH - 1:0] dram_next_addr;
 reg  [BUFFER_SIZE - 1:0] async_fifo_buffer;
-reg  [DRAM_DATA_SIZE - 1:0] async_fifo_chunk_input[3];
-reg  [DRAM_DATA_SIZE - 1:0] async_fifo_input;
+reg  [DRAM_DATA_WIDTH - 1:0] async_fifo_chunk_input[3];
+reg  [DRAM_DATA_WIDTH - 1:0] async_fifo_input;
 reg  [INPUT_NUM_WIDTH - 1:0] async_fifo_buffer_index;
 reg  async_fifo_write_fsm;
 reg  async_fifo_write;
@@ -38,28 +41,28 @@ reg  dval_buffer;
 reg  lval_buffer; // to save last data
 
 wire async_fifo_buffer_write;
-wire async_fifo_empty;
 
 // Async FIFO inteface
 assign async_fifo_buffer_write = fval & dval & lval;
 
 async_fifo_generator async_fifo_inst (
-    .reset(reset),
-    .clk(clink_X_clk),
-    .data(async_fifo_input),
-    .write(async_fifo_write),
-    .read(1'b0),
-    .empty(async_fifo_empty),
-    .full(1'b0),
-    .out(async_fifo_out)
+    .srst       (reset),
+    .wr_clk     (clink_X_clk),
+    .rd_clk     (dram_ctrl_clk), 
+    .din        (async_fifo_input),
+    .wr_en      (async_fifo_write),
+    .re_en      (dram_write_en),
+    .empty      (async_fifo_empty),
+    .full       (),
+    .dout       (async_fifo_out)
 );
 
 // DRAM interface
 always_ff @(posedge clink_X_clk) begin
     if( reset ) begin
-        dram_write_addr <= DRAM_ADDR_BASE;
-        dram_next_addr <= DRAM_ADDR_BASE;
-        dram_write_en <= 1'b0;
+        dram_write_addr     <= DRAM_ADDR_BASE;
+        dram_next_addr      <= DRAM_ADDR_BASE;
+        dram_write_en       <= 1'b0;
     end
     else begin
         dram_write_en <= 1'b0;
@@ -76,9 +79,9 @@ end
 // async fifo interface
 always_ff @(posedge clink_X_clk) begin
     if( reset ) begin
-        async_fifo_buffer <= 0;
+        async_fifo_buffer       <= 0;
         async_fifo_buffer_index <= 0;
-        async_fifo_write_fsm <= 1'b0;
+        async_fifo_write_fsm    <= 1'b0;
         {fval_buffer, dval_buffer, lval_buffer} <= 3'h0;
     end
     else begin
@@ -125,10 +128,10 @@ statetype_w async_fifo_write_state;
 always_ff @(posedge clink_X_clk) begin
     if( reset ) begin
         async_fifo_write <= 1'b0;
-        async_fifo_chunk_input[0] <= DRAM_DATA_SIZE'(0);
-        async_fifo_chunk_input[1] <= DRAM_DATA_SIZE'(0);
-        async_fifo_chunk_input[2] <= DRAM_DATA_SIZE'(0);
-        async_fifo_input <= DRAM_DATA_SIZE'(0);
+        async_fifo_chunk_input[0] <= DRAM_DATA_WIDTH'(0);
+        async_fifo_chunk_input[1] <= DRAM_DATA_WIDTH'(0);
+        async_fifo_chunk_input[2] <= DRAM_DATA_WIDTH'(0);
+        async_fifo_input <= DRAM_DATA_WIDTH'(0);
         async_fifo_write_state <= IDLE;
     end
     else begin
@@ -136,9 +139,9 @@ always_ff @(posedge clink_X_clk) begin
         case(async_fifo_write_state)
             IDLE: begin
                 if( async_fifo_write_fsm == 1'b1 ) begin
-                    async_fifo_chunk_input[0] <= async_fifo_buffer[0 +:DRAM_DATA_SIZE];
-                    async_fifo_chunk_input[1] <= async_fifo_buffer[DRAM_DATA_SIZE +:DRAM_DATA_SIZE];
-                    async_fifo_chunk_input[2] <= async_fifo_buffer[DRAM_DATA_SIZE*2 +:DRAM_DATA_SIZE];
+                    async_fifo_chunk_input[0] <= async_fifo_buffer[0 +:DRAM_DATA_WIDTH];
+                    async_fifo_chunk_input[1] <= async_fifo_buffer[DRAM_DATA_WIDTH +:DRAM_DATA_WIDTH];
+                    async_fifo_chunk_input[2] <= async_fifo_buffer[DRAM_DATA_WIDTH*2 +:DRAM_DATA_WIDTH];
                     async_fifo_write_state <= STAGE1;
                 end
             end

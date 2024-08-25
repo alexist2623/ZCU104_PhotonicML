@@ -7,13 +7,14 @@ module Image2DRAM
     //////////////////////////////////////////////////////////////////////////////////
     parameter DRAM_ADDR_WIDTH               = 39,
     parameter DRAM_DATA_WIDTH               = 512,
+    parameter DRAM_ADDR_BASE                = 32'h80000000,
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
     parameter MAXI_ADDR_WIDTH               = 39,
     parameter MAXI_DATA_WIDTH               = DRAM_DATA_WIDTH,
-    parameter AXI_STROBE_WIDTH              = SAXI_DATA_WIDTH >> 3,
-    parameter AXI_STROBE_LEN                = 4 // LOG(AXI_STROBE_WDITH)
+    parameter MAXI_STROBE_WIDTH             = MAXI_DATA_WIDTH >> 3,
+    parameter MAXI_STROBE_LEN               = $clog2(MAXI_STROBE_WIDTH) // LOG(AXI_STROBE_WDITH)
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +41,7 @@ module Image2DRAM
     // AXI4 Master Data Write
     //////////////////////////////////////////////////////////////////////////////////
     output wire [MAXI_DATA_WIDTH - 1:0] m_axi_wdata,
-    output wire [AXI_STROBE_WIDTH - 1:0] m_axi_wstrb,
+    output wire [MAXI_STROBE_WIDTH - 1:0] m_axi_wstrb,
     output wire m_axi_wvalid,
     output wire m_axi_wlast,
     input  wire m_axi_wready,                                                        //Note that ready signal is wire
@@ -106,8 +107,8 @@ DRAM_Controller #(
     .AXI_ADDR_WIDTH                 (MAXI_ADDR_WIDTH),
     .DRAM_DATA_WIDTH                (DRAM_DATA_WIDTH),
     .AXI_DATA_WIDTH                 (DRAM_DATA_WIDTH),
-    .AXI_STROBE_WIDTH               (AXI_STROBE_WIDTH),
-    .AXI_STROBE_LEN                 (AXI_STROBE_LEN)
+    .AXI_STROBE_WIDTH               (MAXI_STROBE_WIDTH),
+    .AXI_STROBE_LEN                 (MAXI_STROBE_LEN)
 ) dram_controller_0 (
     .m_axi_awaddr                   (m_axi_awaddr),
     .m_axi_awid                     (m_axi_awid),
@@ -157,13 +158,9 @@ DRAM_Controller #(
 );
 
 BufferGearBox #(
-    .DRAM_ADDR_LEN                  (DRAM_ADDR_LEN),
+    .DRAM_ADDR_WIDTH                (DRAM_ADDR_WIDTH),
     .DRAM_ADDR_BASE                 (DRAM_ADDR_BASE),
-    .DRAM_DATA_SIZE                 (DRAM_DATA_SIZE),
-    .BUFFER_SIZE                    (BUFFER_SIZE),
-    .INPUT_DATA_SIZE                (INPUT_DATA_SIZE),
-    .INPUT_NUM                      (INPUT_NUM),
-    .INPUT_NUM_WIDTH                (INPUT_NUM_WIDTH)
+    .DRAM_DATA_WIDTH                (DRAM_DATA_WIDTH)
 ) buffer_gearbox_inst (
     .reset                          (~m_axi_aresetn),
     .clink_X_clk                    (m_axi_aclk),

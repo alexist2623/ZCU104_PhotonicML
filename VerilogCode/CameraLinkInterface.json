@@ -3,7 +3,6 @@
         "name" : "CameraLinkInterface",
         "top": "CameraLinkInterface.sv",
         "top_module_name" : "CameraLinkInterface",
-        "gen_ip" : "False",
         "files" : [
             "CameraLinkInterface/CameraLinkInterface.sv",
             "CameraLinkInterface/AXI2UART.sv",
