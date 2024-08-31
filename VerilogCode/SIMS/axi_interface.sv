@@ -101,6 +101,32 @@ interface axi_if#(
             $display("AXI WRITE");
         end
     endtask
+
+    task automatic read(
+        input  logic [AXI_ADDR_WIDTH-1:0] addr, 
+        output logic [127:0] data
+    );
+        @(posedge s_axi_aclk);
+        s_axi_araddr <= addr;
+        s_axi_arvalid <= 1;
+        s_axi_rready <= 1;
+
+        wait (s_axi_arready);
+        #8;
+        wait (~s_axi_arready);
+        s_axi_arvalid <= 0;
+
+        wait (s_axi_rvalid);
+        data <= s_axi_rdata;
+        s_axi_rready <= 0;
+
+        if (s_axi_rresp != 2'b00) begin
+            $display("AXI RESPONSE IS NOT OKAY : %d", s_axi_rresp);
+        end
+        else begin
+            $display("AXI READ addr : %h, data : %h", addr, data);
+        end
+    endtask
     
     task automatic init();
         s_axi_awaddr = 0;

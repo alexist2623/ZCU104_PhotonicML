@@ -1,7 +1,7 @@
 module BufferGearBox
 #(
     parameter DRAM_ADDR_WIDTH       = 32,
-    parameter DRAM_ADDR_BASE        = 32'h80000000, // should be fixed
+    parameter DRAM_ADDR_BASE        = 32'h8000_0000, // should be fixed
     parameter DRAM_DATA_WIDTH       = 512
 )
 (
@@ -17,10 +17,12 @@ module BufferGearBox
 
     output wire [DRAM_DATA_WIDTH - 1:0] async_fifo_out,
     output wire async_fifo_empty,
+    input  wire clk_pixel_resetn,
 
     output reg  dram_write_en,
     output reg  [DRAM_ADDR_WIDTH - 1:0] dram_write_addr,
     input  wire dram_write_busy,
+    output reg  [7:0] dram_write_len
 );
 
 localparam BUFFER_SIZE           = DRAM_DATA_WIDTH * 3;
@@ -40,22 +42,30 @@ reg  fval_buffer;
 reg  dval_buffer;
 reg  lval_buffer; // to save last data
 
+reg  clk_pixel_resetn_buffer1, clk_pixel_resetn_buffer2; // CDC
+
 wire async_fifo_buffer_write;
 
 // Async FIFO inteface
 assign async_fifo_buffer_write = fval & dval & lval;
 
+/*
+ * Async FIFO is used to resolve the clock domain crossing between Cameralink 
+ * pixel clock(clink_X_clk) and DRAM clock(m_axi_aclk)
+ */
 async_fifo_generator async_fifo_inst (
     .srst       (reset),
     .wr_clk     (clink_X_clk),
     .rd_clk     (m_axi_aclk), 
     .din        (async_fifo_input),
     .wr_en      (async_fifo_write),
-    .re_en      (dram_write_en),
+    .rd_en      (dram_write_en),
     .empty      (async_fifo_empty),
     .full       (),
     .dout       (async_fifo_out)
 );
+
+reg [3:0] dram_write_wait_cnt;
 
 // DRAM interface
 always_ff @(posedge m_axi_aclk) begin
@@ -63,22 +73,46 @@ always_ff @(posedge m_axi_aclk) begin
         dram_write_addr     <= DRAM_ADDR_BASE;
         dram_next_addr      <= DRAM_ADDR_BASE;
         dram_write_en       <= 1'b0;
+        dram_write_len      <= 8'h0;
+        dram_write_wait_cnt <= 4'h0;
     end
     else begin
         dram_write_en <= 1'b0;
-        if( async_fifo_empty == 1'b0 && dram_write_busy == 1'b0 ) begin
+        if( async_fifo_empty == 1'b0 && dram_write_busy == 1'b0 && dram_write_wait_cnt == 4'h0 ) begin
             dram_write_en <= 1'b1;
+            dram_write_len <= 8'h0;
             dram_next_addr <= dram_write_addr + BUFFER_SIZE;
+            dram_write_wait_cnt <= 4'h1;
+
+            /* 
+             * Debugging 
+             */
+            $display("DRAM Write Addr: %h, wirte data : %h", dram_write_addr, async_fifo_out);
         end
+        /*
+         * load next address ( adding BUFFER_SIZE) to dram_write_addr
+         */
         else begin
             dram_write_addr <= dram_next_addr;
+        end
+        
+        /*
+         * dram_write_wait_cnt is used to wait for 16 clock cycles before writing to DRAM
+         * since there is delay to assert dram_wirte_busy signal
+         */
+        if( dram_write_wait_cnt != 4'h0 ) begin
+            dram_write_wait_cnt <= dram_write_wait_cnt + 4'h1;
+            if( dram_write_wait_cnt == 4'hF ) begin
+                dram_write_wait_cnt <= 4'h0;
+            end
         end
     end
 end
 
 // async fifo interface
 always_ff @(posedge clink_X_clk) begin
-    if( reset ) begin
+    {clk_pixel_resetn_buffer2, clk_pixel_resetn_buffer1} <= {clk_pixel_resetn_buffer1, clk_pixel_resetn};
+    if( ~clk_pixel_resetn_buffer2 ) begin
         async_fifo_buffer       <= 0;
         async_fifo_buffer_index <= 0;
         async_fifo_write_fsm    <= 1'b0;
@@ -125,8 +159,11 @@ typedef enum logic [6:0] {
 statetype_w async_fifo_write_state;
 
 // buffer control logic
+/*
+ * Use 3 stages to write to DRAM buffer since DRAM_BUFFER_SIZE 512 is not multiple of 24
+ */
 always_ff @(posedge clink_X_clk) begin
-    if( reset ) begin
+    if( ~clk_pixel_resetn_buffer2 ) begin
         async_fifo_write <= 1'b0;
         async_fifo_chunk_input[0] <= DRAM_DATA_WIDTH'(0);
         async_fifo_chunk_input[1] <= DRAM_DATA_WIDTH'(0);

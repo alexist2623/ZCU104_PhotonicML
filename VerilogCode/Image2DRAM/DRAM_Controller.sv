@@ -185,7 +185,7 @@ always_ff @(posedge m_axi_aclk) begin
                     m_axi_awid <= 16'h0; 
                     m_axi_awburst <= 2'h0;
                     m_axi_awsize <= 3'b110; // 4 byte data
-                    m_axi_awlen <= dram_read_len;
+                    m_axi_awlen <= dram_write_len;
                     m_axi_awvalid <= 1'b1;
                     m_axi_awuser <= 16'h0;
                                         

@@ -99,13 +99,18 @@ module AXI2UART
     output reg  [7:0]  tx_data,              // Data to be transmitted
     input  wire        tx_busy,              // Transmission in progress
     input  wire        rx_ready,             // Data received and ready
-    output wire [7:0]  rx_data               // Data received
+    output wire [7:0]  rx_data,              // Data received
+    output reg         CC1,
+    output reg         CC2,
+    output reg         CC3,
+    output reg         CC4
 );
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Address Space
 //////////////////////////////////////////////////////////////////////////////////
 localparam AXI_WRITE_UART       = {AXI_ADDR_WIDTH{6'h00}};
+localparam AXI_WRITE_CC         = {AXI_ADDR_WIDTH{6'h01}};
 localparam AXI_READ_UART        = {AXI_ADDR_WIDTH{6'h00}};
 localparam AXI_READ_UART_VALID  = {AXI_ADDR_WIDTH{6'h10}};
 
@@ -116,6 +121,7 @@ localparam AXI_READ_UART_VALID  = {AXI_ADDR_WIDTH{6'h10}};
 typedef enum logic [6:0] {
     WRITE_IDLE, 
     WRITE_UART,
+    WRITE_CC,
     WRITE_ERROR_STATE, 
     WRITE_RESPONSE} statetype_w;
 statetype_w axi_state_write;
@@ -153,7 +159,7 @@ reg axi_wlast;
 //////////////////////////////////////////////////////////////////////////////////
 
 assign s_axi_awready = (axi_state_write == WRITE_IDLE);
-assign s_axi_wready  = (axi_state_write == WRITE_UART);
+assign s_axi_wready  = ((axi_state_write == WRITE_UART) || (axi_state_write == WRITE_CC));
 assign s_axi_arready = (axi_state_read == READ_IDLE);
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -183,6 +189,7 @@ always_ff @(posedge s_axi_aclk) begin
         
         tx_start <= 1'b0;
         tx_data  <= 8'h0;
+        {CC1,CC2,CC3,CC4} <= 4'h0;
     end
     
     else begin
@@ -222,6 +229,21 @@ always_ff @(posedge s_axi_aclk) begin
                         axi_state_write <= WRITE_UART;
                     end
                     
+                    if( s_axi_awaddr == AXI_WRITE_CC ) begin
+                        axi_waddr <= s_axi_awaddr;
+                        axi_waddr_base <= s_axi_awaddr;
+                        axi_wlen <= s_axi_awlen;
+                        axi_wsize <= s_axi_awsize;
+                        axi_wburst <= s_axi_awburst;
+                        axi_wlen_counter <= s_axi_awlen;
+                        axi_wshift_size <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count <= 8'h0;
+                        axi_awid <= s_axi_awid;
+                        axi_awuser <= s_axi_awuser;
+                        
+                        axi_state_write <= WRITE_CC;
+                    end
+                    
                     else begin
                         axi_waddr <= {AXI_ADDR_WIDTH{1'b0}};
                         axi_waddr_base <= {AXI_ADDR_WIDTH{1'b0}};
@@ -256,6 +278,15 @@ always_ff @(posedge s_axi_aclk) begin
                 if( s_axi_wvalid == 1'b1 ) begin
                     tx_data <= s_axi_wdata[7:0];
                     tx_start <= 1'b1;
+                    if( s_axi_wlast == 1'b1 ) begin
+                        axi_state_write <= WRITE_RESPONSE;
+                    end
+                end
+            end
+            
+            WRITE_CC: begin
+                if( s_axi_wvalid == 1'b1 ) begin
+                    {CC4,CC3,CC2,CC1} <= s_axi_wdata[3:0];
                     if( s_axi_wlast == 1'b1 ) begin
                         axi_state_write <= WRITE_RESPONSE;
                     end

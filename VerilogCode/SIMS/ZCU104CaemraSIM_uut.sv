@@ -1,217 +1,265 @@
-
-
-/******************************************************************************
-// (c) Copyright 2013 - 2014 Xilinx, Inc. All rights reserved.
-//
-// This file contains confidential and proprietary information
-// of Xilinx, Inc. and is protected under U.S. and
-// international copyright and other intellectual property
-// laws.
-//
-// DISCLAIMER
-// This disclaimer is not a license and does not grant any
-// rights to the materials distributed herewith. Except as
-// otherwise provided in a valid license issued to you by
-// Xilinx, and to the maximum extent permitted by applicable
-// law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
-// WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
-// AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
-// BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
-// INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
-// (2) Xilinx shall not be liable (whether in contract or tort,
-// including negligence, or under any other theory of
-// liability) for any loss or damage of any kind or nature
-// related to, arising under or in connection with these
-// materials, including for any direct, or any indirect,
-// special, incidental, or consequential loss or damage
-// (including loss of data, profits, goodwill, or any type of
-// loss or damage suffered as a result of any action brought
-// by a third party) even if such damage or loss was
-// reasonably foreseeable or Xilinx had been advised of the
-// possibility of the same.
-//
-// CRITICAL APPLICATIONS
-// Xilinx products are not designed or intended to be fail-
-// safe, or for use in any application requiring fail-safe
-// performance, such as life-support or safety devices or
-// systems, Class III medical devices, nuclear facilities,
-// applications related to the deployment of airbags, or any
-// other applications that could lead to death, personal
-// injury, or severe property or environmental damage
-// (individually and collectively, "Critical
-// Applications"). Customer assumes the sole risk and
-// liability of any use of Xilinx products in Critical
-// Applications, subject only to applicable laws and
-// regulations governing limitations on product liability.
-//
-// THIS COPYRIGHT NOTICE AND DISCLAIMER MUST BE RETAINED AS
-// PART OF THIS FILE AT ALL TIMES.
-******************************************************************************/
-//   ____  ____
-//  /   /\/   /
-// /___/  \  /    Vendor             : Xilinx
-// \   \   \/     Version            : 1.0
-//  \   \         Application        : MIG
-//  /   /         Filename           : sim_tb_top.sv
-// /___/   /\     Date Last Modified : $Date: 2014/09/03 $
-// \   \  /  \    Date Created       : Thu Apr 18 2013
-//  \___\/\___\
-//
-// Device           : UltraScale
-// Design Name      : DDR4_SDRAM
-// Purpose          :
-//                   Top-level testbench for testing Memory interface.
-//                   Instantiates:
-//                     1. IP_TOP (top-level representing FPGA, contains core,
-//                        clocking, built-in testbench/memory checker and other
-//                        support structures)
-//                     2. Memory Model
-//                     3. Miscellaneous clock generation and reset logic
-// Reference        :
-// Revision History :
-//*****************************************************************************
-
-`timescale 1ps/1ps
-
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2024/08/26 17:05:56
+// Design Name: 
+// Module Name: ZCU104CaemraSIM_uut
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+`include "axi_interface.sv"
 `ifdef XILINX_SIMULATOR
 module short(in1, in1);
 inout in1;
 endmodule
 `endif
 
-module dram_sim(
-    output reg                   sys_rst, //Common port for all controllers
-
-    input  wire                  c0_init_calib_complete,
-    input  wire                  c0_data_compare_error,
-    output wire                  c0_sys_clk_p,
-    output wire                  c0_sys_clk_n,
-    input  wire                  c0_ddr4_act_n,
-    input  wire  [16:0]          c0_ddr4_adr,
-    input  wire  [1:0]           c0_ddr4_ba,
-    input  wire  [1:0]           c0_ddr4_bg,
-    input  wire  [0:0]           c0_ddr4_cke,
-    input  wire  [0:0]           c0_ddr4_odt,
-    input  wire  [0:0]           c0_ddr4_cs_n,
-    input  wire  [0:0]           c0_ddr4_ck_t,
-    input  wire  [0:0]           c0_ddr4_ck_c,
-    input  wire                  c0_ddr4_reset_n,
-    input  wire  [7:0]           c0_ddr4_dm_dbi_n,
-    input  wire  [63:0]          c0_ddr4_dq,
-    input  wire  [7:0]           c0_ddr4_dqs_c,
-    input  wire  [7:0]           c0_ddr4_dqs_t
+module ZCU104CaemraSIM_uut(
+    axi_if axi_if_inst,
+    
+    output wire SerTC                      ,
+    input  wire SerTFG                     ,
+    output wire cc1                        ,
+    output wire cc2                        ,
+    output wire cc3                        ,
+    output wire cc4                        ,
+    input  wire clink_X_clk_n              ,
+    input  wire clink_X_clk_p              ,
+    input  wire clink_X_data_0_n           ,
+    input  wire clink_X_data_0_p           ,
+    input  wire clink_X_data_1_n           ,
+    input  wire clink_X_data_1_p           ,
+    input  wire clink_X_data_2_n           ,
+    input  wire clink_X_data_2_p           ,
+    input  wire clink_X_data_3_n           ,
+    input  wire clink_X_data_3_p           ,
+    input  wire clink_X_ready              ,
+    output wire image_end                  ,
+    input  wire trigger                    ,
+    input  wire clk_pixel_resetn
 );
 
-  localparam ADDR_WIDTH                    = 17;
-  localparam DQ_WIDTH                      = 64;
-  localparam DQS_WIDTH                     = 8;
-  localparam DM_WIDTH                      = 8;
-  localparam DRAM_WIDTH                    = 8;
-  localparam tCK                           = 938 ; //DDR4 interface clock period in ps
-  localparam real SYSCLK_PERIOD            = tCK; 
-  localparam NUM_PHYSICAL_PARTS = (DQ_WIDTH/DRAM_WIDTH) ;
-  localparam           CLAMSHELL_PARTS = (NUM_PHYSICAL_PARTS/2);
-  localparam           ODD_PARTS = ((CLAMSHELL_PARTS*2) < NUM_PHYSICAL_PARTS) ? 1 : 0;
-  parameter RANK_WIDTH                       = 1;
-  parameter CS_WIDTH                       = 1;
-  parameter ODT_WIDTH                      = 1;
-  parameter CA_MIRROR                      = "OFF";
+localparam ADDR_WIDTH                     = 17;
+localparam DQ_WIDTH                       = 64;
+localparam DQS_WIDTH                      = 8;
+localparam DM_WIDTH                       = 8;
+localparam DRAM_WIDTH                     = 8;
+localparam tCK                            = 833 ; //DDR4 interface clock period in ps
+localparam real SYSCLK_PERIOD             = tCK; 
+localparam NUM_PHYSICAL_PARTS = (DQ_WIDTH/DRAM_WIDTH) ;
+localparam           CLAMSHELL_PARTS = (NUM_PHYSICAL_PARTS/2);
+localparam           ODD_PARTS = ((CLAMSHELL_PARTS*2) < NUM_PHYSICAL_PARTS) ? 1 : 0;
+parameter RANK_WIDTH                     = 1;
+parameter CS_WIDTH                       = 1;
+parameter ODT_WIDTH                      = 1;
+parameter CA_MIRROR                      = "OFF";
 
 
-  localparam MRS                           = 3'b000;
-  localparam REF                           = 3'b001;
-  localparam PRE                           = 3'b010;
-  localparam ACT                           = 3'b011;
-  localparam WR                            = 3'b100;
-  localparam RD                            = 3'b101;
-  localparam ZQC                           = 3'b110;
-  localparam NOP                           = 3'b111;
+localparam MRS                           = 3'b000;
+localparam REF                           = 3'b001;
+localparam PRE                           = 3'b010;
+localparam ACT                           = 3'b011;
+localparam WR                            = 3'b100;
+localparam RD                            = 3'b101;
+localparam ZQC                           = 3'b110;
+localparam NOP                           = 3'b111;
 
-  import arch_package::*;
-  parameter UTYPE_density CONFIGURED_DENSITY = _4G;
+import arch_package::*;
+parameter UTYPE_density CONFIGURED_DENSITY = _8G;
 
-  // Input clock is assumed to be equal to the memory clock frequency
-  // User should change the parameter as necessary if a different input
-  // clock frequency is used
-  localparam real CLKIN_PERIOD_NS = 3335 / 1000.0;
+// Input clock is assumed to be equal to the memory clock frequency
+// User should change the parameter as necessary if a different input
+// clock frequency is used
 
-  //initial begin
-  //   $shm_open("waves.shm");
-  //   $shm_probe("ACMTF");
-  //end
+//initial begin
+//   $shm_open("waves.shm");
+//   $shm_probe("ACMTF");
+//end
 
-  reg                  sys_clk_i;
+reg                  sys_clk_i;
+reg                  sys_rst;
 
-  reg  [16:0]            c0_ddr4_adr_sdram[1:0];
-  reg  [1:0]           c0_ddr4_ba_sdram[1:0];
-  reg  [1:0]           c0_ddr4_bg_sdram[1:0];
+wire                 c0_sys_clk_p;
+wire                 c0_sys_clk_n;
 
-
-  
-
-  wire  [0:0]  c0_ddr4_ck_t_int;
-  wire  [0:0]  c0_ddr4_ck_c_int;
+reg  [16:0]            c0_ddr4_adr_sdram[1:0];
+reg  [1:0]           c0_ddr4_ba_sdram[1:0];
+reg  [1:0]           c0_ddr4_bg_sdram[1:0];
 
 
+wire                 c0_ddr4_act_n;
+wire  [16:0]          c0_ddr4_adr;
+wire  [1:0]          c0_ddr4_ba;
+wire  [1:0]    c0_ddr4_bg;
+wire  [0:0]           c0_ddr4_cke;
+wire  [0:0]           c0_ddr4_odt;
+wire  [0:0]            c0_ddr4_cs_n;
+
+wire  [0:0]  c0_ddr4_ck_t_int;
+wire  [0:0]  c0_ddr4_ck_c_int;
+
+wire    c0_ddr4_ck_t;
+wire    c0_ddr4_ck_c;
+
+wire                 c0_ddr4_reset_n;
+
+wire  [7:0]          c0_ddr4_dm_dbi_n;
+wire  [63:0]          c0_ddr4_dq;
+wire  [7:0]          c0_ddr4_dqs_c;
+wire  [7:0]          c0_ddr4_dqs_t;
+wire c0_init_calib_complete;
+wire c0_data_compare_error;
 
 
-  reg  [31:0] cmdName;
-  bit  en_model;
-  tri        model_enable = en_model;
+reg  [31:0] cmdName;
+bit  en_model;
+tri        model_enable = en_model;
 
 
 
-  //**************************************************************************//
-  // Reset Generation
-  //**************************************************************************//
-  initial begin
-     sys_rst = 1'b0;
-     #200
-     sys_rst = 1'b1;
-     en_model = 1'b0; 
-     #5 en_model = 1'b1;
-     #200;
-     sys_rst = 1'b0;
-     #100;
-  end
+//**************************************************************************//
+// Reset Generation
+//**************************************************************************//
+initial begin
+    sys_rst = 1'b0;
+    #200
+    sys_rst = 1'b1;
+    en_model = 1'b0; 
+    #5 en_model = 1'b1;
+    #200;
+    sys_rst = 1'b0;
+    #100;
+end
 
-  //**************************************************************************//
-  // Clock Generation
-  //**************************************************************************//
+//**************************************************************************//
+// Clock Generation
+//**************************************************************************//
 
-  initial
-    sys_clk_i = 1'b0;
-  always
-    sys_clk_i = #(3335/2.0) ~sys_clk_i;
+assign c0_sys_clk_p =  axi_if_inst.s_axi_aclk;
+assign c0_sys_clk_n = ~axi_if_inst.s_axi_aclk;
 
-  assign c0_sys_clk_p = sys_clk_i;
-  assign c0_sys_clk_n = ~sys_clk_i;
+assign c0_ddr4_ck_t = c0_ddr4_ck_t_int[0];
+assign c0_ddr4_ck_c = c0_ddr4_ck_c_int[0];
 
-  assign c0_ddr4_ck_t = c0_ddr4_ck_t_int[0];
-  assign c0_ddr4_ck_c = c0_ddr4_ck_c_int[0];
+always @( * ) begin
+ c0_ddr4_adr_sdram[0]   <=  c0_ddr4_adr;
+ c0_ddr4_adr_sdram[1]   <=  (CA_MIRROR == "ON") ?
+                                   {c0_ddr4_adr[ADDR_WIDTH-1:14],
+                                    c0_ddr4_adr[11], c0_ddr4_adr[12],
+                                    c0_ddr4_adr[13], c0_ddr4_adr[10:9],
+                                    c0_ddr4_adr[7], c0_ddr4_adr[8],
+                                    c0_ddr4_adr[5], c0_ddr4_adr[6],
+                                    c0_ddr4_adr[3], c0_ddr4_adr[4],
+                                    c0_ddr4_adr[2:0]} :
+                                    c0_ddr4_adr;
+ c0_ddr4_ba_sdram[0]    <=  c0_ddr4_ba;
+ c0_ddr4_ba_sdram[1]    <=  (CA_MIRROR == "ON") ?
+                                    {c0_ddr4_ba[0],
+                                     c0_ddr4_ba[1]} :
+                                     c0_ddr4_ba;
+ c0_ddr4_bg_sdram[0]    <=  c0_ddr4_bg;
+ c0_ddr4_bg_sdram[1]    <=  (CA_MIRROR == "ON" && DRAM_WIDTH != 16) ?
+                                    {c0_ddr4_bg[0],
+                                     c0_ddr4_bg[1]} :
+                                     c0_ddr4_bg;
+end
 
-   always @( * ) begin
-     c0_ddr4_adr_sdram[0]   <=  c0_ddr4_adr;
-     c0_ddr4_adr_sdram[1]   <=  (CA_MIRROR == "ON") ?
-                                       {c0_ddr4_adr[ADDR_WIDTH-1:14],
-                                        c0_ddr4_adr[11], c0_ddr4_adr[12],
-                                        c0_ddr4_adr[13], c0_ddr4_adr[10:9],
-                                        c0_ddr4_adr[7], c0_ddr4_adr[8],
-                                        c0_ddr4_adr[5], c0_ddr4_adr[6],
-                                        c0_ddr4_adr[3], c0_ddr4_adr[4],
-                                        c0_ddr4_adr[2:0]} :
-                                        c0_ddr4_adr;
-     c0_ddr4_ba_sdram[0]    <=  c0_ddr4_ba;
-     c0_ddr4_ba_sdram[1]    <=  (CA_MIRROR == "ON") ?
-                                        {c0_ddr4_ba[0],
-                                         c0_ddr4_ba[1]} :
-                                         c0_ddr4_ba;
-     c0_ddr4_bg_sdram[0]    <=  c0_ddr4_bg;
-     c0_ddr4_bg_sdram[1]    <=  (CA_MIRROR == "ON" && DRAM_WIDTH != 16) ?
-                                        {c0_ddr4_bg[0],
-                                         c0_ddr4_bg[1]} :
-                                         c0_ddr4_bg;
-    end
+
+  //===========================================================================
+  //                         FPGA Memory Controller instantiation
+  //===========================================================================
+
+ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
+(
+    .DDR4_SODIMM_act_n          (c0_ddr4_act_n),
+    .DDR4_SODIMM_adr            (c0_ddr4_adr),
+    .DDR4_SODIMM_ba             (c0_ddr4_ba),
+    .DDR4_SODIMM_bg             (c0_ddr4_bg),
+    .DDR4_SODIMM_ck_c           (c0_ddr4_ck_c),
+    .DDR4_SODIMM_ck_t           (c0_ddr4_ck_t),
+    .DDR4_SODIMM_cke            (c0_ddr4_cke),
+    .DDR4_SODIMM_cs_n           (c0_ddr4_cs_n),
+    .DDR4_SODIMM_dm_n           (c0_ddr4_dm_dbi_n),
+    .DDR4_SODIMM_dq             (c0_ddr4_dq),
+    .DDR4_SODIMM_dqs_c          (c0_ddr4_dqs_c),
+    .DDR4_SODIMM_dqs_t          (c0_ddr4_dqs_t),
+    .DDR4_SODIMM_odt            (c0_ddr4_odt),
+    .DDR4_SODIMM_reset_n        (c0_ddr4_reset_n),
+    .S00_AXI_araddr             (axi_if_inst.s_axi_araddr),
+    .S00_AXI_arburst            (axi_if_inst.s_axi_arburst),
+    //.S00_AXI_arcache            (axi_if_inst.s_axi_arcache),
+    .S00_AXI_arid               (axi_if_inst.s_axi_arid),
+    .S00_AXI_arlen              (axi_if_inst.s_axi_arlen),
+    //.S00_AXI_arlock             (axi_if_inst.s_axi_arlock),
+    //.S00_AXI_arprot             (axi_if_inst.s_axi_arprot),
+    //.S00_AXI_arqos              (axi_if_inst.s_axi_arqos),
+    .S00_AXI_arready            (axi_if_inst.s_axi_arready),
+    //.S00_AXI_arregion           (axi_if_inst.s_axi_arregion),
+    .S00_AXI_arsize             (axi_if_inst.s_axi_arsize),
+    .S00_AXI_arvalid            (axi_if_inst.s_axi_arvalid),
+    .S00_AXI_awaddr             (axi_if_inst.s_axi_awaddr),
+    .S00_AXI_awburst            (axi_if_inst.s_axi_awburst),
+    //.S00_AXI_awcache            (axi_if_inst.s_axi_awcache),
+    .S00_AXI_awid               (axi_if_inst.s_axi_awid),
+    .S00_AXI_awlen              (axi_if_inst.s_axi_awlen),
+    //.S00_AXI_awlock             (axi_if_inst.s_axi_awlock),
+    //.S00_AXI_awprot             (axi_if_inst.s_axi_awprot),
+    //.S00_AXI_awqos              (axi_if_inst.s_axi_awqos),
+    .S00_AXI_awready            (axi_if_inst.s_axi_awready),
+    //.S00_AXI_awregion           (axi_if_inst.s_axi_awregion),
+    .S00_AXI_awsize             (axi_if_inst.s_axi_awsize),
+    .S00_AXI_awvalid            (axi_if_inst.s_axi_awvalid),
+    .S00_AXI_bid                (axi_if_inst.s_axi_bid),
+    .S00_AXI_bready             (axi_if_inst.s_axi_bready),
+    .S00_AXI_bresp              (axi_if_inst.s_axi_bresp),
+    .S00_AXI_bvalid             (axi_if_inst.s_axi_bvalid),
+    .S00_AXI_rdata              (axi_if_inst.s_axi_rdata),
+    .S00_AXI_rid                (axi_if_inst.s_axi_rid),
+    .S00_AXI_rlast              (axi_if_inst.s_axi_rlast),
+    .S00_AXI_rready             (axi_if_inst.s_axi_rready),
+    .S00_AXI_rresp              (axi_if_inst.s_axi_rresp),
+    .S00_AXI_rvalid             (axi_if_inst.s_axi_rvalid),
+    .S00_AXI_wdata              (axi_if_inst.s_axi_wdata),
+    .S00_AXI_wlast              (axi_if_inst.s_axi_wlast),
+    .S00_AXI_wready             (axi_if_inst.s_axi_wready),
+    .S00_AXI_wstrb              (axi_if_inst.s_axi_wstrb),
+    .S00_AXI_wvalid             (axi_if_inst.s_axi_wvalid),
+    .SerTC                      (SerTC),
+    .SerTFG                     (SerTFG),
+    .cc1                        (cc1),
+    .cc2                        (cc2),
+    .cc3                        (cc3),
+    .cc4                        (cc4),
+    .clink_X_clk_n              (clink_X_clk_n),
+    .clink_X_clk_p              (clink_X_clk_p),
+    .clink_X_data_0_n           (clink_X_data_0_n),
+    .clink_X_data_0_p           (clink_X_data_0_p),
+    .clink_X_data_1_n           (clink_X_data_1_n),
+    .clink_X_data_1_p           (clink_X_data_1_p),
+    .clink_X_data_2_n           (clink_X_data_2_n),
+    .clink_X_data_2_p           (clink_X_data_2_p),
+    .clink_X_data_3_n           (clink_X_data_3_n),
+    .clink_X_data_3_p           (clink_X_data_3_p),
+    .clink_X_ready              (clink_X_ready),
+    .image_end                  (image_end),
+    .s_axi_aclk                 (axi_if_inst.s_axi_aclk),
+    .s_axi_aresetn              (~sys_rst),
+    .sys_rst                    (sys_rst),
+    .trigger                    (trigger),
+    .clk_pixel_resetn           (clk_pixel_resetn)
+);
+
 
   reg [ADDR_WIDTH-1:0] DDR4_ADRMOD[RANK_WIDTH-1:0];
 
@@ -562,5 +610,4 @@ endgenerate
       end
     end
   endgenerate
-
 endmodule

@@ -87,7 +87,12 @@ module Image2DRAM
     input  wire [7:0]  d2,
     input  wire fval,
     input  wire dval,
-    input  wire lval
+    input  wire lval,
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // Cameralink clock region reset
+    //////////////////////////////////////////////////////////////////////////////////
+    input  wire clk_pixel_resetn
 );
 
 wire [MAXI_ADDR_WIDTH - 1:0] dram_write_addr;
@@ -175,6 +180,8 @@ BufferGearBox #(
     .async_fifo_out                 (dram_write_data),
     .dram_write_addr                (dram_write_addr),
     .dram_write_en                  (dram_write_en),
-    .dram_write_busy                (dram_write_busy)
+    .dram_write_len                 (dram_write_len),
+    .dram_write_busy                (dram_write_busy),
+    .clk_pixel_resetn               (clk_pixel_resetn)
 );
 endmodule

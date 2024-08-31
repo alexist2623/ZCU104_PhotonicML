@@ -147,71 +147,70 @@ wire [7:0]  tx_data;              // data to be transmitted
 wire        tx_busy;              // Transmission in progress
 
 wire [27:0] clink_rx_out;
+wire [27:0] pixel_X;
 
 // 7:1 deserialized data to rx_out
-assign rx_out[0]  = pixel_X[6];
-assign rx_out[1]  = pixel_X[5];
-assign rx_out[2]  = pixel_X[4];
-assign rx_out[3]  = pixel_X[3];
-assign rx_out[4]  = pixel_X[2];
-assign rx_out[5]  = pixel_X[26];
-assign rx_out[6]  = pixel_X[1];
-assign rx_out[7]  = pixel_X[0];
-assign rx_out[8]  = pixel_X[13];
-assign rx_out[9]  = pixel_X[12];
-assign rx_out[10] = pixel_X[25];
-assign rx_out[11] = pixel_X[24];
-assign rx_out[12] = pixel_X[11];
-assign rx_out[13] = pixel_X[10];
-assign rx_out[14] = pixel_X[9];
-assign rx_out[15] = pixel_X[8];
-assign rx_out[16] = pixel_X[23];
-assign rx_out[17] = pixel_X[22];
-assign rx_out[18] = pixel_X[7];
-assign rx_out[19] = pixel_X[20];
-assign rx_out[20] = pixel_X[19];
-assign rx_out[21] = pixel_X[18];
-assign rx_out[22] = pixel_X[17];
-assign rx_out[23] = pixel_X[21];
-assign rx_out[24] = pixel_X[16];
-assign rx_out[25] = pixel_X[15];
-assign rx_out[26] = pixel_X[14];
-assign rx_out[27] = pixel_X[27];
+assign clink_rx_out[0]  = pixel_X[6];
+assign clink_rx_out[1]  = pixel_X[5];
+assign clink_rx_out[2]  = pixel_X[4];
+assign clink_rx_out[3]  = pixel_X[3];
+assign clink_rx_out[4]  = pixel_X[2];
+assign clink_rx_out[5]  = pixel_X[26];
+assign clink_rx_out[6]  = pixel_X[1];
+assign clink_rx_out[7]  = pixel_X[0];
+assign clink_rx_out[8]  = pixel_X[13];
+assign clink_rx_out[9]  = pixel_X[12];
+assign clink_rx_out[10] = pixel_X[25];
+assign clink_rx_out[11] = pixel_X[24];
+assign clink_rx_out[12] = pixel_X[11];
+assign clink_rx_out[13] = pixel_X[10];
+assign clink_rx_out[14] = pixel_X[9];
+assign clink_rx_out[15] = pixel_X[8];
+assign clink_rx_out[16] = pixel_X[23];
+assign clink_rx_out[17] = pixel_X[22];
+assign clink_rx_out[18] = pixel_X[7];
+assign clink_rx_out[19] = pixel_X[20];
+assign clink_rx_out[20] = pixel_X[19];
+assign clink_rx_out[21] = pixel_X[18];
+assign clink_rx_out[22] = pixel_X[17];
+assign clink_rx_out[23] = pixel_X[21];
+assign clink_rx_out[24] = pixel_X[16];
+assign clink_rx_out[25] = pixel_X[15];
+assign clink_rx_out[26] = pixel_X[14];
+assign clink_rx_out[27] = pixel_X[27];
 
-// rx_out data to actual cameralink data
-assign d0[0] = rx_out[0];
-assign d0[1] = rx_out[1];
-assign d0[2] = rx_out[2];
-assign d0[3] = rx_out[3];
-assign d0[4] = rx_out[4];
-assign d0[5] = rx_out[6];
-assign d0[6] = rx_out[27];
-assign d0[7] = rx_out[5];
+// clink_rx_out data to actual cameralink data
+assign d0[0] = clink_rx_out[0];
+assign d0[1] = clink_rx_out[1];
+assign d0[2] = clink_rx_out[2];
+assign d0[3] = clink_rx_out[3];
+assign d0[4] = clink_rx_out[4];
+assign d0[5] = clink_rx_out[6];
+assign d0[6] = clink_rx_out[27];
+assign d0[7] = clink_rx_out[5];
 
-assign d1[0] = rx_out[7];
-assign d1[1] = rx_out[8];
-assign d1[2] = rx_out[9];
-assign d1[3] = rx_out[12];
-assign d1[4] = rx_out[13];
-assign d1[5] = rx_out[14];
-assign d1[6] = rx_out[10];
-assign d1[7] = rx_out[11];
+assign d1[0] = clink_rx_out[7];
+assign d1[1] = clink_rx_out[8];
+assign d1[2] = clink_rx_out[9];
+assign d1[3] = clink_rx_out[12];
+assign d1[4] = clink_rx_out[13];
+assign d1[5] = clink_rx_out[14];
+assign d1[6] = clink_rx_out[10];
+assign d1[7] = clink_rx_out[11];
 
-assign d2[0] = rx_out[15];
-assign d2[1] = rx_out[18];
-assign d2[2] = rx_out[19];
-assign d2[3] = rx_out[20];
-assign d2[4] = rx_out[21];
-assign d2[5] = rx_out[22];
-assign d2[6] = rx_out[16];
-assign d2[7] = rx_out[17];
+assign d2[0] = clink_rx_out[15];
+assign d2[1] = clink_rx_out[18];
+assign d2[2] = clink_rx_out[19];
+assign d2[3] = clink_rx_out[20];
+assign d2[4] = clink_rx_out[21];
+assign d2[5] = clink_rx_out[22];
+assign d2[6] = clink_rx_out[16];
+assign d2[7] = clink_rx_out[17];
 
-assign lval = rx_out[24];
-assign fval = rx_out[25];
-assign dval = rx_out[26];
+assign lval = clink_rx_out[24];
+assign fval = clink_rx_out[25];
+assign dval = clink_rx_out[26];
 assign cc1  = trigger;
-
-assign clink_X_clk_out = clink_X_clk;
 
 rx_channel_1to7 # (
    .LINES                   (LINES),            // Number of data lines 
@@ -311,10 +310,10 @@ axi2uart_inst (
     .rx_ready               (rx_ready),
     .rx_data                (rx_data),
 
-    .CC1                    (),
-    .CC2                    (),
-    .CC3                    (),
-    .CC4                    ()
+    .CC1                    (cc1),
+    .CC2                    (cc2),
+    .CC3                    (cc3),
+    .CC4                    (cc4)
 );
 
 
