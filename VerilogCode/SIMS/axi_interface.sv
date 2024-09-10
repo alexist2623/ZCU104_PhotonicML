@@ -54,7 +54,7 @@ interface axi_if#(
     
     logic [1:0] s_axi_arburst;
     logic [7:0] s_axi_arlen;
-    logic [5:0] s_axi_araddr;
+    logic [AXI_ADDR_WIDTH-1:0] s_axi_araddr;
     logic [2:0] s_axi_arsize;
     logic s_axi_arvalid;
     logic [15:0] s_axi_arid;
@@ -103,13 +103,14 @@ interface axi_if#(
     endtask
 
     task automatic read(
-        input  logic [AXI_ADDR_WIDTH-1:0] addr, 
-        output logic [127:0] data
+        input  [AXI_ADDR_WIDTH-1:0] addr, 
+        ref logic [127:0] data
     );
         @(posedge s_axi_aclk);
         s_axi_araddr <= addr;
         s_axi_arvalid <= 1;
         s_axi_rready <= 1;
+        s_axi_arsize <= 3'h7;
 
         wait (s_axi_arready);
         #8;
@@ -117,7 +118,7 @@ interface axi_if#(
         s_axi_arvalid <= 0;
 
         wait (s_axi_rvalid);
-        data <= s_axi_rdata;
+        data = s_axi_rdata;
         s_axi_rready <= 0;
 
         if (s_axi_rresp != 2'b00) begin

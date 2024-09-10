@@ -207,7 +207,7 @@ always_ff @(posedge m_axi_aclk) begin
                     m_axi_awaddr <= AXI_ADDR_WIDTH'(0);
                     m_axi_awid <= 16'h0; 
                     m_axi_awburst <= 2'h0;
-                    m_axi_awsize <= 3'b000;
+                    m_axi_awsize <= 3'b111;
                     m_axi_awlen <= 8'h0;
                     m_axi_awvalid <= 1'b0;
                     m_axi_awuser <= 16'h0;
