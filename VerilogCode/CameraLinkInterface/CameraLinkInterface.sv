@@ -135,7 +135,7 @@ module CameraLinkInterface
     //////////////////////////////////////////////////////////////////////////////////
     // Cameralink Trigger and Image end
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire        trigger,
+    // input  wire        trigger, // will be used after Clink is tested
     output wire        image_end
 );
 
@@ -210,19 +210,18 @@ assign d2[7] = clink_rx_out[17];
 assign lval = clink_rx_out[24];
 assign fval = clink_rx_out[25];
 assign dval = clink_rx_out[26];
-assign cc1  = trigger;
 
 rx_channel_1to7 # (
    .LINES                   (LINES),            // Number of data lines 
    // Basler ace Cmeralink 82MHz 
    .CLKIN_PERIOD            (12.195),        // Clock period (ns) of input clock on clkin_p
-   .REF_FREQ                (300.0),        // Reference clock frequency for idelay control
+   .REF_FREQ                (82.0),        // Reference clock frequency for idelay control
    .DIFF_TERM               ("TRUE"),       // Enable internal differential termination
    .USE_PLL                 ("FALSE"),      // Enable PLL use rather than MMCM use
    .DATA_FORMAT             ("PER_LINE"),  // Mapping input lines to output bus
    .CLK_PATTERN             (7'b1100011),   // Clock pattern for alignment
    .RX_SWAP_MASK            (16'b0),        // Allows P/N inputs to be invered to ease PCB routing
-   .SIM_DEVICE              ("ULTRASCALE")  // Set for the family <ULTRASCALE | ULTRASCALE_PLUS>
+   .SIM_DEVICE              ("ULTRASCALE_PLUS")  // Set for the family <ULTRASCALE | ULTRASCALE_PLUS>
 )
 clink_X_7to1
 (

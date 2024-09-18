@@ -7,11 +7,182 @@
             "Image2DRAM.json"
         ],
         "output_ports" : [
+            "FMC_LPC_LA07_P",
+            "FMC_LPC_LA07_N",
+            "FMC_LPC_LA08_P",
+            "FMC_LPC_LA08_N",
+            "FMC_LPC_LA09_P",
+            "FMC_LPC_LA09_N",
+            "FMC_LPC_LA15_P",
+            "FMC_LPC_LA15_N",
+            "FMC_LPC_LA17_CC_P",
+            "FMC_LPC_LA17_CC_N"
         ],
         "input_ports" : [
+            "FMC_LPC_LA01_CC_P",
+            "FMC_LPC_LA01_CC_N",
+            "FMC_LPC_LA03_P",
+            "FMC_LPC_LA03_N",
+            "FMC_LPC_LA04_P",
+            "FMC_LPC_LA04_N",
+            "FMC_LPC_LA05_P",
+            "FMC_LPC_LA05_N",
+            "FMC_LPC_LA06_P",
+            "FMC_LPC_LA06_N",
+            "FMC_LPC_LA14_P",
+            "FMC_LPC_LA14_N"
         ]
     },
     "bd_cell" : {
+        "LVDS_14" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "C_BUFGCE_DIV" : "1",
+                "C_BUFG_GT_SYNC" : "false",
+                "C_BUF_TYPE" : "IBUFDS",
+                "C_OBUFDS_GTE5_ADV" : "00",
+                "C_REFCLK_ICNTL_TX" : "00000",
+                "C_SIZE" : "1",
+                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
+                "USE_BOARD_FLOW" : "false"
+            },
+            "ports" : {
+                "IBUF_DS_P" : "FMC_LPC_LA14_P",
+                "IBUF_DS_N" : "FMC_LPC_LA14_N",
+                "IBUF_OUT" : "clink_intf/SerTFG"
+            }
+        },
+        "LVDS_08" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "C_BUFGCE_DIV" : "1",
+                "C_BUFG_GT_SYNC" : "false",
+                "C_BUF_TYPE" : "OBUFDS",
+                "C_OBUFDS_GTE5_ADV" : "00",
+                "C_REFCLK_ICNTL_TX" : "00000",
+                "C_SIZE" : "1",
+                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
+                "USE_BOARD_FLOW" : "false"
+            },
+            "ports" : {
+                "OBUF_DS_P" : "FMC_LPC_LA08_P",
+                "OBUF_DS_N" : "FMC_LPC_LA08_N"
+            }
+        },
+        "LVDS_09" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "C_BUFGCE_DIV" : "1",
+                "C_BUFG_GT_SYNC" : "false",
+                "C_BUF_TYPE" : "OBUFDS",
+                "C_OBUFDS_GTE5_ADV" : "00",
+                "C_REFCLK_ICNTL_TX" : "00000",
+                "C_SIZE" : "1",
+                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
+                "USE_BOARD_FLOW" : "false"
+            },
+            "ports" : {
+                "OBUF_DS_P" : "FMC_LPC_LA09_P",
+                "OBUF_DS_N" : "FMC_LPC_LA09_N"
+            }
+        },
+        "LVDS_07" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "C_BUFGCE_DIV" : "1",
+                "C_BUFG_GT_SYNC" : "false",
+                "C_BUF_TYPE" : "OBUFDS",
+                "C_OBUFDS_GTE5_ADV" : "00",
+                "C_REFCLK_ICNTL_TX" : "00000",
+                "C_SIZE" : "1",
+                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
+                "USE_BOARD_FLOW" : "false"
+            },
+            "ports" : {
+                "OBUF_DS_P" : "FMC_LPC_LA07_P",
+                "OBUF_DS_N" : "FMC_LPC_LA07_N"
+            }
+        },
+        "LVDS_15" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "C_BUFGCE_DIV" : "1",
+                "C_BUFG_GT_SYNC" : "false",
+                "C_BUF_TYPE" : "OBUFDS",
+                "C_OBUFDS_GTE5_ADV" : "00",
+                "C_REFCLK_ICNTL_TX" : "00000",
+                "C_SIZE" : "1",
+                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
+                "USE_BOARD_FLOW" : "false"
+            },
+            "ports" : {
+                "OBUF_DS_P" : "FMC_LPC_LA15_P",
+                "OBUF_DS_N" : "FMC_LPC_LA15_N"
+            }
+        },
+        "LVDS_17" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "C_BUFGCE_DIV" : "1",
+                "C_BUFG_GT_SYNC" : "false",
+                "C_BUF_TYPE" : "OBUFDS",
+                "C_OBUFDS_GTE5_ADV" : "00",
+                "C_REFCLK_ICNTL_TX" : "00000",
+                "C_SIZE" : "1",
+                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
+                "USE_BOARD_FLOW" : "false"
+            },
+            "ports" : {
+                "OBUF_DS_P" : "FMC_LPC_LA17_CC_P",
+                "OBUF_DS_N" : "FMC_LPC_LA17_CC_N"
+            }
+        },
+        "clink_intf": {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:user:CameraLinkInterface",
+            "tcl_options" : ["type", "vlnv"],
+            "ports": {
+                "clink_X_clk_p": "FMC_LPC_LA01_CC_P",
+                "clink_X_clk_n": "FMC_LPC_LA01_CC_N",
+                "clink_X_data_0_p": "FMC_LPC_LA03_P",
+                "clink_X_data_0_n": "FMC_LPC_LA03_N",
+                "clink_X_data_1_p": "FMC_LPC_LA04_P",
+                "clink_X_data_1_n": "FMC_LPC_LA04_N",
+                "clink_X_data_2_p": "FMC_LPC_LA06_P",
+                "clink_X_data_2_n": "FMC_LPC_LA06_N",
+                "clink_X_data_3_p": "FMC_LPC_LA05_P",
+                "clink_X_data_3_n": "FMC_LPC_LA05_N",
+                "SerTC": "LVDS_15/OBUF_IN",
+                "cc1": "LVDS_08/OBUF_IN",
+                "cc2": "LVDS_07/OBUF_IN",
+                "cc3": "LVDS_09/OBUF_IN",
+                "cc4": "LVDS_17/OBUF_IN",
+                "d0": "image2dram/d0",
+                "d1": "image2dram/d1",
+                "d2": "image2dram/d2",
+                "lval": "image2dram/lval",
+                "dval": "image2dram/dval",
+                "fval": "image2dram/fval",
+                "clink_X_clk_out": "image2dram/clink_X_clk"
+            }
+        },
+        "image2dram": {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:user:Image2DRAM",
+            "tcl_options" : ["type", "vlnv"]
+        },
         "ddr4_0" : {
             "type" : "ip",
             "vlnv" : "xilinx.com:ip:ddr4",
@@ -29,13 +200,13 @@
                 "C0.CS_WIDTH" : "1",
                 "C0.ControllerType" : "DDR4_SDRAM",
                 "C0.DDR4_ACT_SKEW" : "0",
-                "C0.DDR4_ADDR_SKEW_0" : "0",       
-                "C0.DDR4_ADDR_SKEW_1" : "0",       
-                "C0.DDR4_ADDR_SKEW_2" : "0",       
-                "C0.DDR4_ADDR_SKEW_3" : "0",       
-                "C0.DDR4_ADDR_SKEW_4" : "0",       
-                "C0.DDR4_ADDR_SKEW_5" : "0",       
-                "C0.DDR4_ADDR_SKEW_6" : "0",       
+                "C0.DDR4_ADDR_SKEW_0" : "0",
+                "C0.DDR4_ADDR_SKEW_1" : "0",
+                "C0.DDR4_ADDR_SKEW_2" : "0",
+                "C0.DDR4_ADDR_SKEW_3" : "0",
+                "C0.DDR4_ADDR_SKEW_4" : "0",
+                "C0.DDR4_ADDR_SKEW_5" : "0",
+                "C0.DDR4_ADDR_SKEW_6" : "0",
                 "C0.DDR4_ADDR_SKEW_7" : "0",
                 "C0.DDR4_ADDR_SKEW_8" : "0",
                 "C0.DDR4_ADDR_SKEW_9" : "0",
@@ -52,7 +223,7 @@
                 "C0.DDR4_AxiAddressWidth" : "33",
                 "C0.DDR4_AxiArbitrationScheme" : "RD_PRI_REG",
                 "C0.DDR4_AxiDataWidth" : "512",
-                "C0.DDR4_AxiIDWidth" : "4",
+                "C0.DDR4_AxiIDWidth" : "17",
                 "C0.DDR4_AxiNarrowBurst" : "false",
                 "C0.DDR4_AxiSelection" : "true",
                 "C0.DDR4_BA_SKEW_0" : "0",
@@ -87,7 +258,7 @@
                 "C0.DDR4_EN_PARITY" : "false",
                 "C0.DDR4_Ecc" : "false",
                 "C0.DDR4_Enable_LVAUX" : "false",
-                "C0.DDR4_InputClockPeriod" : "7997",
+                "C0.DDR4_InputClockPeriod" : "3332",
                 "C0.DDR4_LR_SKEW_0" : "0",
                 "C0.DDR4_LR_SKEW_1" : "0",
                 "C0.DDR4_MCS_ECC" : "false",
@@ -126,7 +297,7 @@
                 "C0.MIGRATION" : "false",
                 "C0.ODT_WIDTH" : "1",
                 "C0.StackHeight" : "1",
-                "C0_CLOCK_BOARD_INTERFACE" : "Custom",
+                "C0_CLOCK_BOARD_INTERFACE" : "clk_300mhz",
                 "C0_DDR4_BOARD_INTERFACE" : "Custom",
                 "CLKOUT6" : "false",
                 "DCI_Cascade" : "false",

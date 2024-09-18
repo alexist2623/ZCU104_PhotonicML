@@ -61,3 +61,14 @@ class TCP_Client:
             unicode string: received string
         """
         return (self.socket.recv(10000).decode('latin-1'))
+    
+    def send_raw(self, data):
+        """ Send raw data.
+        
+        Args:
+            data (bytes): data to send
+        
+        Returns:
+            None
+        """
+        self.socket.send(data)

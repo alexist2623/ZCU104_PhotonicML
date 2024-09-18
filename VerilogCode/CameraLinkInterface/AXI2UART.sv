@@ -103,16 +103,17 @@ module AXI2UART
     output reg         CC1,
     output reg         CC2,
     output reg         CC3,
-    output reg         CC4
+    output reg         CC4,
+    output reg         trigger_from_cpu
 );
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Address Space
 //////////////////////////////////////////////////////////////////////////////////
 localparam AXI_WRITE_UART       = {AXI_ADDR_WIDTH{6'h00}};
-localparam AXI_WRITE_CC         = {AXI_ADDR_WIDTH{6'h01}};
-localparam AXI_READ_UART        = {AXI_ADDR_WIDTH{6'h00}};
-localparam AXI_READ_UART_VALID  = {AXI_ADDR_WIDTH{6'h10}};
+localparam AXI_WRITE_CC         = {AXI_ADDR_WIDTH{6'h10}};
+localparam AXI_READ_UART        = {AXI_ADDR_WIDTH{6'h20}};
+localparam AXI_READ_UART_VALID  = {AXI_ADDR_WIDTH{6'h30}};
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition

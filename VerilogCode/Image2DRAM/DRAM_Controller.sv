@@ -25,7 +25,7 @@ module DRAM_Controller
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH                    = 32,
+    parameter AXI_ADDR_WIDTH                    = 39,
     parameter DRAM_DATA_WIDTH                   = 512,
     parameter AXI_DATA_WIDTH                    = DRAM_DATA_WIDTH,
     parameter AXI_STROBE_WIDTH                  = AXI_DATA_WIDTH >> 3,

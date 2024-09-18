@@ -1,7 +1,7 @@
 module BufferGearBox
 #(
-    parameter DRAM_ADDR_WIDTH       = 32,
-    parameter DRAM_ADDR_BASE        = 32'h8000_0000, // should be fixed
+    parameter DRAM_ADDR_WIDTH       = 39,
+    parameter DRAM_ADDR_BASE        = 39'h400000000, // should be fixed
     parameter DRAM_DATA_WIDTH       = 512
 )
 (
