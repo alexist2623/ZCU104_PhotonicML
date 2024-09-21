@@ -174,16 +174,28 @@ reg        px_ready_int;
 
 //
 // Clock input
+// IBUFGDS is removed at Ultrascale plus
 //
-IBUFGDS_DIFF_OUT # (
-      .DIFF_TERM        (DIFF_TERM)
-   )
-   iob_clk_in (
-      .I                (clkin_p),
-      .IB               (clkin_n),
-      .O                (clkin_p_i),
-      .OB               (clkin_n_i)
-   );
+
+wire       clk_ibufds_out;
+wire       clk_bufg_out;
+
+assign clkin_p_i =  clk_bufg_out;
+assign clkin_n_i = ~clk_bufg_out;
+
+IBUFDS #(
+   .DIFF_TERM        (DIFF_TERM)
+)
+iob_clk_in (
+   .I                (clkin_p),
+   .IB               (clkin_n),
+   .O                (clk_ibufds_out)
+);
+
+BUFG bufg_inst(
+   .I                (clk_ibufds_out),
+   .O                (clk_bufg_out)
+);
 
 //
 // Instantitate a PLL or a MMCM
