@@ -61,9 +61,9 @@ void initialization(){
 	init_platform();
 
 	/* initialize IP addresses to be used */
-	IP4_ADDR(&ipaddr,  192, 168,   1, 10);
+	IP4_ADDR(&ipaddr,  172,  22,  22,236);
 	IP4_ADDR(&netmask, 255, 255, 255,  0);
-	IP4_ADDR(&gw,      192, 168,   1,  1);
+	IP4_ADDR(&gw,      172,  22,  22,  1);
 	xil_printf("set manual IP\n\r");
 
 	print_app_header();

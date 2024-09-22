@@ -47,11 +47,12 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 {
 	char * cmd_str;
 	uint64_t exposure_state = 0;
+	static char action_str[1024];
+	static uint8_t uart_data[1024 * 8] = {0};
 	static int tcp_stage = STAGE1;
 	static uint64_t uart_addr = 0;
 	static uint64_t uart_addr_len = 0;
 	static uint64_t uart_data_len = 0;
-	static uint64_t uart_data[256] = {};
 
 	/*
 	 * do not read the packet if we are not in ESTABLISHED state
@@ -70,10 +71,12 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 	/*
 	 * Command processing
 	 */
+	substring_by_chr(action_str, p->payload,1,2);
+	xil_printf("ACTION : %s \r\n",action_str);
 	
 	switch (tcp_stage){
 		case STAGE1:
-			if (strcmp(p->payload,"EXPOSURE") == 0) {
+			if (strcmp(action_str,"EXPOSURE") == 0) {
 				xil_printf("EXPOSURE ");
 				exposure_state = get_param(p->payload, 2, 3);
 				if (exposure_state == 0) {
@@ -87,30 +90,37 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 				*/
 				Xil_Out128(XPAR_CLINK_INTF_BASEADDR, exposure_state);
 			}
-			if (strcmp(p->payload,"UART_SEND") == 0) {
+			if (strcmp(action_str,"UART_SEND") == 0) {
 				/*
-				* #UART#{addr_len}#{data_len}#!EOL#
+				* #UART#{uart_addr}#{addr_len}#{data_len}#!EOL#
 				* after this send bytes of data
 				*/
 				xil_printf("UART SEND \r\n");
-				uart_addr = get_param(p->payload, 2, 3);
-				uart_addr_len = get_param(p->payload, 3, 4);
-				uart_data_len = get_param(p->payload, 4, 5);
+				uart_addr 		= get_param(p->payload, 2, 3);
+				uart_addr_len 	= get_param(p->payload, 3, 4);
+				uart_data_len 	= get_param(p->payload, 4, 5);
+				xil_printf("UART ADDR : %x \r\n", uart_addr);
+				xil_printf("UART ADDR LEN : %d \r\n", uart_addr_len);
+				xil_printf("UART DATA LEN : %d \r\n", uart_data_len);
 				/*
 				* Make AXI command to Clink Interface module
 				*/
+				xil_printf("Write AXI Command\r\n");
 				switch (uart_addr_len){
 					case 0b00:
 						/* 2 bytes */
+						xil_printf("AXI ADDR is 2Bytes \r\n");
 						Xil_Out128(
 							XPAR_CLINK_INTF_BASEADDR | AXI_WRITE_UART,
 							MAKE128CONST(0,uart_addr&0xff)
 						);
+						xil_printf("Write 1 st Byte\r\n");
 						sleep(1/9600.0*10);
 						Xil_Out128(
 							XPAR_CLINK_INTF_BASEADDR | AXI_WRITE_UART,
 							MAKE128CONST(0,(uart_addr>>8)&0xff)
 						);
+						xil_printf("Write 2 nd Byte\r\n");
 						break;
 					case 0b01:
 						/* 4 bytes */
@@ -212,17 +222,18 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 						xil_printf("UNKNOWN ADDR LEN : %d\r\n",uart_addr_len);
 						break;
 				}
-				xil_printf("ADDR : %d, DATA : %d \r\n",addr,data);
+				xil_printf("ADDR : %d \r\n", uart_addr);
 				tcp_stage = STAGE2;
 			}
 			else{
 				xil_printf("UNKNOWN COMMAND : %s\r\n",p->payload);
 			}
 		case STAGE2:
+			memcpy((void *)uart_data, p->payload, uart_data_len);
 			for (int i = 0 ; i < uart_data_len ; i++){
 				Xil_Out128(
 					XPAR_CLINK_INTF_BASEADDR | AXI_WRITE_UART,
-					MAKE128CONST(0,((p->payload) >> (8*i)) & 0xff)
+					MAKE128CONST(0,uart_data[i] & 0xff)
 				);
 				sleep(1/9600.0*10);
 			}

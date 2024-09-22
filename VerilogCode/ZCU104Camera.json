@@ -73,9 +73,10 @@
                 "M00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
                 "S01_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
                 "M01_ACLK" : "ddr4_0/c0_ddr4_ui_clk",
-                "M01_ARESETN" : "util_vector_logic_0/Res",
                 "ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "M00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
+                "M01_ARESETN" : "util_vector_logic_0/Res",
+                "S00_ARESETN" : "zynq_ultra_ps_e_0/pl_resetn0",
                 "S01_ARESETN" : "zynq_ultra_ps_e_0/pl_resetn0"
             },
             "interface" : {

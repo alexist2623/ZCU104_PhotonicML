@@ -8,8 +8,8 @@ import TCPClient_v1_00 as TCP
 import time
 
 class ZCU104:
-    def __init__(self, IPAddress = '192.168.1.10', TCPPort = 7):    
-        self.tcp = TCP.TCP_Client(IPAddress = '192.168.1.10', TCPPort = 7)
+    def __init__(self, IPAddress = '172.22.22.236', TCPPort = 7):    
+        self.tcp = TCP.TCP_Client(IPAddress = IPAddress, TCPPort = 7)
 
     def connect(self)->None:
         self.tcp.connect()
@@ -293,7 +293,7 @@ class ZCU104:
         print(a)
 
 if __name__ == "__main__":
-    zcu104 = ZCU104(IPAddress = '192.168.1.10', TCPPort = 7)
+    zcu104 = ZCU104(IPAddress = '172.22.22.236', TCPPort = 7)
     zcu104.connect()
     zcu104.camera_init()
     zcu104.disconnect()

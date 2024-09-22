@@ -102,6 +102,17 @@ char * substring(char * str_dest,char * str,int64_t start,int64_t end){
 
 	return str_dest;
 }
+
+char * substring_by_chr(char * str_dest, char * inst, int64_t start, int64_t end){
+	int64_t i = 0;
+	int64_t pos1 	= 0;
+	int64_t pos2 	= 0;
+	pos1 			= string_count(inst,start,'#')+1;
+	pos2 			= string_count(inst,end,'#');
+
+	substring(str_dest,inst,pos1,pos2);
+	return str_dest;
+}
 /*****************************************************************************/
 /**
 *

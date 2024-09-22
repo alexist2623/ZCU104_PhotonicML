@@ -35,10 +35,10 @@ static INLINE void Xil_Out128(UINTPTR Addr, __uint128_t Value)
 
 #define MAKE128CONST(hi,lo) ((((__uint128_t)hi << 64) | (lo)))
 
-#define AXI_WRITE_UART       (0x00);
-#define AXI_WRITE_CC         (0x10);
-#define AXI_READ_UART        (0x20);
-#define AXI_READ_UART_VALID  (0x30);
+#define AXI_WRITE_UART       (0x00)
+#define AXI_WRITE_CC         (0x10)
+#define AXI_READ_UART        (0x20)
+#define AXI_READ_UART_VALID  (0x30)
 
 struct tcp_pcb * start_application();
 err_t 	accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err);
@@ -66,5 +66,6 @@ int64_t string_count(char* str, int64_t pos, char spc);
 char * substring(char * str_dest,char * str,int64_t start,int64_t end);
 char * int642str(int64_t val, char * str_dest);
 int64_t wolc_strcmp(char * str1, char * str2);
+char * substring_by_chr(char * str_dest, char * inst, int64_t start, int64_t end);
 
 #endif  // _ZCU104CLINKTEST_
