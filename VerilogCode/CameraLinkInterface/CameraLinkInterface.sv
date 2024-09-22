@@ -215,7 +215,7 @@ rx_channel_1to7 # (
    .LINES                   (LINES),            // Number of data lines 
    // Basler ace Cmeralink 82MHz 
    .CLKIN_PERIOD            (12.195),        // Clock period (ns) of input clock on clkin_p
-   .REF_FREQ                (82.0),        // Reference clock frequency for idelay control
+   .REF_FREQ                (300.0),        // Reference clock frequency for idelay control
    .DIFF_TERM               ("TRUE"),       // Enable internal differential termination
    .USE_PLL                 ("FALSE"),      // Enable PLL use rather than MMCM use
    .DATA_FORMAT             ("PER_LINE"),  // Mapping input lines to output bus

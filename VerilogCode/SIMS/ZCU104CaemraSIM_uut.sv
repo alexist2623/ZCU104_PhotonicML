@@ -46,7 +46,7 @@ module ZCU104CaemraSIM_uut(
     input  wire clink_X_data_3_p           ,
     input  wire clink_X_ready              ,
     output wire image_end                  ,
-    input  wire trigger                    ,
+    //input  wire trigger                    ,
     input  wire clk_pixel_resetn
 );
 
@@ -256,7 +256,7 @@ ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
     .s_axi_aclk                 (axi_if_inst.s_axi_aclk),
     .s_axi_aresetn              (~sys_rst),
     .sys_rst                    (sys_rst),
-    .trigger                    (trigger),
+    //.trigger                    (trigger),
     .clk_pixel_resetn           (clk_pixel_resetn)
 );
 

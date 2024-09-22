@@ -54,7 +54,7 @@ assign async_fifo_buffer_write = fval & dval & lval;
  * pixel clock(clink_X_clk) and DRAM clock(m_axi_aclk)
  */
 async_fifo_generator async_fifo_inst (
-    .srst       (reset),
+    .srst       (~clk_pixel_resetn),
     .wr_clk     (clink_X_clk),
     .rd_clk     (m_axi_aclk), 
     .din        (async_fifo_input),

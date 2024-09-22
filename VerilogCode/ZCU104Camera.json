@@ -31,9 +31,60 @@
             "FMC_LPC_LA06_N",
             "FMC_LPC_LA14_P",
             "FMC_LPC_LA14_N"
-        ]
+        ],
+        "clk" : {
+            "CLK_300_P" : {
+                "dir" : "I",
+                "type" : "clk",
+                "freq_hz" : "300000000"
+            },
+            "CLK_300_N" : {
+                "dir" : "I",
+                "type" : "clk",
+                "freq_hz" : "300000000"
+            }
+        }
     },
     "bd_cell" : {
+        "util_vector_logic_0" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:util_vector_logic",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "C_SIZE " : "1",
+                "C_OPERATION" : "not",
+                "LOGO_FILE" : "data/sym_notgate.png"
+            },
+            "ports" : {
+                "Op1" : "ddr4_0/c0_ddr4_ui_clk_sync_rst"
+            }
+        },
+        "axi_interconnect_0" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:axi_interconnect",
+            "tcl_options" : ["type", "vlnv"],
+            "config" : {
+                "NUM_SI" : "2",
+                "NUM_MI" : "2"
+            },
+            "ports" : {
+                "ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "S00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "M00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "S01_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "M01_ACLK" : "ddr4_0/c0_ddr4_ui_clk",
+                "M01_ARESETN" : "util_vector_logic_0/Res",
+                "ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
+                "M00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
+                "S01_ARESETN" : "zynq_ultra_ps_e_0/pl_resetn0"
+            },
+            "interface" : {
+                "S00_AXI" : "zynq_ultra_ps_e_0/M_AXI_HPM0_FPD",
+                "M00_AXI" : "clink_intf/s_axi",
+                "M01_AXI" : "ddr4_0/C0_DDR4_S_AXI",
+                "S01_AXI" : "image2dram/m_axi"
+            }
+        },
         "LVDS_14" : {
             "type" : "ip",
             "vlnv" : "xilinx.com:ip:util_ds_buf",
@@ -175,18 +226,30 @@
                 "lval": "image2dram/lval",
                 "dval": "image2dram/dval",
                 "fval": "image2dram/fval",
-                "clink_X_clk_out": "image2dram/clink_X_clk"
+                "clink_X_clk_out": "image2dram/clink_X_clk",
+                "s_axi_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
+                "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn"
             }
         },
         "image2dram": {
             "type" : "ip",
             "vlnv" : "xilinx.com:user:Image2DRAM",
-            "tcl_options" : ["type", "vlnv"]
+            "tcl_options" : ["type", "vlnv"],
+            "ports" : {
+                "m_axi_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
+                "m_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn"
+            }
         },
         "ddr4_0" : {
             "type" : "ip",
             "vlnv" : "xilinx.com:ip:ddr4",
             "tcl_options" : ["type", "vlnv"],
+            "ports" : {
+                "c0_sys_clk_p" : "CLK_300_P",
+                "c0_sys_clk_n" : "CLK_300_N",
+                "sys_rst" : "dram_reset_0/peripheral_reset",
+                "c0_ddr4_aresetn" : "dram_reset_0/peripheral_aresetn"
+            },
             "config" : {
                 "ADDN_UI_CLKOUT1_FREQ_HZ" : "None",
                 "ADDN_UI_CLKOUT2_FREQ_HZ" : "None",
@@ -331,13 +394,36 @@
             "vlnv" : "xilinx.com:ip:proc_sys_reset",
             "tcl_options" : ["type", "vlnv"],
             "ports" : {
-                "ext_reset_in" : "zynq_ultra_ps_e_0/pl_resetn0"
+                "ext_reset_in" : "zynq_ultra_ps_e_0/pl_resetn0",
+                "slowest_sync_clk" : "zynq_ultra_ps_e_0/pl_clk0"
+            }
+        },
+        "dram_reset_0" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:proc_sys_reset",
+            "tcl_options" : ["type", "vlnv"],
+            "ports" : {
+                "ext_reset_in" : "zynq_ultra_ps_e_0/pl_resetn0",
+                "slowest_sync_clk" : "ddr4_0/c0_ddr4_ui_clk"
+            }
+        },
+        "clink_clk_reset_0" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:ip:proc_sys_reset",
+            "tcl_options" : ["type", "vlnv"],
+            "ports" : {
+                "ext_reset_in" : "zynq_ultra_ps_e_0/pl_resetn0",
+                "slowest_sync_clk" : "clink_intf/clink_X_clk_out",
+                "peripheral_aresetn" : "image2dram/clk_pixel_resetn"
             }
         },
         "zynq_ultra_ps_e_0" : {
             "type" : "ip",
             "vlnv" : "xilinx.com:ip:zynq_ultra_ps_e",
             "tcl_options" : ["type", "vlnv"],
+            "ports" : {
+                "pl_clk0" : "zynq_ultra_ps_e_0/maxihpm0_fpd_aclk"
+            },
             "config" : {
                 "PSU__PSS_REF_CLK__FREQMHZ" : "33.333333",
                 "PSU__CAN1__PERIPHERAL__ENABLE" : "1",

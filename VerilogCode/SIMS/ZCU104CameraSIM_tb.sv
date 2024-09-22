@@ -95,7 +95,7 @@ ZCU104CaemraSIM_uut uut (
     .clink_X_data_3_p   (clink_X_data_3_p),
     .clink_X_ready      (clink_X_ready),
     .image_end          (image_end),
-    .trigger            (trigger),
+    //.trigger            (trigger),
     .clk_pixel_resetn   (clk_pixel_resetn)
 );
 
@@ -142,7 +142,7 @@ initial begin
     clink_X_data_1 <= 1'b0;
     clink_X_data_2 <= 1'b0;
     clink_X_data_3 <= 1'b0;
-    trigger <= 1'b0;
+    //trigger <= 1'b0;
     clk_pixel_resetn <= 1'b1;
     clink_en <= 1'b1;
     axi_read_addr <= DRAM_ADDR_BASE;
