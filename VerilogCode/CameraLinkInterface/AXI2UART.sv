@@ -230,7 +230,7 @@ always_ff @(posedge s_axi_aclk) begin
                         axi_state_write <= WRITE_UART;
                     end
                     
-                    if( s_axi_awaddr == AXI_WRITE_CC ) begin
+                    else if( s_axi_awaddr == AXI_WRITE_CC ) begin
                         axi_waddr <= s_axi_awaddr;
                         axi_waddr_base <= s_axi_awaddr;
                         axi_wlen <= s_axi_awlen;

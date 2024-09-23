@@ -21,7 +21,7 @@ localparam integer HALF_BAUD_DIV = BAUD_DIV >> 1;
 
 // Transmit logic
 reg [3:0] tx_bit_cnt;
-reg [12:0] tx_clk_div;
+reg [15:0] tx_clk_div;
 reg [9:0] tx_shift_reg;
 
 always_ff @(posedge clk) begin

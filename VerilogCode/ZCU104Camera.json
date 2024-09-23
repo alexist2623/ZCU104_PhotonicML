@@ -76,8 +76,8 @@
                 "ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "M00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "M01_ARESETN" : "util_vector_logic_0/Res",
-                "S00_ARESETN" : "zynq_ultra_ps_e_0/pl_resetn0",
-                "S01_ARESETN" : "zynq_ultra_ps_e_0/pl_resetn0"
+                "S00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
+                "S01_ARESETN" : "proc_sys_reset_0/interconnect_aresetn"
             },
             "interface" : {
                 "S00_AXI" : "zynq_ultra_ps_e_0/M_AXI_HPM0_FPD",

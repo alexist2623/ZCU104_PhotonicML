@@ -81,7 +81,7 @@ initial begin
     CLK_300_P <= 1'b0;
     CLK_300_N <= 1'b1;
     forever begin
-        #3.3333;
+        #1.667;
         CLK_300_P <= ~CLK_300_P;
         CLK_300_N <= ~CLK_300_N;
     end
