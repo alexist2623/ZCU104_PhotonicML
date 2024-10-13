@@ -44,10 +44,18 @@
 
 module ZCU104Camera_tb;
 
-localparam  AXI_CLINK_INTF_ADDR             = 39'hA000_0000;
-localparam  UART_WRITE                      = 6'h00;
+localparam  AXI_CLINK_INTF_ADDR             = 39'h0A0000000;
+localparam  AXI_ADDR_WIDTH                  = 7;
+localparam AXI_WRITE_UART       = AXI_ADDR_WIDTH'(0) + 7'h00;
+localparam AXI_WRITE_CC         = AXI_ADDR_WIDTH'(0) + 7'h10;
+
+localparam AXI_READ_UART        = AXI_ADDR_WIDTH'(0) + 7'h00;
+localparam AXI_READ_UART_VALID  = AXI_ADDR_WIDTH'(0) + 7'h20;
+localparam AXI_READ_CLINK_READY = AXI_ADDR_WIDTH'(0) + 7'h30;
 /* axi response */
 reg [1:0] response;
+reg [1:0] response2;
+logic [127:0] read_data;
 
 reg         CLK_300_N;
 reg         CLK_300_P;
@@ -132,13 +140,26 @@ task automatic cpu_write(
     uut.zcu104_inst.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.write_data(addr, 8'h10, data, response);
 endtask : cpu_write
 
+task automatic cpu_read(
+    input logic [38:0] addr,
+    ref logic [127:0] data
+);
+    uut.zcu104_inst.ZCU104_Main_blk_i.zynq_ultra_ps_e_0.inst.read_data(addr, 8'h10, data, response2);
+    $display("READ @ %f [ns]", $time);
+    $display("READ DATA: %h", data);
+endtask : cpu_read
+
 initial begin
     cpu_init();
-    #1000;
-    $display("UART WRITE TEST");
-    cpu_write(AXI_CLINK_INTF_ADDR|UART_WRITE, 128'h48);
-    #(1000000000 / 9600 * 10 + 1000);
-    $display("UART WRITE TEST DONE");
+    #130000;
+    // $display("UART WRITE TEST");
+    // cpu_write(AXI_CLINK_INTF_ADDR|AXI_WRITE_CC, 128'h1);
+    // #(1000000000 / 9600 * 10 + 1000);
+    $display("UART WRITE CC");
+    cpu_write(AXI_CLINK_INTF_ADDR | AXI_WRITE_CC, 128'h1);
+    $display("WRITE TEST DONE");
+    cpu_read(AXI_CLINK_INTF_ADDR | AXI_READ_CLINK_READY, read_data);
+    #(100);
     $finish;
 end
 

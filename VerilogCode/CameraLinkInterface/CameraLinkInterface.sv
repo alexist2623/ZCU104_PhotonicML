@@ -136,7 +136,10 @@ module CameraLinkInterface
     // Cameralink Trigger and Image end
     //////////////////////////////////////////////////////////////////////////////////
     // input  wire        trigger, // will be used after Clink is tested
-    output wire        image_end
+    output wire        image_end,
+
+    output reg         clk_blink_0,
+    output reg         clk_blink_1
 );
 
 // AXI2UART instance for handling AXI communication and UART interface
@@ -316,7 +319,40 @@ axi2uart_inst (
     .CC4                    (cc4)
 );
 
+// reg [25:0] lvds_cnt;
+// reg lvds_reset_buffer1, lvds_reset_buffer2;
+reg [25:0] pll_cnt;
+reg pll_reset_buffer1, pll_reset_buffer2;
 
+// always_ff @(posedge clink_X_clk_p) begin
+//     {lvds_reset_buffer2, lvds_reset_buffer1} <= {lvds_reset_buffer1, ~s_axi_aresetn};
+//     if (lvds_reset_buffer2 == 1'b1) begin
+//         lvds_cnt <= 0;
+//         clk_blink_0 <=1'b0;
+//     end
+//     else begin
+//         lvds_cnt <= lvds_cnt + 1;
+//         if (lvds_cnt == 26'd0) begin
+//             lvds_cnt <= 0;
+//             clk_blink_0 <= ~clk_blink_0;
+//         end
+//     end
+// end
+
+always_ff @(posedge clink_X_clk_out) begin
+    {pll_reset_buffer2, pll_reset_buffer1} <= {pll_reset_buffer1, ~s_axi_aresetn};
+    if (pll_reset_buffer2 == 1'b1) begin
+        pll_cnt <= 0;
+        clk_blink_1 <=1'b0;
+    end
+    else begin
+        pll_cnt <= pll_cnt + 1;
+        if (pll_cnt == 26'd0) begin
+            pll_cnt <= 0;
+            clk_blink_1 <= ~clk_blink_1;
+        end
+    end
+end
 
 
 endmodule

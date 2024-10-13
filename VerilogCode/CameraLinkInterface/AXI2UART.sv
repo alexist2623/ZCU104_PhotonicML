@@ -112,11 +112,12 @@ module AXI2UART
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Address Space
 //////////////////////////////////////////////////////////////////////////////////
-localparam AXI_WRITE_UART       = {AXI_ADDR_WIDTH{7'h00}};
-localparam AXI_WRITE_CC         = {AXI_ADDR_WIDTH{7'h10}};
-localparam AXI_READ_UART        = {AXI_ADDR_WIDTH{7'h20}};
-localparam AXI_READ_UART_VALID  = {AXI_ADDR_WIDTH{7'h30}};
-localparam AXI_READ_CLINK_READY = {AXI_ADDR_WIDTH{7'h40}};
+localparam AXI_WRITE_UART       = AXI_ADDR_WIDTH'(0) + 7'h00;
+localparam AXI_WRITE_CC         = AXI_ADDR_WIDTH'(0) + 7'h10;
+
+localparam AXI_READ_UART        = AXI_ADDR_WIDTH'(0) + 7'h00;
+localparam AXI_READ_UART_VALID  = AXI_ADDR_WIDTH'(0) + 7'h20;
+localparam AXI_READ_CLINK_READY = AXI_ADDR_WIDTH'(0) + 7'h30;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
@@ -347,8 +348,12 @@ end
 // AXI4 Read FSM
 // AXI read only gives zero data to master from slave
 //////////////////////////////////////////////////////////////////////////////////
-reg [15:0] axi_arid;
-reg [15:0] axi_aruser;
+reg [1:0]                   axi_arburst;
+reg [7:0]                   axi_arlen;
+reg [AXI_ADDR_WIDTH - 1:0]  axi_araddr;
+reg [2:0]                   axi_arsize;
+reg [15:0]                  axi_arid;
+reg [15:0]                  axi_aruser;
 
 always_ff @(posedge s_axi_aclk) begin
     if( s_axi_aresetn == 1'b0 ) begin
@@ -376,6 +381,14 @@ always_ff @(posedge s_axi_aclk) begin
                 s_axi_rvalid <= 1'b0;
                 s_axi_rlast <= 1'b0;
                 if( s_axi_arvalid == 1'b1 ) begin
+                    axi_arid                <= s_axi_arid;
+                    axi_aruser              <= s_axi_aruser;
+                    axi_arburst             <= s_axi_arburst;
+                    axi_arlen               <= s_axi_arlen;
+                    axi_araddr              <= s_axi_araddr;
+                    axi_arsize              <= s_axi_arsize;
+                    axi_arid                <= s_axi_arid;
+                    axi_aruser              <= s_axi_aruser;
                     if( s_axi_araddr == AXI_READ_UART ) begin
                         axi_state_read <= READ_UART;
                     end

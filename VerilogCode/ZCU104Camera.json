@@ -16,7 +16,9 @@
             "FMC_LPC_LA15_P",
             "FMC_LPC_LA15_N",
             "FMC_LPC_LA17_CC_P",
-            "FMC_LPC_LA17_CC_N"
+            "FMC_LPC_LA17_CC_N",
+            "GPIO_LED_0_LS",
+            "GPIO_LED_1_LS"
         ],
         "input_ports" : [
             "FMC_LPC_LA01_CC_P",
@@ -340,7 +342,9 @@
                 "fval": "image2dram_0/fval",
                 "clink_X_clk_out": "image2dram_0/clink_X_clk",
                 "s_axi_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
-                "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn"
+                "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
+                "clk_blink_0" : "GPIO_LED_0_LS",
+                "clk_blink_1" : "GPIO_LED_1_LS"
             }
         },
         "image2dram_0": {
