@@ -25,7 +25,7 @@ module AXI2UART
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH = 6,
+    parameter AXI_ADDR_WIDTH = 7,
     parameter AXI_DATA_WIDTH = 128,
     parameter AXI_STROBE_WIDTH = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN = 4 // LOG(AXI_STROBE_WDITH)
@@ -104,16 +104,19 @@ module AXI2UART
     output reg         CC2,
     output reg         CC3,
     output reg         CC4,
-    output reg         trigger_from_cpu
+    output reg         trigger_from_cpu,
+
+    input  wire        clink_ready           // CameraLink ready signal
 );
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Address Space
 //////////////////////////////////////////////////////////////////////////////////
-localparam AXI_WRITE_UART       = {AXI_ADDR_WIDTH{6'h00}};
-localparam AXI_WRITE_CC         = {AXI_ADDR_WIDTH{6'h10}};
-localparam AXI_READ_UART        = {AXI_ADDR_WIDTH{6'h20}};
-localparam AXI_READ_UART_VALID  = {AXI_ADDR_WIDTH{6'h30}};
+localparam AXI_WRITE_UART       = {AXI_ADDR_WIDTH{7'h00}};
+localparam AXI_WRITE_CC         = {AXI_ADDR_WIDTH{7'h10}};
+localparam AXI_READ_UART        = {AXI_ADDR_WIDTH{7'h20}};
+localparam AXI_READ_UART_VALID  = {AXI_ADDR_WIDTH{7'h30}};
+localparam AXI_READ_CLINK_READY = {AXI_ADDR_WIDTH{7'h40}};
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
@@ -130,7 +133,8 @@ statetype_w axi_state_write;
 typedef enum logic [4:0] {
     READ_IDLE, 
     READ_UART, 
-    READ_UART_VALID, 
+    READ_UART_VALID,
+    READ_CLINK_READY,
     READ_ERROR_STATE} statetype_r;
 statetype_r axi_state_read;
 
@@ -378,6 +382,9 @@ always_ff @(posedge s_axi_aclk) begin
                     else if( s_axi_araddr == AXI_READ_UART_VALID ) begin
                         axi_state_read <= READ_UART_VALID;
                     end
+                    else if( s_axi_araddr == AXI_READ_CLINK_READY ) begin
+                        axi_state_read <= READ_CLINK_READY;
+                    end
                     else begin
                         axi_state_read <= READ_ERROR_STATE;
                     end
@@ -398,6 +405,16 @@ always_ff @(posedge s_axi_aclk) begin
             READ_UART_VALID: begin
                 if( s_axi_rready == 1'b1) begin
                     s_axi_rdata <= AXI_DATA_WIDTH'(rx_data_valid);
+                    s_axi_rresp <= 2'b0;
+                    s_axi_rvalid <= 1'b1;
+                    s_axi_rlast <= 1'b1;
+                    s_axi_rid <= axi_arid;
+                    axi_state_read <= READ_IDLE;
+                end
+            end
+            READ_CLINK_READY: begin
+                if( s_axi_rready == 1'b1) begin
+                    s_axi_rdata <= AXI_DATA_WIDTH'(clink_ready);
                     s_axi_rresp <= 2'b0;
                     s_axi_rvalid <= 1'b1;
                     s_axi_rlast <= 1'b1;

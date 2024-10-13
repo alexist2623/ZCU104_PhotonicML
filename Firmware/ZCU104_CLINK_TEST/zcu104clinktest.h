@@ -21,19 +21,22 @@
 #ifndef __BAREMETAL__
 #define __BAREMETAL__
 #endif
-/////////////////////////////////////////////////////////////
-// 128 bit write
-//
-// https://isocpp.org/wiki/faq/inline-functions
-// -> why inline function is in header file?
-/////////////////////////////////////////////////////////////
+/************************** 128 bit make macro *******************************/
+#define MAKE128CONST(hi,lo) 			((((__uint128_t)hi << 64) | (lo)))
+#define UPPER(x) 						(uint64_t)( ( (x) >> 64 ) & MASK64BIT)
+#define LOWER(x) 						(uint64_t)( (x) & MASK64BIT )
+#define MASK64BIT 						((uint64_t) 0xffffffffffffffff)
+
 static INLINE void Xil_Out128(UINTPTR Addr, __uint128_t Value)
 {
 	volatile __uint128_t *LocalAddr = (volatile __uint128_t *)Addr;
 	*LocalAddr = Value;
 }
-
-#define MAKE128CONST(hi,lo) ((((__uint128_t)hi << 64) | (lo)))
+static INLINE __uint128_t Xil_In128(UINTPTR Addr)
+{
+	volatile __uint128_t *LocalAddr = (volatile __uint128_t *)Addr;
+	return *LocalAddr;
+}
 
 #define AXI_WRITE_UART       (0x00)
 #define AXI_WRITE_CC         (0x10)

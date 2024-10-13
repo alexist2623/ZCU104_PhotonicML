@@ -29,7 +29,7 @@ module CameraLinkInterface
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH            = 6,
+    parameter AXI_ADDR_WIDTH            = 7,
     parameter AXI_DATA_WIDTH            = 128,
     parameter AXI_STROBE_WIDTH          = AXI_DATA_WIDTH >> 3,
     parameter AXI_STROBE_LEN            = 4 // LOG(AXI_STROBE_WDITH)
@@ -308,6 +308,7 @@ axi2uart_inst (
     .tx_busy                (tx_busy),
     .rx_ready               (rx_ready),
     .rx_data                (rx_data),
+    .clink_ready            (clink_X_ready),
 
     .CC1                    (cc1),
     .CC2                    (cc2),

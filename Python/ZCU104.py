@@ -158,7 +158,7 @@ class ZCU104:
         byte_data = bytes(data)
         self.tcp.send_raw(byte_data)
         log = self.tcp.read()
-        print(log)
+        print("byte send")
 
     def set_acquisition_trigger(self)->None:
         """
@@ -176,6 +176,23 @@ class ZCU104:
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x01]
         )
+        
+    def set_no_acquisition_trigger(self)->None:
+        """
+        Set acquisition as a hardware trigger mode
+
+        Args:
+            None
+        
+        Returns:
+            None
+
+        """
+        self.send_uart(
+            addr = 0x00040100,
+            addr_len = 0b11,
+            data = [0x00, 0x00, 0x00, 0x00]
+        )
 
     def set_acqusition_source_cc1(self)->None:
         """
@@ -192,6 +209,23 @@ class ZCU104:
             addr = 0x00040140,
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x09]
+        )
+        
+    def set_acqusition_source_soft(self)->None:
+        """
+        Set acquisition source as CC1
+
+        Args:
+            None
+        
+        Returns:
+            None
+
+        """
+        self.send_uart(
+            addr = 0x00040140,
+            addr_len = 0b11,
+            data = [0x00, 0x00, 0x00, 0x00]
         )
 
     def set_frame_count(self, frame_count : int)->None:
@@ -221,6 +255,16 @@ class ZCU104:
             data = [0x00, 0x00, 0x00, 0x01]
         )
 
+    def set_no_frame_tirgger(self)->None:
+        """
+        Set framer start as a hardware trigger mode
+        """
+        self.send_uart(
+            addr = 0x00040200,
+            addr_len = 0b11,
+            data = [0x00, 0x00, 0x00, 0x00]
+        )
+
     def set_frame_trigger_source(self)->None:
         """
         Set frame trigger source as CC2
@@ -229,6 +273,16 @@ class ZCU104:
             addr = 0x00040240,
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x0A]
+        )
+    
+    def set_frame_trigger_source_soft(self)->None:
+        """
+        Set frame trigger source as CC2
+        """
+        self.send_uart(
+            addr = 0x00040240,
+            addr_len = 0b11,
+            data = [0x00, 0x00, 0x00, 0x00]
         )
 
     def set_tap_1x3(self)->None:
@@ -260,6 +314,20 @@ class ZCU104:
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x01]
         )
+        
+    def make_soft_acq(self):
+        self.send_uart(
+            addr = (0x00040120 | 0x04),
+            addr_len = 0b11,
+            data = [0x00, 0x00, 0x00, 0x01]
+        )
+        
+    def make_soft_frame(self):
+        self.send_uart(
+            addr = (0x00040220 | 0x04),
+            addr_len = 0b11,
+            data = [0x00, 0x00, 0x00, 0x01]
+        )
 
     def camera_init(self)->None:
         """
@@ -273,27 +341,61 @@ class ZCU104:
         self.set_frame_tirgger()
         self.set_frame_trigger_source()
         self.set_frame_count(1)
-
-    def assert_cc1(self, value : bool)->None:
-        """
-        Assert CC1
-
-        Args:
-            value (bool): True or False
         
-        Returns:
-            None
-
+    def camera_soft_init(self)->None:
         """
-        if value:
-            self.tcp.write("#CC1#1#")
-        else:
-            self.tcp.write("#CC1#0#")
+        Initialize camera
+        """
+        self.set_tap_1x3()
+        self.set_pixel_format()
+        self.cl_clock()
+        self.set_acquisition_trigger()
+        self.set_acqusition_source_soft()
+        self.set_frame_tirgger()
+        self.set_frame_trigger_source_soft()
+        self.set_frame_count(1)
+
+    def cc_ctrl(self, cc_channel: int, cc_value: bool)->None:
+        """
+        Control CC channel
+        """
+        packet = f"#CC_CTRL#{(int(cc_value) & 0xff) << 8 | (cc_channel & 0xff)}#!EOL#"
+        self.tcp.write(packet)
+        a = self.tcp.read()
+        print(a)
+    
+    def read_dram(self, addr: int, size: int)->bytes:
+        """
+        Read DRAM data
+
+        addr : start address to read with offset of XPAR_MIG_0_BASEADDR 0x400000000
+        size : number of 128-bit chunks to read
+        """
+        packet = f"#READ_DRAM#{addr}#{size}#!EOL#"
+        self.tcp.write(packet)
+        a = self.tcp.read()
+        print(a)
+        
+    def write_dram(self, addr: int, data_upper, data_lower):
+        packet = f"#WRITE_DRAM#{addr}#{data_upper}#{data_lower}#!EOL#"
+        self.tcp.write(packet)
         a = self.tcp.read()
         print(a)
 
 if __name__ == "__main__":
     zcu104 = ZCU104(IPAddress = '172.22.22.236', TCPPort = 7)
     zcu104.connect()
-    zcu104.camera_init()
+    zcu104.camera_soft_init()
+    # zcu104.cc_ctrl(1, True)
+    # time.sleep(0.001)
+    # zcu104.cc_ctrl(1, False)
+    # time.sleep(0.001)
+    # zcu104.cc_ctrl(2, True)
+    # time.sleep(0.001)
+    # zcu104.cc_ctrl(2, False)
+    zcu104.make_soft_acq()
+    zcu104.make_soft_frame()
+    time.sleep(1)
+    zcu104.write_dram(0x00000000,0x1234,0x5678)
+    zcu104.read_dram(0x00000000, 0x10)
     zcu104.disconnect()
