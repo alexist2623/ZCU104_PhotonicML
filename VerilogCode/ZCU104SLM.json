@@ -3,106 +3,31 @@
         "project_name" : "ZCU104_Main",
         "axi_offset" : "0xA0000000",
         "json_path" : [
-            "CameraLinkInterface.json",
-            "Image2DRAM.json"
+            "HDMIController.json", 
+            "ImageControllerIRQ.json",
+            "MasterController.json",
+            "GTH_serializer.json",
+            "IOController.json"
         ],
         "output_ports" : [
-            "FMC_LPC_LA07_P",
-            "FMC_LPC_LA07_N",
-            "FMC_LPC_LA08_P",
-            "FMC_LPC_LA08_N",
-            "FMC_LPC_LA09_P",
-            "FMC_LPC_LA09_N",
-            "FMC_LPC_LA15_P",
-            "FMC_LPC_LA15_N",
-            "FMC_LPC_LA17_CC_P",
-            "FMC_LPC_LA17_CC_N",
-            "GPIO_LED_0_LS",
-            "GPIO_LED_1_LS"
+            "HDMI_TX0_N",
+            "HDMI_TX1_N",
+            "HDMI_TX2_N",
+            "HDMI_TX0_P",
+            "HDMI_TX1_P",
+            "HDMI_TX2_P",
+            "HDMI_TX_LVDS_OUT_P",
+            "HDMI_TX_LVDS_OUT_N",
+            "HDMI_TX_EN",
+            "PMOD0_0"
         ],
         "input_ports" : [
-            "FMC_LPC_LA01_CC_P",
-            "FMC_LPC_LA01_CC_N",
-            "FMC_LPC_LA03_P",
-            "FMC_LPC_LA03_N",
-            "FMC_LPC_LA04_P",
-            "FMC_LPC_LA04_N",
-            "FMC_LPC_LA05_P",
-            "FMC_LPC_LA05_N",
-            "FMC_LPC_LA06_P",
-            "FMC_LPC_LA06_N",
-            "FMC_LPC_LA14_P",
-            "FMC_LPC_LA14_N"
-        ],
-        "clk" : {
-            "CLK_300_P" : {
-                "dir" : "I",
-                "type" : "clk",
-                "freq_hz" : "300000000"
-            },
-            "CLK_300_N" : {
-                "dir" : "I",
-                "type" : "clk",
-                "freq_hz" : "300000000"
-            }
-        },
-        "interface" : {
-            "DDR4_SODIMM": {
-                "mode" : "Master",
-                "vlnv" : "xilinx.com:interface:ddr4_rtl:1.0"
-            }
-        }
+            "HDMI_DRU_CLOCK_C_P",
+            "HDMI_DRU_CLOCK_C_N",
+            "PMOD1_0"
+        ]
     },
     "bd_cell" : {
-        "axi_interconnect_0" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:axi_interconnect",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "NUM_SI" : "1",
-                "NUM_MI" : "2",
-                "ENABLE_ADVANCED_OPTIONS" : "1",
-                "XBAR_DATA_WIDTH" : "128"
-            },
-            "ports" : {
-                "ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
-                "S00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
-                "M00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
-                "M01_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
-
-                "ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
-                "M00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
-                "M01_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
-                "S00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn"
-            },
-            "interface" : {
-                "S00_AXI" : "zynq_ultra_ps_e_0/M_AXI_HPM0_FPD"
-            }
-        },
-        "dram_interconnect_0" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:axi_interconnect",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "NUM_SI" : "2",
-                "NUM_MI" : "1"
-            },
-            "ports" : {
-                "ARESETN" : "dram_reset_0/interconnect_aresetn",
-                "M00_ARESETN" : "dram_reset_0/peripheral_aresetn",
-                "S00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
-                "S01_ARESETN" : "dram_reset_0/peripheral_aresetn",
-
-                "ACLK" : "ddr4_0/c0_ddr4_ui_clk",
-                "M00_ACLK" : "ddr4_0/c0_ddr4_ui_clk",
-                "S00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
-                "S01_ACLK" : "ddr4_0/c0_ddr4_ui_clk"
-            },
-            "interface" : {
-                "S00_AXI" : "axi_interconnect_0/M01_AXI",
-                "S01_AXI" : "image2dram_0/m_axi"
-            }
-        },
         "proc_sys_reset_0" : {
             "type" : "ip",
             "vlnv" : "xilinx.com:ip:proc_sys_reset",
@@ -112,376 +37,143 @@
                 "slowest_sync_clk" : "zynq_ultra_ps_e_0/pl_clk0"
             }
         },
-        "dram_reset_0" : {
+        "proc_sys_reset_1" : {
             "type" : "ip",
             "vlnv" : "xilinx.com:ip:proc_sys_reset",
             "tcl_options" : ["type", "vlnv"],
             "ports" : {
-                "ext_reset_in" : "not_gate_0/Res",
-                "slowest_sync_clk" : "ddr4_0/c0_ddr4_ui_clk"
+                "ext_reset_in" : "MasterController_0/pixel_clk_resetn",
+                "slowest_sync_clk" : "GTH_serializer_0/clk_pixel"
             }
         },
-        "clink_clk_reset_0" : {
+        "axi_interconnect_0" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:ip:proc_sys_reset",
-            "tcl_options" : ["type", "vlnv"],
-            "ports" : {
-                "ext_reset_in" : "clink_intf/clink_resetn",
-                "slowest_sync_clk" : "clink_intf/clink_X_clk_out",
-                "peripheral_aresetn" : "image2dram_0/clk_pixel_resetn"
-            }
-        },
-        "not_gate_0" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_vector_logic",
+            "vlnv" : "xilinx.com:ip:axi_interconnect",
             "tcl_options" : ["type", "vlnv"],
             "config" : {
-                "C_SIZE" : "1",
-                "C_OPERATION" : "not",
-                "LOGO_FILE" : "data/sym_notgate.png"
+                "NUM_SI" : "1",
+                "NUM_MI" : "4",
+                "ENABLE_ADVANCED_OPTIONS" : "1",
+                "XBAR_DATA_WIDTH" : "128"
             },
             "ports" : {
-                "Op1" : "ddr4_0/c0_ddr4_ui_clk_sync_rst"
-            }
-        },
-        "not_gate_1" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_vector_logic",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_SIZE" : "1",
-                "C_OPERATION" : "not",
-                "LOGO_FILE" : "data/sym_notgate.png"
-            },
-            "ports" : {
-                "Op1" : "clink_intf/dram_resetn"
-            }
-        },
-        "ddr4_0" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:ddr4",
-            "tcl_options" : ["type", "vlnv"],
-            "ports" : {
-                "c0_sys_clk_p" : "CLK_300_P",
-                "c0_sys_clk_n" : "CLK_300_N",
-                "sys_rst" : "not_gate_1/Res",
-                "c0_ddr4_aresetn" : "dram_reset_0/peripheral_aresetn"
+                "ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "S00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "M00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "M01_ACLK" : "GTH_serializer_0/clk_pixel",
+                "M02_ACLK" : "GTH_serializer_0/clk_pixel",
+                "M03_ACLK" : "GTH_serializer_0/clk_pixel",
+
+                "ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
+                "M00_ARESETN" : "proc_sys_reset_0/peripheral_aresetn",
+                "M01_ARESETN" : "proc_sys_reset_1/peripheral_aresetn",
+                "M02_ARESETN" : "proc_sys_reset_1/peripheral_aresetn",
+                "M03_ARESETN" : "proc_sys_reset_1/peripheral_aresetn",
+                "S00_ARESETN" : "proc_sys_reset_0/peripheral_aresetn"
             },
             "interface" : {
-                "C0_DDR4" : "DDR4_SODIMM",
-                "C0_DDR4_S_AXI" : "dram_interconnect_0/M00_AXI"
-            },
-            "axi" : {
-                "zynq_ultra_ps_e_0/Data" : {
-                    "offset" : "0x0400000000",
-                    "range" : "0x100000000"
-                },
-                "image2dram_0/m_axi" : {
-                    "offset" : "0x0400000000",
-                    "range" : "0x100000000"
-                }
-            },
-            "config" : {
-                "ADDN_UI_CLKOUT1_FREQ_HZ" : "None",
-                "ADDN_UI_CLKOUT2_FREQ_HZ" : "None",
-                "ADDN_UI_CLKOUT3_FREQ_HZ" : "None",
-                "ADDN_UI_CLKOUT4_FREQ_HZ" : "None",
-                "AL_SEL" : "0",
-                "C0.ADDR_WIDTH" : "17",
-                "C0.BANK_GROUP_WIDTH" : "2",       
-                "C0.CKE_WIDTH" : "1",
-                "C0.CK_WIDTH" : "1",
-                "C0.CS_WIDTH" : "1",
-                "C0.ControllerType" : "DDR4_SDRAM",
-                "C0.DDR4_ACT_SKEW" : "0",
-                "C0.DDR4_ADDR_SKEW_0" : "0",
-                "C0.DDR4_ADDR_SKEW_1" : "0",
-                "C0.DDR4_ADDR_SKEW_2" : "0",
-                "C0.DDR4_ADDR_SKEW_3" : "0",
-                "C0.DDR4_ADDR_SKEW_4" : "0",
-                "C0.DDR4_ADDR_SKEW_5" : "0",
-                "C0.DDR4_ADDR_SKEW_6" : "0",
-                "C0.DDR4_ADDR_SKEW_7" : "0",
-                "C0.DDR4_ADDR_SKEW_8" : "0",
-                "C0.DDR4_ADDR_SKEW_9" : "0",
-                "C0.DDR4_ADDR_SKEW_10" : "0",
-                "C0.DDR4_ADDR_SKEW_11" : "0",
-                "C0.DDR4_ADDR_SKEW_12" : "0",
-                "C0.DDR4_ADDR_SKEW_13" : "0",
-                "C0.DDR4_ADDR_SKEW_14" : "0",
-                "C0.DDR4_ADDR_SKEW_15" : "0",
-                "C0.DDR4_ADDR_SKEW_16" : "0",
-                "C0.DDR4_ADDR_SKEW_17" : "0",
-                "C0.DDR4_AUTO_AP_COL_A3" : "false",
-                "C0.DDR4_AutoPrecharge" : "false",
-                "C0.DDR4_AxiAddressWidth" : "33",
-                "C0.DDR4_AxiArbitrationScheme" : "RD_PRI_REG",
-                "C0.DDR4_AxiDataWidth" : "512",
-                "C0.DDR4_AxiIDWidth" : "17",
-                "C0.DDR4_AxiNarrowBurst" : "false",
-                "C0.DDR4_AxiSelection" : "true",
-                "C0.DDR4_BA_SKEW_0" : "0",
-                "C0.DDR4_BA_SKEW_1" : "0",
-                "C0.DDR4_BG_SKEW_0" : "0",
-                "C0.DDR4_BG_SKEW_1" : "0",
-                "C0.DDR4_BurstLength" : "8",
-                "C0.DDR4_BurstType" : "Sequential",
-                "C0.DDR4_CKE_SKEW_0" : "0",
-                "C0.DDR4_CKE_SKEW_1" : "0",
-                "C0.DDR4_CKE_SKEW_2" : "0",
-                "C0.DDR4_CKE_SKEW_3" : "0",
-                "C0.DDR4_CK_SKEW_0" : "0",
-                "C0.DDR4_CK_SKEW_1" : "0",
-                "C0.DDR4_CK_SKEW_2" : "0",
-                "C0.DDR4_CK_SKEW_3" : "0",
-                "C0.DDR4_CLKFBOUT_MULT" : "12",
-                "C0.DDR4_CLKOUT0_DIVIDE" : "5",
-                "C0.DDR4_CS_SKEW_0" : "0",
-                "C0.DDR4_CS_SKEW_1" : "0",
-                "C0.DDR4_CS_SKEW_2" : "0",
-                "C0.DDR4_CS_SKEW_3" : "0",
-                "C0.DDR4_Capacity" : "512",
-                "C0.DDR4_CasLatency" : "17",
-                "C0.DDR4_CasWriteLatency" : "16",
-                "C0.DDR4_ChipSelect" : "true",
-                "C0.DDR4_Clamshell" : "false",
-                "C0.DDR4_CustomParts" : "no_file_loaded",
-                "C0.DDR4_DIVCLK_DIVIDE" : "1",
-                "C0.DDR4_DataMask" : "DM_NO_DBI",
-                "C0.DDR4_DataWidth" : "64",
-                "C0.DDR4_EN_PARITY" : "false",
-                "C0.DDR4_Ecc" : "false",
-                "C0.DDR4_Enable_LVAUX" : "false",
-                "C0.DDR4_InputClockPeriod" : "3332",
-                "C0.DDR4_LR_SKEW_0" : "0",
-                "C0.DDR4_LR_SKEW_1" : "0",
-                "C0.DDR4_MCS_ECC" : "false",
-                "C0.DDR4_Mem_Add_Map" : "ROW_COLUMN_BANK",
-                "C0.DDR4_MemoryName" : "MainMemory",
-                "C0.DDR4_MemoryPart" : "MTA8ATF1G64HZ-2G3",
-                "C0.DDR4_MemoryType" : "SODIMMs",
-                "C0.DDR4_MemoryVoltage" : "1.2V",
-                "C0.DDR4_ODT_SKEW_0" : "0",
-                "C0.DDR4_ODT_SKEW_1" : "0",
-                "C0.DDR4_ODT_SKEW_2" : "0",
-                "C0.DDR4_ODT_SKEW_3" : "0",
-                "C0.DDR4_OnDieTermination" : "RZQ/6",
-                "C0.DDR4_Ordering" : "Normal",
-                "C0.DDR4_OutputDriverImpedenceControl" : "RZQ/7",
-                "C0.DDR4_PAR_SKEW" : "0",
-                "C0.DDR4_PhyClockRatio" : "4:1",
-                "C0.DDR4_RESTORE_CRC" : "false",
-                "C0.DDR4_SAVE_RESTORE" : "false",
-                "C0.DDR4_SELF_REFRESH" : "false",
-                "C0.DDR4_Slot" : "Single",
-                "C0.DDR4_Specify_MandD" : "false",
-                "C0.DDR4_TREFI" : "0",
-                "C0.DDR4_TRFC" : "0",
-                "C0.DDR4_TRFC_DLR" : "0",
-                "C0.DDR4_TXPR" : "0",
-                "C0.DDR4_TimePeriod" : "833",
-                "C0.DDR4_UserRefresh_ZQCS" : "false",
-                "C0.DDR4_isCKEShared" : "false",
-                "C0.DDR4_isCustom" : "false",
-                "C0.DDR4_nCK_TREFI" : "0",
-                "C0.DDR4_nCK_TRFC" : "0",
-                "C0.DDR4_nCK_TRFC_DLR" : "0",
-                "C0.DDR4_nCK_TXPR" : "5",
-                "C0.LR_WIDTH" : "1",
-                "C0.MIGRATION" : "false",
-                "C0.ODT_WIDTH" : "1",
-                "C0.StackHeight" : "1",
-                "C0_CLOCK_BOARD_INTERFACE" : "clk_300mhz",
-                "C0_DDR4_BOARD_INTERFACE" : "Custom",
-                "CLKOUT6" : "false",
-                "DCI_Cascade" : "false",
-                "DIFF_TERM_SYSCLK" : "false",
-                "Debug_Signal" : "Disable",
-                "Default_Bank_Selections" : "false",
-                "EN_PP_4R_MIR" : "false",
-                "Enable_SysPorts" : "true",
-                "Example_TG" : "SIMPLE_TG",
-                "IOPowerReduction" : "OFF",
-                "IO_Power_Reduction" : "false",
-                "IS_FROM_PHY" : "1",
-                "MCS_DBG_EN" : "false",
-                "No_Controller" : "1",
-                "PARTIAL_RECONFIG_FLOW_MIG" : "false",
-                "PING_PONG_PHY" : "1",
-                "Phy_Only" : "Complete_Memory_Controller",
-                "RECONFIG_XSDB_SAVE_RESTORE" : "false",
-                "RESET_BOARD_INTERFACE" : "Custom",
-                "Reference_Clock" : "Differential",
-                "SET_DW_TO_40" : "false",
-                "Simulation_Mode" : "BFM",
-                "System_Clock" : "Differential",
-                "TIMING_3DS" : "false",
-                "TIMING_OP1" : "false",
-                "TIMING_OP2" : "false"
+                "S00_AXI" : "zynq_ultra_ps_e_0/M_AXI_HPM0_FPD",
+                "M00_AXI" : "MasterController_0/s_axi",
+                "M01_AXI" : "ImageController_0/s_axi",
+                "M02_AXI" : "CameraExposureStart/s_axi",
+                "M03_AXI" : "CameraExposureEnd/s_axi"
             }
         },
-        "clink_intf": {
+        "MasterController_0" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:user:CameraLinkInterface",
+            "vlnv" : "xilinx.com:user:MasterController:1.0",
             "tcl_options" : ["type", "vlnv"],
-            "interface" : {
-                "s_axi" : "axi_interconnect_0/M00_AXI"
+            "ports" : {
+                "s_axi_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
+                "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
+                "clk_pixel" : "GTH_serializer_0/clk_pixel"
             },
             "axi" : {
                 "offset" : "0xA0000000",
                 "range" : "0x00001000"
-            },
-            "ports": {
-                "clink_X_clk_p": "FMC_LPC_LA01_CC_P",
-                "clink_X_clk_n": "FMC_LPC_LA01_CC_N",
-                "clink_X_data_0_p": "FMC_LPC_LA03_P",
-                "clink_X_data_0_n": "FMC_LPC_LA03_N",
-                "clink_X_data_1_p": "FMC_LPC_LA04_P",
-                "clink_X_data_1_n": "FMC_LPC_LA04_N",
-                "clink_X_data_2_p": "FMC_LPC_LA06_P",
-                "clink_X_data_2_n": "FMC_LPC_LA06_N",
-                "clink_X_data_3_p": "FMC_LPC_LA05_P",
-                "clink_X_data_3_n": "FMC_LPC_LA05_N",
-                "SerTC": "LVDS_15/OBUF_IN",
-                "cc1": "LVDS_08/OBUF_IN",
-                "cc2": "LVDS_07/OBUF_IN",
-                "cc3": "LVDS_09/OBUF_IN",
-                "cc4": "LVDS_17/OBUF_IN",
-                "d0": "image2dram_0/d0",
-                "d1": "image2dram_0/d1",
-                "d2": "image2dram_0/d2",
-                "lval": "image2dram_0/lval",
-                "dval": "image2dram_0/dval",
-                "fval": "image2dram_0/fval",
-                "clink_X_clk_out": "image2dram_0/clink_X_clk",
-                "s_axi_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
-                "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
-                "clk_blink_0" : "GPIO_LED_0_LS",
-                "clk_blink_1" : "GPIO_LED_1_LS"
             }
         },
-        "image2dram_0": {
+        "ImageController_0" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:user:Image2DRAM",
+            "vlnv" : "xilinx.com:user:ImageController:1.0",
             "tcl_options" : ["type", "vlnv"],
             "ports" : {
-                "m_axi_aclk" : "ddr4_0/c0_ddr4_ui_clk",
-                "m_axi_aresetn" : "dram_reset_0/peripheral_aresetn"
+                "s_axi_aclk" : "GTH_serializer_0/clk_pixel",
+                "s_axi_aresetn" : "proc_sys_reset_1/peripheral_aresetn",
+                "auto_start" : "MasterController_0/auto_start",
+                "counter" : "MasterController_0/counter",
+                "rgb" : "HDMIController_0/rgb"
+            },
+            "axi" : {
+                "offset" : "0xA0001000",
+                "range" : "0x00001000"
             }
         },
-        "LVDS_14" : {
+        "GTH_serializer_0" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "vlnv" : "xilinx.com:user:GTH_serializer:1.0",
             "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "IBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
             "ports" : {
-                "IBUF_DS_P" : "FMC_LPC_LA14_P",
-                "IBUF_DS_N" : "FMC_LPC_LA14_N",
-                "IBUF_OUT" : "clink_intf/SerTFG"
+                "s_axi_clk" : "zynq_ultra_ps_e_0/pl_clk0",
+                "s_axi_resetn" : "proc_sys_reset_0/peripheral_aresetn",
+                "clk_pixel_resetn" : "proc_sys_reset_1/peripheral_aresetn",
+                "gtrefclk00_in_p" : "HDMI_DRU_CLOCK_C_P",
+                "gtrefclk00_in_n" : "HDMI_DRU_CLOCK_C_N",
+                "out_en" : "HDMI_TX_EN",
+                "tmds_clk_p" : "HDMI_TX_LVDS_OUT_P",
+                "tmds_clk_n" : "HDMI_TX_LVDS_OUT_N",
+                "gthtxn_out_0" : "HDMI_TX0_N",
+                "gthtxp_out_0" : "HDMI_TX0_P",
+                "gthtxn_out_1" : "HDMI_TX1_N",
+                "gthtxp_out_1" : "HDMI_TX1_P",
+                "gthtxn_out_2" : "HDMI_TX2_N",
+                "gthtxp_out_2" : "HDMI_TX2_P"
             }
         },
-        "LVDS_08" : {
+        "CameraExposureStart" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "vlnv" : "xilinx.com:user:IOController:1.0",
             "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
             "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA08_P",
-                "OBUF_DS_N" : "FMC_LPC_LA08_N"
+                "s_axi_aclk" : "GTH_serializer_0/clk_pixel",
+                "s_axi_aresetn" : "proc_sys_reset_1/peripheral_aresetn",
+                "output_signal" : "PMOD0_0",
+                "input_signal" : "ImageController_0/camera_exposure_start",
+                "auto_start" : "MasterController_0/auto_start"
+            },
+            "axi" : {
+                "offset" : "0xA0002000",
+                "range" : "0x00001000"
             }
         },
-        "LVDS_09" : {
+        "CameraExposureEnd" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "vlnv" : "xilinx.com:user:IOController:1.0",
             "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
             "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA09_P",
-                "OBUF_DS_N" : "FMC_LPC_LA09_N"
+                "s_axi_aclk" : "GTH_serializer_0/clk_pixel",
+                "s_axi_aresetn" : "proc_sys_reset_1/peripheral_aresetn",
+                "output_signal" : "ImageController_0/image_change",
+                "auto_start" : "MasterController_0/auto_start",
+                "input_signal" : "PMOD1_0"
+            },
+            "axi" : {
+                "offset" : "0xA0003000",
+                "range" : "0x00001000"
             }
         },
-        "LVDS_07" : {
+        "HDMIController_0" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "vlnv" : "xilinx.com:user:HDMIController:1.0",
             "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
             "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA07_P",
-                "OBUF_DS_N" : "FMC_LPC_LA07_N"
-            }
-        },
-        "LVDS_15" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
-            "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA15_P",
-                "OBUF_DS_N" : "FMC_LPC_LA15_N"
-            }
-        },
-        "LVDS_17" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
-            "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA17_CC_P",
-                "OBUF_DS_N" : "FMC_LPC_LA17_CC_N"
+                "clk_pixel" : "GTH_serializer_0/clk_pixel",
+                "clk_pixel_resetn" : "proc_sys_reset_1/peripheral_aresetn",
+                "cx" : "ImageController_0/cx",
+                "cy" : "ImageController_0/cy",
+                "tmds0_10bit" : "GTH_serializer_0/r",
+                "tmds1_10bit" : "GTH_serializer_0/g",
+                "tmds2_10bit" : "GTH_serializer_0/b"
             }
         },
         "zynq_ultra_ps_e_0" : {
@@ -489,7 +181,8 @@
             "vlnv" : "xilinx.com:ip:zynq_ultra_ps_e",
             "tcl_options" : ["type", "vlnv"],
             "ports" : {
-                "pl_clk0" : "zynq_ultra_ps_e_0/maxihpm0_fpd_aclk"
+                "maxihpm0_fpd_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
+                "pl_ps_irq0" : "ImageController_0/irq_signal"
             },
             "config" : {
                 "PSU__PSS_REF_CLK__FREQMHZ" : "33.333333",

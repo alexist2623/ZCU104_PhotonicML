@@ -23,90 +23,91 @@
 module AXI2UART
 #(
     //////////////////////////////////////////////////////////////////////////////////
-    // AXI4 Configuraiton
+    // AXI4 Configuration
     //////////////////////////////////////////////////////////////////////////////////
-    parameter AXI_ADDR_WIDTH = 7,
-    parameter AXI_DATA_WIDTH = 128,
+    parameter AXI_ADDR_WIDTH   = 7,
+    parameter AXI_DATA_WIDTH   = 128,
     parameter AXI_STROBE_WIDTH = AXI_DATA_WIDTH >> 3,
-    parameter AXI_STROBE_LEN = 4 // LOG(AXI_STROBE_WDITH)
+    parameter AXI_STROBE_LEN   = 4 // LOG(AXI_STROBE_WIDTH)
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Address Write
     //////////////////////////////////////////////////////////////////////////////////
-    input wire [AXI_ADDR_WIDTH - 1:0] s_axi_awaddr,
-    input wire [15:0] s_axi_awid, 
-    input wire [1:0] s_axi_awburst,
-    input wire [2:0] s_axi_awsize,
-    input wire [7:0] s_axi_awlen,
-    input wire s_axi_awvalid,
-    input wire [15:0] s_axi_awuser, // added to resolve wrapping error
-    output wire s_axi_awready,                                                        //Note that ready signal is wire
+    input  wire [AXI_ADDR_WIDTH - 1:0] s_axi_awaddr,
+    input  wire [15:0]                 s_axi_awid, 
+    input  wire [1:0]                  s_axi_awburst,
+    input  wire [2:0]                  s_axi_awsize,
+    input  wire [7:0]                  s_axi_awlen,
+    input  wire                        s_axi_awvalid,
+    input  wire [15:0]                 s_axi_awuser, // added to resolve wrapping error
+    output wire                        s_axi_awready, // Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Write Response
     //////////////////////////////////////////////////////////////////////////////////
-    input wire s_axi_bready,
-    output reg [1:0] s_axi_bresp,
-    output reg s_axi_bvalid,
-    output reg [15:0] s_axi_bid, // added to resolve wrapping error
+    input  wire                        s_axi_bready,
+    output reg  [1:0]                  s_axi_bresp,
+    output reg                         s_axi_bvalid,
+    output reg  [15:0]                 s_axi_bid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Data Write
     //////////////////////////////////////////////////////////////////////////////////
-    input wire [AXI_DATA_WIDTH - 1:0] s_axi_wdata,
-    input wire [AXI_STROBE_WIDTH - 1:0] s_axi_wstrb,
-    input wire s_axi_wvalid,
-    input wire s_axi_wlast,
-    output wire s_axi_wready,                                                        //Note that ready signal is wire
+    input  wire [AXI_DATA_WIDTH - 1:0] s_axi_wdata,
+    input  wire [AXI_STROBE_WIDTH - 1:0] s_axi_wstrb,
+    input  wire                        s_axi_wvalid,
+    input  wire                        s_axi_wlast,
+    output wire                        s_axi_wready, // Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Address Read
     //////////////////////////////////////////////////////////////////////////////////
-    input wire [1:0] s_axi_arburst,
-    input wire [7:0] s_axi_arlen,
-    input wire [AXI_ADDR_WIDTH - 1:0] s_axi_araddr,
-    input wire [2:0] s_axi_arsize,
-    input wire s_axi_arvalid,
-    input wire [15:0] s_axi_arid, // added to resolve wrapping error
-    input wire [15:0] s_axi_aruser, // added to resolve wrapping error
-    output wire s_axi_arready,
-    output reg [15:0] s_axi_rid, // added to resolve wrapping error
+    input  wire [1:0]                  s_axi_arburst,
+    input  wire [7:0]                  s_axi_arlen,
+    input  wire [AXI_ADDR_WIDTH - 1:0] s_axi_araddr,
+    input  wire [2:0]                  s_axi_arsize,
+    input  wire                        s_axi_arvalid,
+    input  wire [15:0]                 s_axi_arid, // added to resolve wrapping error
+    input  wire [15:0]                 s_axi_aruser, // added to resolve wrapping error
+    output wire                        s_axi_arready,
+    output reg  [15:0]                 s_axi_rid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Data Read
     //////////////////////////////////////////////////////////////////////////////////
-    input wire s_axi_rready,
-    output reg [AXI_DATA_WIDTH - 1:0] s_axi_rdata,
-    output reg [1:0] s_axi_rresp,
-    output reg s_axi_rvalid,
-    output reg s_axi_rlast,
+    input  wire                        s_axi_rready,
+    output reg  [AXI_DATA_WIDTH - 1:0] s_axi_rdata,
+    output reg  [1:0]                  s_axi_rresp,
+    output reg                         s_axi_rvalid,
+    output reg                         s_axi_rlast,
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Clock
     //////////////////////////////////////////////////////////////////////////////////
-    input wire s_axi_aclk,
+    input  wire                        s_axi_aclk,
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Reset
     //////////////////////////////////////////////////////////////////////////////////
-    input wire s_axi_aresetn,
+    input  wire                        s_axi_aresetn,
     
     //////////////////////////////////////////////////////////////////////////////////
-    // Cameralink UART Configuraiton
+    // Cameralink UART Configuration
     //////////////////////////////////////////////////////////////////////////////////
-    output reg         tx_start,             // Start transmission signal
-    output reg  [7:0]  tx_data,              // Data to be transmitted
-    input  wire        tx_busy,              // Transmission in progress
-    input  wire        rx_ready,             // Data received and ready
-    output wire [7:0]  rx_data,              // Data received
-    output reg         CC1,
-    output reg         CC2,
-    output reg         CC3,
-    output reg         CC4,
-    output reg         trigger_from_cpu,
-
-    input  wire        clink_ready           // CameraLink ready signal
+    output reg                        tx_start, // Start transmission signal
+    output reg  [7:0]                 tx_data, // Data to be transmitted
+    input  wire                       tx_busy, // Transmission in progress
+    input  wire                       rx_ready, // Data received and ready
+    input  wire [7:0]                 rx_data, // Data received
+    output reg                        CC1,
+    output reg                        CC2,
+    output reg                        CC3,
+    output reg                        CC4,
+    output reg                        dram_resetn,
+    output reg                        clink_resetn,
+    
+    input  wire                       clink_ready // CameraLink ready signal
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -114,10 +115,12 @@ module AXI2UART
 //////////////////////////////////////////////////////////////////////////////////
 localparam AXI_WRITE_UART       = AXI_ADDR_WIDTH'(0) + 7'h00;
 localparam AXI_WRITE_CC         = AXI_ADDR_WIDTH'(0) + 7'h10;
+localparam AXI_CLINK_RESETN     = AXI_ADDR_WIDTH'(0) + 7'h20;
+localparam AXI_DRAM_RESETN      = AXI_ADDR_WIDTH'(0) + 7'h30;
 
 localparam AXI_READ_UART        = AXI_ADDR_WIDTH'(0) + 7'h00;
 localparam AXI_READ_UART_VALID  = AXI_ADDR_WIDTH'(0) + 7'h20;
-localparam AXI_READ_CLINK_READY = AXI_ADDR_WIDTH'(0) + 7'h30;
+localparam AXI_READ_UART_BUSY   = AXI_ADDR_WIDTH'(0) + 7'h30;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Write, Read FSM State & reg definition
@@ -127,6 +130,8 @@ typedef enum logic [6:0] {
     WRITE_IDLE, 
     WRITE_UART,
     WRITE_CC,
+    WRITE_CLINK_RESETN,
+    WRITE_DRAM_RESETN,
     WRITE_ERROR_STATE, 
     WRITE_RESPONSE} statetype_w;
 statetype_w axi_state_write;
@@ -135,37 +140,42 @@ typedef enum logic [4:0] {
     READ_IDLE, 
     READ_UART, 
     READ_UART_VALID,
-    READ_CLINK_READY,
+    READ_UART_BUSY,
     READ_ERROR_STATE} statetype_r;
 statetype_r axi_state_read;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI Data Buffer
 //////////////////////////////////////////////////////////////////////////////////
-reg [AXI_ADDR_WIDTH - 1:0] axi_waddr;
-reg [AXI_ADDR_WIDTH - 1:0] axi_waddr_base;
-reg [7:0] axi_wlen;
-reg [7:0] axi_wlen_counter;
-reg [2:0] axi_wsize;
-reg [7:0] axi_wshift_size;
-reg [7:0] axi_wshift_count;
-reg [AXI_STROBE_LEN - 1:0] axi_wunaligned_data_num;
-reg [AXI_STROBE_LEN - 1:0] axi_wunaligned_count;
-reg [1:0] axi_wburst;
+reg [AXI_ADDR_WIDTH - 1:0]        axi_waddr;
+reg [AXI_ADDR_WIDTH - 1:0]        axi_waddr_base;
+reg [7:0]                         axi_wlen;
+reg [7:0]                         axi_wlen_counter;
+reg [2:0]                         axi_wsize;
+reg [7:0]                         axi_wshift_size;
+reg [7:0]                         axi_wshift_count;
+reg [AXI_STROBE_LEN - 1:0]        axi_wunaligned_data_num;
+reg [AXI_STROBE_LEN - 1:0]        axi_wunaligned_count;
+reg [1:0]                         axi_wburst;
 
-reg [AXI_DATA_WIDTH - 1:0] axi_wdata;
-reg [AXI_STROBE_WIDTH - 1:0] axi_wstrb;
-reg axi_wvalid;
-reg [15:0] axi_awid;
-reg [15:0] axi_awuser;
-reg axi_wlast;
+reg [AXI_DATA_WIDTH - 1:0]        axi_wdata;
+reg [AXI_STROBE_WIDTH - 1:0]      axi_wstrb;
+reg                               axi_wvalid;
+reg [15:0]                        axi_awid;
+reg [15:0]                        axi_awuser;
+reg                               axi_wlast;
 
 //////////////////////////////////////////////////////////////////////////////////
 // AXI4 Output Assign Logic
 //////////////////////////////////////////////////////////////////////////////////
 
 assign s_axi_awready = (axi_state_write == WRITE_IDLE);
-assign s_axi_wready  = ((axi_state_write == WRITE_UART) || (axi_state_write == WRITE_CC));
+assign s_axi_wready  = (
+    (axi_state_write == WRITE_UART)         || 
+    (axi_state_write == WRITE_CC)           ||
+    (axi_state_write == WRITE_CLINK_RESETN) ||
+    (axi_state_write == WRITE_DRAM_RESETN)
+);
 assign s_axi_arready = (axi_state_read == READ_IDLE);
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -176,144 +186,183 @@ assign s_axi_arready = (axi_state_read == READ_IDLE);
 
 always_ff @(posedge s_axi_aclk) begin
     if( s_axi_aresetn == 1'b0 ) begin
-        axi_state_write <= WRITE_IDLE;
-        s_axi_bresp <= 2'b0;
-        s_axi_bvalid <= 1'b0;
-        axi_waddr <= {AXI_ADDR_WIDTH{1'b0}};
-        axi_waddr_base <= {AXI_ADDR_WIDTH{1'b0}};
-        axi_wlen <= 8'h0;
-        axi_wsize <= 3'h0;
-        axi_wburst <= 2'h0;
-        axi_wlen_counter <= 8'h0;
+        axi_state_write         <= WRITE_IDLE;
+        s_axi_bresp             <= 2'b0;
+        s_axi_bvalid            <= 1'b0;
+        axi_waddr               <= {AXI_ADDR_WIDTH{1'b0}};
+        axi_waddr_base          <= {AXI_ADDR_WIDTH{1'b0}};
+        axi_wlen                <= 8'h0;
+        axi_wsize               <= 3'h0;
+        axi_wburst              <= 2'h0;
+        axi_wlen_counter        <= 8'h0;
         axi_wunaligned_data_num <= 4'h0;
-        axi_wunaligned_count <= 4'h0;
-        axi_wshift_size <= 8'h0;
-        axi_wshift_count <= 8'h0;
-        s_axi_bid <= 16'h0; // id value
-        axi_awid <= 16'h0;
-        axi_awuser <= 16'h0;
+        axi_wunaligned_count    <= 4'h0;
+        axi_wshift_size         <= 8'h0;
+        axi_wshift_count        <= 8'h0;
+        s_axi_bid               <= 16'h0; // id value
+        axi_awid                <= 16'h0;
+        axi_awuser              <= 16'h0;
+        dram_resetn             <= 1'b1;
+        clink_resetn            <= 1'b1;
         
-        tx_start <= 1'b0;
-        tx_data  <= 8'h0;
-        {CC1,CC2,CC3,CC4} <= 4'h0;
+        tx_start                <= 1'b0;
+        tx_data                 <= 8'h0;
+        {CC1, CC2, CC3, CC4}    <= 4'h0;
     end
     
     else begin
         tx_start <= 1'b0;
-        case(axi_state_write)
+        case (axi_state_write)
             WRITE_IDLE: begin
-                s_axi_bresp <= 2'b0;
-                s_axi_bvalid <= 1'b0;
-                axi_awid <= 16'h0;
-                axi_awuser <= 16'h0;
-                s_axi_bid <= 16'h0; // id value
-                
-                if( s_axi_awvalid == 1'b1 ) begin
-                    axi_waddr <= {AXI_ADDR_WIDTH{1'b0}};
-                    axi_waddr_base <= {AXI_ADDR_WIDTH{1'b0}};
-                    axi_wlen <= 8'h0;
-                    axi_wsize <= 3'h0;
-                    axi_wburst <= 2'h0;
-                    axi_wlen_counter <= 8'h0;
+                s_axi_bresp             <= 2'b0;
+                s_axi_bvalid            <= 1'b0;
+                axi_awid                <= 16'h0;
+                axi_awuser              <= 16'h0;
+                s_axi_bid               <= 16'h0; // id value
+    
+                if (s_axi_awvalid == 1'b1) begin
+                    axi_waddr               <= {AXI_ADDR_WIDTH{1'b0}};
+                    axi_waddr_base          <= {AXI_ADDR_WIDTH{1'b0}};
+                    axi_wlen                <= 8'h0;
+                    axi_wsize               <= 3'h0;
+                    axi_wburst              <= 2'h0;
+                    axi_wlen_counter        <= 8'h0;
                     axi_wunaligned_data_num <= 4'h0;
-                    axi_wunaligned_count <= 4'h0;
-                    axi_wshift_size <= 8'h0;
-                    axi_wshift_count <= 8'h0;
-                    
-                    if( s_axi_awaddr == AXI_WRITE_UART ) begin
-                        axi_waddr <= s_axi_awaddr;
-                        axi_waddr_base <= s_axi_awaddr;
-                        axi_wlen <= s_axi_awlen;
-                        axi_wsize <= s_axi_awsize;
-                        axi_wburst <= s_axi_awburst;
-                        axi_wlen_counter <= s_axi_awlen;
-                        axi_wshift_size <= 8'h1 << s_axi_awsize;
-                        axi_wshift_count <= 8'h0;
-                        axi_awid <= s_axi_awid;
-                        axi_awuser <= s_axi_awuser;
-                        
-                        axi_state_write <= WRITE_UART;
+                    axi_wunaligned_count    <= 4'h0;
+                    axi_wshift_size         <= 8'h0;
+                    axi_wshift_count        <= 8'h0;
+    
+                    if (s_axi_awaddr == AXI_WRITE_UART) begin
+                        axi_waddr           <= s_axi_awaddr;
+                        axi_waddr_base      <= s_axi_awaddr;
+                        axi_wlen            <= s_axi_awlen;
+                        axi_wsize           <= s_axi_awsize;
+                        axi_wburst          <= s_axi_awburst;
+                        axi_wlen_counter    <= s_axi_awlen;
+                        axi_wshift_size     <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count    <= 8'h0;
+                        axi_awid            <= s_axi_awid;
+                        axi_awuser          <= s_axi_awuser;
+    
+                        axi_state_write     <= WRITE_UART;
                     end
-                    
-                    else if( s_axi_awaddr == AXI_WRITE_CC ) begin
-                        axi_waddr <= s_axi_awaddr;
-                        axi_waddr_base <= s_axi_awaddr;
-                        axi_wlen <= s_axi_awlen;
-                        axi_wsize <= s_axi_awsize;
-                        axi_wburst <= s_axi_awburst;
-                        axi_wlen_counter <= s_axi_awlen;
-                        axi_wshift_size <= 8'h1 << s_axi_awsize;
-                        axi_wshift_count <= 8'h0;
-                        axi_awid <= s_axi_awid;
-                        axi_awuser <= s_axi_awuser;
-                        
-                        axi_state_write <= WRITE_CC;
+                    else if (s_axi_awaddr == AXI_WRITE_CC) begin
+                        axi_waddr           <= s_axi_awaddr;
+                        axi_waddr_base      <= s_axi_awaddr;
+                        axi_wlen            <= s_axi_awlen;
+                        axi_wsize           <= s_axi_awsize;
+                        axi_wburst          <= s_axi_awburst;
+                        axi_wlen_counter    <= s_axi_awlen;
+                        axi_wshift_size     <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count    <= 8'h0;
+                        axi_awid            <= s_axi_awid;
+                        axi_awuser          <= s_axi_awuser;
+    
+                        axi_state_write     <= WRITE_CC;
                     end
-                    
+                    else if (s_axi_awaddr == AXI_CLINK_RESETN) begin
+                        axi_waddr           <= s_axi_awaddr;
+                        axi_waddr_base      <= s_axi_awaddr;
+                        axi_wlen            <= s_axi_awlen;
+                        axi_wsize           <= s_axi_awsize;
+                        axi_wburst          <= s_axi_awburst;
+                        axi_wlen_counter    <= s_axi_awlen;
+                        axi_wshift_size     <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count    <= 8'h0;
+                        axi_awid            <= s_axi_awid;
+                        axi_awuser          <= s_axi_awuser;
+    
+                        axi_state_write     <= WRITE_CLINK_RESETN;
+                    end
+                    else if (s_axi_awaddr == AXI_DRAM_RESETN) begin
+                        axi_waddr           <= s_axi_awaddr;
+                        axi_waddr_base      <= s_axi_awaddr;
+                        axi_wlen            <= s_axi_awlen;
+                        axi_wsize           <= s_axi_awsize;
+                        axi_wburst          <= s_axi_awburst;
+                        axi_wlen_counter    <= s_axi_awlen;
+                        axi_wshift_size     <= 8'h1 << s_axi_awsize;
+                        axi_wshift_count    <= 8'h0;
+                        axi_awid            <= s_axi_awid;
+                        axi_awuser          <= s_axi_awuser;
+    
+                        axi_state_write     <= WRITE_DRAM_RESETN;
+                    end
                     else begin
-                        axi_waddr <= {AXI_ADDR_WIDTH{1'b0}};
-                        axi_waddr_base <= {AXI_ADDR_WIDTH{1'b0}};
-                        axi_wlen <= 8'h0;
-                        axi_wsize <= 3'h0;
-                        axi_wburst <= 2'h0;
-                        axi_wlen_counter <= 8'h0;
-                        axi_wshift_size <= 8'h0;
-                        axi_wshift_count <= 8'h0;
-                        axi_awid <= s_axi_awid;
-                        axi_awuser <= s_axi_awuser;
-                        axi_state_write <= WRITE_ERROR_STATE;
+                        axi_waddr           <= {AXI_ADDR_WIDTH{1'b0}};
+                        axi_waddr_base      <= {AXI_ADDR_WIDTH{1'b0}};
+                        axi_wlen            <= 8'h0;
+                        axi_wsize           <= 3'h0;
+                        axi_wburst          <= 2'h0;
+                        axi_wlen_counter    <= 8'h0;
+                        axi_wshift_size     <= 8'h0;
+                        axi_wshift_count    <= 8'h0;
+                        axi_awid            <= s_axi_awid;
+                        axi_awuser          <= s_axi_awuser;
+                        axi_state_write     <= WRITE_ERROR_STATE;
                     end
                 end
-                
                 else begin
-                    axi_waddr <= {AXI_ADDR_WIDTH{1'b0}};
-                    axi_waddr_base <= {AXI_ADDR_WIDTH{1'b0}};
-                    axi_wlen <= 8'h0;
-                    axi_wsize <= 3'h0;
-                    axi_wburst <= 2'h0;
-                    axi_wlen_counter <= 8'h0;
-                    axi_wshift_size <= 8'h0;
-                    axi_wshift_count <= 8'h0;
-                    axi_awid <= 16'h0;
-                    axi_awuser <= 16'h0;
-                    axi_state_write <= WRITE_IDLE;
+                    axi_waddr               <= {AXI_ADDR_WIDTH{1'b0}};
+                    axi_waddr_base          <= {AXI_ADDR_WIDTH{1'b0}};
+                    axi_wlen                <= 8'h0;
+                    axi_wsize               <= 3'h0;
+                    axi_wburst              <= 2'h0;
+                    axi_wlen_counter        <= 8'h0;
+                    axi_wshift_size         <= 8'h0;
+                    axi_wshift_count        <= 8'h0;
+                    axi_awid                <= 16'h0;
+                    axi_awuser              <= 16'h0;
+                    axi_state_write         <= WRITE_IDLE;
                 end
             end
-            
             WRITE_UART: begin
-                if( s_axi_wvalid == 1'b1 ) begin
-                    tx_data <= s_axi_wdata[7:0];
-                    tx_start <= 1'b1;
-                    if( s_axi_wlast == 1'b1 ) begin
+                if (s_axi_wvalid == 1'b1) begin
+                    tx_data             <= s_axi_wdata[7:0];
+                    tx_start            <= 1'b1;
+                    if (s_axi_wlast == 1'b1) begin
                         axi_state_write <= WRITE_RESPONSE;
                     end
                 end
             end
-            
             WRITE_CC: begin
-                if( s_axi_wvalid == 1'b1 ) begin
-                    {CC4,CC3,CC2,CC1} <= s_axi_wdata[3:0];
-                    if( s_axi_wlast == 1'b1 ) begin
+                if (s_axi_wvalid == 1'b1) begin
+                    {CC4, CC3, CC2, CC1} <= s_axi_wdata[3:0];
+                    if (s_axi_wlast == 1'b1) begin
                         axi_state_write <= WRITE_RESPONSE;
                     end
                 end
             end
-            
-            WRITE_ERROR_STATE: begin
-                if( s_axi_bready == 1'b1 ) begin
-                    s_axi_bresp <= 2'b10;
-                    s_axi_bvalid <= 1'b1;
-                    s_axi_bid <= axi_awid;
-                    axi_state_write <= WRITE_IDLE;
+            WRITE_CLINK_RESETN: begin
+                if (s_axi_wvalid == 1'b1) begin
+                    clink_resetn        <= (~s_axi_wdata[0]);
+                    if (s_axi_wlast == 1'b1) begin
+                        axi_state_write <= WRITE_RESPONSE;
+                    end
                 end
             end
-            
+            WRITE_DRAM_RESETN: begin
+                if (s_axi_wvalid == 1'b1) begin
+                    dram_resetn         <= (~s_axi_wdata[0]);
+                    if (s_axi_wlast == 1'b1) begin
+                        axi_state_write <= WRITE_RESPONSE;
+                    end
+                end
+            end
+            WRITE_ERROR_STATE: begin
+                if (s_axi_bready == 1'b1) begin
+                    s_axi_bresp         <= 2'b10;
+                    s_axi_bvalid        <= 1'b1;
+                    s_axi_bid           <= axi_awid;
+                    axi_state_write     <= WRITE_IDLE;
+                end
+            end
             WRITE_RESPONSE: begin
-                if( s_axi_bready == 1'b1 ) begin
-                    s_axi_bresp <= 2'b00;
-                    s_axi_bvalid <= 1'b1;
-                    s_axi_bid <= axi_awid;
-                    axi_state_write <= WRITE_IDLE;
+                if (s_axi_bready == 1'b1) begin
+                    s_axi_bresp         <= 2'b00;
+                    s_axi_bvalid        <= 1'b1;
+                    s_axi_bid           <= axi_awid;
+                    axi_state_write     <= WRITE_IDLE;
                 end
             end
         endcase
@@ -328,18 +377,18 @@ reg rx_data_valid;
 reg rx_buffer_clear;
 
 always_ff @(posedge s_axi_aclk) begin
-    if( s_axi_aresetn == 1'b0 ) begin
+    if (s_axi_aresetn == 1'b0) begin
         rx_data_buffer <= 8'h0;
-        rx_data_valid <= 1'b0;
+        rx_data_valid  <= 1'b0;
     end
     else begin
-        if( rx_ready == 1'b1 ) begin
+        if (rx_ready == 1'b1) begin
             rx_data_buffer <= rx_data;
-            rx_data_valid <= 1'b1;
+            rx_data_valid  <= 1'b1;
         end
-        if( rx_buffer_clear == 1'b1 ) begin
+        if (rx_buffer_clear == 1'b1) begin
             rx_data_buffer <= 8'h0;
-            rx_data_valid <= 1'b0;
+            rx_data_valid  <= 1'b0;
         end
     end
 end
@@ -356,47 +405,45 @@ reg [15:0]                  axi_arid;
 reg [15:0]                  axi_aruser;
 
 always_ff @(posedge s_axi_aclk) begin
-    if( s_axi_aresetn == 1'b0 ) begin
+    if (s_axi_aresetn == 1'b0) begin
         axi_state_read <= READ_IDLE;
-        s_axi_rdata <= {AXI_DATA_WIDTH{1'b0}};
-        s_axi_rresp <= 2'b0;
-        s_axi_rvalid <= 1'b0;
-        s_axi_rlast <= 1'b0;
-        s_axi_rid <= 16'h0; // id value
-        axi_arid <= 16'h0;
-        axi_aruser <= 16'h0;
-
-        rx_buffer_clear <= 1'b0;
+        s_axi_rdata    <= {AXI_DATA_WIDTH{1'b0}};
+        s_axi_rresp    <= 2'b0;
+        s_axi_rvalid   <= 1'b0;
+        s_axi_rlast    <= 1'b0;
+        s_axi_rid      <= 16'h0; // id value
+        axi_arid       <= 16'h0;
+        axi_aruser     <= 16'h0;
+        rx_buffer_clear<= 1'b0;
     end
-    
     else begin
-        s_axi_rid <= 16'h0; // id value
-        axi_arid <= 16'h0;
-        axi_aruser <= 16'h0;
-        rx_buffer_clear <= 1'b0;
-        case(axi_state_read)
+        s_axi_rid      <= 16'h0; // id value
+        axi_arid       <= 16'h0;
+        axi_aruser     <= 16'h0;
+        rx_buffer_clear<= 1'b0;
+        case (axi_state_read)
             READ_IDLE: begin
-                s_axi_rdata <= {AXI_DATA_WIDTH{1'b0}};
-                s_axi_rresp <= 2'b0;
-                s_axi_rvalid <= 1'b0;
-                s_axi_rlast <= 1'b0;
-                if( s_axi_arvalid == 1'b1 ) begin
-                    axi_arid                <= s_axi_arid;
-                    axi_aruser              <= s_axi_aruser;
-                    axi_arburst             <= s_axi_arburst;
-                    axi_arlen               <= s_axi_arlen;
-                    axi_araddr              <= s_axi_araddr;
-                    axi_arsize              <= s_axi_arsize;
-                    axi_arid                <= s_axi_arid;
-                    axi_aruser              <= s_axi_aruser;
-                    if( s_axi_araddr == AXI_READ_UART ) begin
+                s_axi_rdata    <= {AXI_DATA_WIDTH{1'b0}};
+                s_axi_rresp    <= 2'b0;
+                s_axi_rvalid   <= 1'b0;
+                s_axi_rlast    <= 1'b0;
+                if (s_axi_arvalid == 1'b1) begin
+                    axi_arid       <= s_axi_arid;
+                    axi_aruser     <= s_axi_aruser;
+                    axi_arburst    <= s_axi_arburst;
+                    axi_arlen      <= s_axi_arlen;
+                    axi_araddr     <= s_axi_araddr;
+                    axi_arsize     <= s_axi_arsize;
+                    axi_arid       <= s_axi_arid;
+                    axi_aruser     <= s_axi_aruser;
+                    if (s_axi_araddr == AXI_READ_UART) begin
                         axi_state_read <= READ_UART;
                     end
-                    else if( s_axi_araddr == AXI_READ_UART_VALID ) begin
+                    else if (s_axi_araddr == AXI_READ_UART_VALID) begin
                         axi_state_read <= READ_UART_VALID;
                     end
-                    else if( s_axi_araddr == AXI_READ_CLINK_READY ) begin
-                        axi_state_read <= READ_CLINK_READY;
+                    else if (s_axi_araddr == AXI_READ_UART_BUSY) begin
+                        axi_state_read <= READ_UART_BUSY;
                     end
                     else begin
                         axi_state_read <= READ_ERROR_STATE;
@@ -404,43 +451,42 @@ always_ff @(posedge s_axi_aclk) begin
                 end
             end
             READ_UART: begin
-                if( s_axi_rready == 1'b1  && rx_data_valid == 1'b1 ) begin
-                    s_axi_rdata <= AXI_DATA_WIDTH'(rx_data_buffer);
-                    s_axi_rresp <= 2'b0;
-                    s_axi_rvalid <= 1'b1;
-                    s_axi_rlast <= 1'b1;
-                    s_axi_rid <= axi_arid;
+                if (s_axi_rready == 1'b1 && rx_data_valid == 1'b1) begin
+                    s_axi_rdata    <= AXI_DATA_WIDTH'(rx_data_buffer);
+                    s_axi_rresp    <= 2'b0;
+                    s_axi_rvalid   <= 1'b1;
+                    s_axi_rlast    <= 1'b1;
+                    s_axi_rid      <= axi_arid;
                     axi_state_read <= READ_IDLE;
-
-                    rx_buffer_clear <= 1'b1;
+                    rx_buffer_clear<= 1'b1;
                 end
             end
             READ_UART_VALID: begin
-                if( s_axi_rready == 1'b1) begin
-                    s_axi_rdata <= AXI_DATA_WIDTH'(rx_data_valid);
-                    s_axi_rresp <= 2'b0;
-                    s_axi_rvalid <= 1'b1;
-                    s_axi_rlast <= 1'b1;
-                    s_axi_rid <= axi_arid;
+                if (s_axi_rready == 1'b1) begin
+                    s_axi_rdata    <= AXI_DATA_WIDTH'(rx_data_valid);
+                    s_axi_rresp    <= 2'b0;
+                    s_axi_rvalid   <= 1'b1;
+                    s_axi_rlast    <= 1'b1;
+                    s_axi_rid      <= axi_arid;
                     axi_state_read <= READ_IDLE;
                 end
             end
-            READ_CLINK_READY: begin
-                if( s_axi_rready == 1'b1) begin
-                    s_axi_rdata <= AXI_DATA_WIDTH'(clink_ready);
-                    s_axi_rresp <= 2'b0;
-                    s_axi_rvalid <= 1'b1;
-                    s_axi_rlast <= 1'b1;
-                    s_axi_rid <= axi_arid;
+            READ_UART_BUSY: begin
+                if (s_axi_rready == 1'b1) begin
+                    s_axi_rdata    <= AXI_DATA_WIDTH'(tx_busy);
+                    s_axi_rresp    <= 2'b0;
+                    s_axi_rvalid   <= 1'b1;
+                    s_axi_rlast    <= 1'b1;
+                    s_axi_rid      <= axi_arid;
                     axi_state_read <= READ_IDLE;
                 end
             end
             READ_ERROR_STATE: begin
-                s_axi_rdata <= AXI_DATA_WIDTH'(0);
-                s_axi_rresp <= 2'b10;
-                s_axi_rvalid <= 1'b1;
-                s_axi_rlast <= 1'b1;
-                s_axi_rid <= axi_arid;
+                s_axi_rdata    <= AXI_DATA_WIDTH'(0);
+                s_axi_rresp    <= 2'b10;
+                s_axi_rvalid   <= 1'b1;
+                s_axi_rlast    <= 1'b1;
+                s_axi_rid      <= axi_arid;
                 axi_state_read <= READ_IDLE;
             end
         endcase

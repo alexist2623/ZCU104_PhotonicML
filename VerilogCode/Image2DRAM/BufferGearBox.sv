@@ -36,13 +36,11 @@ reg  [BUFFER_SIZE - 1:0] async_fifo_buffer;
 reg  [DRAM_DATA_WIDTH - 1:0] async_fifo_chunk_input[3];
 reg  [DRAM_DATA_WIDTH - 1:0] async_fifo_input;
 reg  [INPUT_NUM_WIDTH - 1:0] async_fifo_buffer_index;
-reg  async_fifo_write_fsm;
-reg  async_fifo_write;
-reg  fval_buffer;
-reg  dval_buffer;
-reg  lval_buffer; // to save last data
-
-reg  clk_pixel_resetn_buffer1, clk_pixel_resetn_buffer2; // CDC
+(* mark_debug = "true" *) reg  async_fifo_write_fsm;
+(* mark_debug = "true" *) reg  async_fifo_write;
+(* mark_debug = "true" *) reg  fval_buffer;
+(* mark_debug = "true" *) reg  dval_buffer;
+(* mark_debug = "true" *) reg  lval_buffer; // to save last data
 
 wire async_fifo_buffer_write;
 
@@ -111,8 +109,7 @@ end
 
 // async fifo interface
 always_ff @(posedge clink_X_clk) begin
-    {clk_pixel_resetn_buffer2, clk_pixel_resetn_buffer1} <= {clk_pixel_resetn_buffer1, clk_pixel_resetn};
-    if( ~clk_pixel_resetn_buffer2 ) begin
+    if( ~clk_pixel_resetn ) begin
         async_fifo_buffer       <= 0;
         async_fifo_buffer_index <= 0;
         async_fifo_write_fsm    <= 1'b0;
@@ -163,7 +160,7 @@ statetype_w async_fifo_write_state;
  * Use 3 stages to write to DRAM buffer since DRAM_BUFFER_SIZE 512 is not multiple of 24
  */
 always_ff @(posedge clink_X_clk) begin
-    if( ~clk_pixel_resetn_buffer2 ) begin
+    if( ~clk_pixel_resetn ) begin
         async_fifo_write <= 1'b0;
         async_fifo_chunk_input[0] <= DRAM_DATA_WIDTH'(0);
         async_fifo_chunk_input[1] <= DRAM_DATA_WIDTH'(0);

@@ -38,53 +38,53 @@ module CameraLinkInterface
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Address Write
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire [AXI_ADDR_WIDTH - 1:0] s_axi_awaddr,
-    input  wire [15:0] s_axi_awid, 
-    input  wire [1:0] s_axi_awburst,
-    input  wire [2:0] s_axi_awsize,
-    input  wire [7:0] s_axi_awlen,
-    input  wire s_axi_awvalid,
-    input  wire [15:0] s_axi_awuser, // added to resolve wrapping error
-    output wire s_axi_awready,                                                        //Note that ready signal is wire
+    input  wire [AXI_ADDR_WIDTH - 1:0]  s_axi_awaddr,
+    input  wire [15:0]                  s_axi_awid, 
+    input  wire [1:0]                   s_axi_awburst,
+    input  wire [2:0]                   s_axi_awsize,
+    input  wire [7:0]                   s_axi_awlen,
+    input  wire                         s_axi_awvalid,
+    input  wire [15:0]                  s_axi_awuser, // added to resolve wrapping error
+    output wire                         s_axi_awready, // Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Write Response
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire s_axi_bready,
-    output wire [1:0] s_axi_bresp,
-    output wire s_axi_bvalid,
-    output wire [15:0] s_axi_bid, // added to resolve wrapping error
+    input  wire                         s_axi_bready,
+    output wire [1:0]                   s_axi_bresp,
+    output wire                         s_axi_bvalid,
+    output wire [15:0]                  s_axi_bid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Data Write
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire [AXI_DATA_WIDTH - 1:0] s_axi_wdata,
+    input  wire [AXI_DATA_WIDTH - 1:0]  s_axi_wdata,
     input  wire [AXI_STROBE_WIDTH - 1:0] s_axi_wstrb,
-    input  wire s_axi_wvalid,
-    input  wire s_axi_wlast,
-    output wire s_axi_wready,                                                        //Note that ready signal is wire
+    input  wire                         s_axi_wvalid,
+    input  wire                         s_axi_wlast,
+    output wire                         s_axi_wready, // Note that ready signal is wire
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Address Read
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire [1:0] s_axi_arburst,
-    input  wire [7:0] s_axi_arlen,
-    input  wire [AXI_ADDR_WIDTH - 1:0] s_axi_araddr,
-    input  wire [2:0] s_axi_arsize,
-    input  wire s_axi_arvalid,
-    input  wire [15:0] s_axi_arid, // added to resolve wrapping error
-    input  wire [15:0] s_axi_aruser, // added to resolve wrapping error
-    output wire s_axi_arready,
-    output wire [15:0] s_axi_rid, // added to resolve wrapping error
+    input  wire [1:0]                   s_axi_arburst,
+    input  wire [7:0]                   s_axi_arlen,
+    input  wire [AXI_ADDR_WIDTH - 1:0]  s_axi_araddr,
+    input  wire [2:0]                   s_axi_arsize,
+    input  wire                         s_axi_arvalid,
+    input  wire [15:0]                  s_axi_arid, // added to resolve wrapping error
+    input  wire [15:0]                  s_axi_aruser, // added to resolve wrapping error
+    output wire                         s_axi_arready,
+    output wire [15:0]                  s_axi_rid, // added to resolve wrapping error
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Data Read
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire        s_axi_rready,
-    output wire        [AXI_DATA_WIDTH - 1:0] s_axi_rdata,
-    output wire        [1:0] s_axi_rresp,
-    output wire        s_axi_rvalid,
-    output wire        s_axi_rlast,
+    input  wire                         s_axi_rready,
+    output wire [AXI_DATA_WIDTH - 1:0]  s_axi_rdata,
+    output wire [1:0]                   s_axi_rresp,
+    output wire                         s_axi_rvalid,
+    output wire                         s_axi_rlast,
     
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Clock
@@ -138,9 +138,16 @@ module CameraLinkInterface
     // input  wire        trigger, // will be used after Clink is tested
     output wire        image_end,
 
-    output reg         clk_blink_0,
-    output reg         clk_blink_1
+    output wire        clk_blink_0,
+    output reg         clk_blink_1,
+    //
+    // Reset Sequence
+    // dram_reset -> clink_reset
+    //
+    output wire        clink_resetn,
+    output wire        dram_resetn
 );
+assign clk_blink_0 = clink_X_ready;
 
 // AXI2UART instance for handling AXI communication and UART interface
 wire        rx_ready;             // data received and ready
@@ -214,37 +221,51 @@ assign lval = clink_rx_out[24];
 assign fval = clink_rx_out[25];
 assign dval = clink_rx_out[26];
 
+reg clink_reset_buffer1, clink_reset_buffer2;
+
+always @(posedge clink_X_clk_out) begin
+    {clink_reset_buffer2, clink_reset_buffer1} <= {clink_reset_buffer1, ~s_axi_aresetn};
+    if (clink_reset_buffer2 == 1'b1) begin
+        clk_blink_1         <= 1'b0;
+    end
+    else begin
+        if (fval == 1'b1) begin
+            clk_blink_1     <= 1'b1;
+        end
+    end
+end
+
 rx_channel_1to7 # (
    .LINES                   (LINES),            // Number of data lines 
    // Basler ace Cmeralink 82MHz 
-   .CLKIN_PERIOD            (12.195),        // Clock period (ns) of input clock on clkin_p
-   .REF_FREQ                (300.0),        // Reference clock frequency for idelay control
-   .DIFF_TERM               ("TRUE"),       // Enable internal differential termination
-   .USE_PLL                 ("FALSE"),      // Enable PLL use rather than MMCM use
-   .DATA_FORMAT             ("PER_LINE"),  // Mapping input lines to output bus
-   .CLK_PATTERN             (7'b1100011),   // Clock pattern for alignment
-   .RX_SWAP_MASK            (16'b0),        // Allows P/N inputs to be invered to ease PCB routing
-   .SIM_DEVICE              ("ULTRASCALE_PLUS")  // Set for the family <ULTRASCALE | ULTRASCALE_PLUS>
+   .CLKIN_PERIOD            (12.195),           // Clock period (ns) of input clock on clkin_p
+   .REF_FREQ                (300.0),            // Reference clock frequency for idelay control
+   .DIFF_TERM               ("TRUE"),           // Enable internal differential termination
+   .USE_PLL                 ("FALSE"),          // Enable PLL use rather than MMCM use
+   .DATA_FORMAT             ("PER_LINE"),       // Mapping input lines to output bus
+   .CLK_PATTERN             (7'b1100011),       // Clock pattern for alignment
+   .RX_SWAP_MASK            (16'b0),            // Allows P/N inputs to be invered to ease PCB routing
+   .SIM_DEVICE              ("ULTRASCALE_PLUS") // Set for the family <ULTRASCALE | ULTRASCALE_PLUS>
 )
 clink_X_7to1
 (
-   .clkin_p                 (clink_X_clk_p),      // Clock input LVDS P-side
-   .clkin_n                 (clink_X_clk_n),      // Clock input LVDS N-side
+   .clkin_p                 (clink_X_clk_p),    // Clock input LVDS P-side
+   .clkin_n                 (clink_X_clk_n),    // Clock input LVDS N-side
    .datain_p                ({clink_X_data_3_p,
                             clink_X_data_2_p,
                             clink_X_data_1_p,
-                            clink_X_data_0_p}),   // Data input LVDS P-side
+                            clink_X_data_0_p}), // Data input LVDS P-side
    .datain_n                ({clink_X_data_3_n,
                             clink_X_data_2_n,
                             clink_X_data_1_n,
-                            clink_X_data_0_n}),   // Data input LVDS N-side
+                            clink_X_data_0_n}), // Data input LVDS N-side
    .reset                   (~s_axi_aresetn),   // Asynchronous interface reset
    .idelay_rdy              (),                 // Asynchronous IDELAYCTRL ready 
-   .cmt_locked              (),                 // PLL/MMCM locked output
+   .cmt_locked              (clink_X_ready),    // PLL/MMCM locked output
    //
-   .px_clk                  (clink_X_clk_out),     // Pixel clock output
+   .px_clk                  (clink_X_clk_out),  // Pixel clock output
    .px_data                 (pixel_X),          // Pixel data bus output
-   .px_ready                (clink_X_ready)     // Pixel data ready
+   .px_ready                ()                  // Pixel data ready
 );
 
 uart 
@@ -259,10 +280,10 @@ uart_inst
     .tx_start               (tx_start),         // Start transmission signal
     .tx_data                (tx_data),          // Data to be transmitted
     .tx_busy                (tx_busy),          // Transmission in progress
-    .tx_serial              (SerTC),        // UART transmit serial output
-    .rx_serial              (rx_serial),        // UART receive serial input
+    .tx_serial              (SerTC),            // UART transmit serial output
+    .rx_serial              (SerTFG),        // UART receive serial input
     .rx_ready               (rx_ready),         // Data received and ready
-    .rx_data                (SerTFG)           // Data received
+    .rx_data                (rx_data)            // Data received
 );
 
 AXI2UART #(
@@ -312,47 +333,13 @@ axi2uart_inst (
     .rx_ready               (rx_ready),
     .rx_data                (rx_data),
     .clink_ready            (clink_X_ready),
+    .clink_resetn           (clink_resetn),
+    .dram_resetn            (dram_resetn),
 
     .CC1                    (cc1),
     .CC2                    (cc2),
     .CC3                    (cc3),
     .CC4                    (cc4)
 );
-
-// reg [25:0] lvds_cnt;
-// reg lvds_reset_buffer1, lvds_reset_buffer2;
-reg [25:0] pll_cnt;
-reg pll_reset_buffer1, pll_reset_buffer2;
-
-// always_ff @(posedge clink_X_clk_p) begin
-//     {lvds_reset_buffer2, lvds_reset_buffer1} <= {lvds_reset_buffer1, ~s_axi_aresetn};
-//     if (lvds_reset_buffer2 == 1'b1) begin
-//         lvds_cnt <= 0;
-//         clk_blink_0 <=1'b0;
-//     end
-//     else begin
-//         lvds_cnt <= lvds_cnt + 1;
-//         if (lvds_cnt == 26'd0) begin
-//             lvds_cnt <= 0;
-//             clk_blink_0 <= ~clk_blink_0;
-//         end
-//     end
-// end
-
-always_ff @(posedge clink_X_clk_out) begin
-    {pll_reset_buffer2, pll_reset_buffer1} <= {pll_reset_buffer1, ~s_axi_aresetn};
-    if (pll_reset_buffer2 == 1'b1) begin
-        pll_cnt <= 0;
-        clk_blink_1 <=1'b0;
-    end
-    else begin
-        pll_cnt <= pll_cnt + 1;
-        if (pll_cnt == 26'd0) begin
-            pll_cnt <= 0;
-            clk_blink_1 <= ~clk_blink_1;
-        end
-    end
-end
-
 
 endmodule
