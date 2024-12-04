@@ -174,28 +174,16 @@ reg        px_ready_int;
 
 //
 // Clock input
-// IBUFGDS is removed at Ultrascale plus
 //
-
-wire       clk_ibufds_out;
-wire       clk_bufg_out;
-
-assign clkin_p_i =  clk_bufg_out;
-assign clkin_n_i = ~clk_bufg_out;
-
-IBUFDS #(
-   .DIFF_TERM        (DIFF_TERM)
-)
-iob_clk_in (
-   .I                (clkin_p),
-   .IB               (clkin_n),
-   .O                (clk_ibufds_out)
-);
-
-BUFG bufg_inst(
-   .I                (clk_ibufds_out),
-   .O                (clk_bufg_out)
-);
+IBUFGDS_DIFF_OUT # (
+      .DIFF_TERM        (DIFF_TERM)
+   )
+   iob_clk_in (
+      .I                (clkin_p),
+      .IB               (clkin_n),
+      .O                (clkin_p_i),
+      .OB               (clkin_n_i)
+   );
 
 //
 // Instantitate a PLL or a MMCM
@@ -307,31 +295,32 @@ assign px_reset = px_reset_sync[0];
 // Clock Master Side IDELAY
 //
 IDELAYE3 # (
-      .DELAY_SRC        ("IDATAIN"),
-      .CASCADE          ("NONE"),
-      .DELAY_TYPE       ("VAR_LOAD"),
-      .DELAY_VALUE      ( ((SIM_DEVICE == "ULTRASCALE") && (DELAY_VALUE >=1100) )? DELAY_VALUE : 1100), //(DELAY_VALUE),
-      .REFCLK_FREQUENCY (REF_FREQ),   
-      .DELAY_FORMAT     ("TIME"),
-      .UPDATE_MODE      ("ASYNC"),
-      .SIM_DEVICE       (SIM_DEVICE)
-   )
-   idelay_cm (
-      .IDATAIN          (clkin_p_i),
-      .DATAOUT          (clkin_p_d),
-      .CLK              (rx_clkdiv8),
-      .CE               (1'b0),
-      .RST              (!cmt_locked),
-   // .RST              (Mstr_IdlyRst & idelay_rdy),
-      .INC              (1'b0),
-      .DATAIN           (1'b0),
-      .LOAD             (Mstr_Load),
-      .CNTVALUEIN       (Mstr_CntVal_In),
-      .EN_VTC           (!idelay_rdy),
-      .CASC_IN          (1'b0),
-      .CASC_RETURN      (1'b0),
-      .CASC_OUT         (),
-      .CNTVALUEOUT      (Mstr_CntVal_Out));
+   .DELAY_SRC        ("IDATAIN"),
+   .CASCADE          ("NONE"),
+   .DELAY_TYPE       ("VAR_LOAD"),
+   .DELAY_VALUE      ( ((SIM_DEVICE == "ULTRASCALE") && (DELAY_VALUE >=1100) )? DELAY_VALUE : 1100), //(DELAY_VALUE),
+   .REFCLK_FREQUENCY (REF_FREQ),   
+   .DELAY_FORMAT     ("TIME"),
+   .UPDATE_MODE      ("ASYNC"),
+   .SIM_DEVICE       (SIM_DEVICE)
+)
+idelay_cm (
+   .IDATAIN          (clkin_p_i),
+   .DATAOUT          (clkin_p_d),
+   .CLK              (rx_clkdiv8),
+   .CE               (1'b0),
+   .RST              (!cmt_locked),
+// .RST              (Mstr_IdlyRst & idelay_rdy),
+   .INC              (1'b0),
+   .DATAIN           (1'b0),
+   .LOAD             (Mstr_Load),
+   .CNTVALUEIN       (Mstr_CntVal_In),
+   .EN_VTC           (!idelay_rdy),
+   .CASC_IN          (1'b0),
+   .CASC_RETURN      (1'b0),
+   .CASC_OUT         (),
+   .CNTVALUEOUT      (Mstr_CntVal_Out)
+);
 
 //-----------------------------------------------------------------------------
 //

@@ -145,81 +145,91 @@ module CameraLinkInterface
     // dram_reset -> clink_reset
     //
     output wire        clink_resetn,
-    output wire        dram_resetn
+    output wire        dram_resetn,
+    input  wire        clk_300mhz
 );
-assign clk_blink_0 = clink_X_ready;
 
 // AXI2UART instance for handling AXI communication and UART interface
-wire        rx_ready;             // data received and ready
-wire [7:0]  rx_data;               // data received
-wire        tx_start;             // Start transmission signal
-wire [7:0]  tx_data;              // data to be transmitted
-wire        tx_busy;              // Transmission in progress
+wire            rx_ready;               // data received and ready
+wire [7:0]      rx_data;                // data received
+wire            tx_start;               // Start transmission signal
+wire [7:0]      tx_data;                // data to be transmitted
+wire            tx_busy;                // Transmission in progress
 
-wire [27:0] clink_rx_out;
-wire [27:0] pixel_X;
+// Wire for CameraLink interface
+wire [27:0]     clink_rx_out;
+wire [27:0]     pixel_X;
 
+wire            refclk_i;         
+wire            idly_reset_int;
+wire            rx_idelay_rdy;
+wire            rx_reset_int;
+wire            rx_cmt_locked;
+wire            px_ready;
+
+assign clink_X_ready        = px_ready;
+assign clk_blink_0          = px_ready;
 // 7:1 deserialized data to rx_out
-assign clink_rx_out[0]  = pixel_X[6];
-assign clink_rx_out[1]  = pixel_X[5];
-assign clink_rx_out[2]  = pixel_X[4];
-assign clink_rx_out[3]  = pixel_X[3];
-assign clink_rx_out[4]  = pixel_X[2];
-assign clink_rx_out[5]  = pixel_X[26];
-assign clink_rx_out[6]  = pixel_X[1];
-assign clink_rx_out[7]  = pixel_X[0];
-assign clink_rx_out[8]  = pixel_X[13];
-assign clink_rx_out[9]  = pixel_X[12];
-assign clink_rx_out[10] = pixel_X[25];
-assign clink_rx_out[11] = pixel_X[24];
-assign clink_rx_out[12] = pixel_X[11];
-assign clink_rx_out[13] = pixel_X[10];
-assign clink_rx_out[14] = pixel_X[9];
-assign clink_rx_out[15] = pixel_X[8];
-assign clink_rx_out[16] = pixel_X[23];
-assign clink_rx_out[17] = pixel_X[22];
-assign clink_rx_out[18] = pixel_X[7];
-assign clink_rx_out[19] = pixel_X[20];
-assign clink_rx_out[20] = pixel_X[19];
-assign clink_rx_out[21] = pixel_X[18];
-assign clink_rx_out[22] = pixel_X[17];
-assign clink_rx_out[23] = pixel_X[21];
-assign clink_rx_out[24] = pixel_X[16];
-assign clink_rx_out[25] = pixel_X[15];
-assign clink_rx_out[26] = pixel_X[14];
-assign clink_rx_out[27] = pixel_X[27];
+assign clink_rx_out[0]      = pixel_X[6];
+assign clink_rx_out[1]      = pixel_X[5];
+assign clink_rx_out[2]      = pixel_X[4];
+assign clink_rx_out[3]      = pixel_X[3];
+assign clink_rx_out[4]      = pixel_X[2];
+assign clink_rx_out[5]      = pixel_X[26];
+assign clink_rx_out[6]      = pixel_X[1];
+assign clink_rx_out[7]      = pixel_X[0];
+assign clink_rx_out[8]      = pixel_X[13];
+assign clink_rx_out[9]      = pixel_X[12];
+assign clink_rx_out[10]     = pixel_X[25];
+assign clink_rx_out[11]     = pixel_X[24];
+assign clink_rx_out[12]     = pixel_X[11];
+assign clink_rx_out[13]     = pixel_X[10];
+assign clink_rx_out[14]     = pixel_X[9];
+assign clink_rx_out[15]     = pixel_X[8];
+assign clink_rx_out[16]     = pixel_X[23];
+assign clink_rx_out[17]     = pixel_X[22];
+assign clink_rx_out[18]     = pixel_X[7];
+assign clink_rx_out[19]     = pixel_X[20];
+assign clink_rx_out[20]     = pixel_X[19];
+assign clink_rx_out[21]     = pixel_X[18];
+assign clink_rx_out[22]     = pixel_X[17];
+assign clink_rx_out[23]     = pixel_X[21];
+assign clink_rx_out[24]     = pixel_X[16];
+assign clink_rx_out[25]     = pixel_X[15];
+assign clink_rx_out[26]     = pixel_X[14];
+assign clink_rx_out[27]     = pixel_X[27];
 
 // clink_rx_out data to actual cameralink data
-assign d0[0] = clink_rx_out[0];
-assign d0[1] = clink_rx_out[1];
-assign d0[2] = clink_rx_out[2];
-assign d0[3] = clink_rx_out[3];
-assign d0[4] = clink_rx_out[4];
-assign d0[5] = clink_rx_out[6];
-assign d0[6] = clink_rx_out[27];
-assign d0[7] = clink_rx_out[5];
+assign d0[0]                = clink_rx_out[0];
+assign d0[1]                = clink_rx_out[1];
+assign d0[2]                = clink_rx_out[2];
+assign d0[3]                = clink_rx_out[3];
+assign d0[4]                = clink_rx_out[4];
+assign d0[5]                = clink_rx_out[6];
+assign d0[6]                = clink_rx_out[27];
+assign d0[7]                = clink_rx_out[5];
 
-assign d1[0] = clink_rx_out[7];
-assign d1[1] = clink_rx_out[8];
-assign d1[2] = clink_rx_out[9];
-assign d1[3] = clink_rx_out[12];
-assign d1[4] = clink_rx_out[13];
-assign d1[5] = clink_rx_out[14];
-assign d1[6] = clink_rx_out[10];
-assign d1[7] = clink_rx_out[11];
+assign d1[0]                = clink_rx_out[7];
+assign d1[1]                = clink_rx_out[8];
+assign d1[2]                = clink_rx_out[9];
+assign d1[3]                = clink_rx_out[12];
+assign d1[4]                = clink_rx_out[13];
+assign d1[5]                = clink_rx_out[14];
+assign d1[6]                = clink_rx_out[10];
+assign d1[7]                = clink_rx_out[11];
 
-assign d2[0] = clink_rx_out[15];
-assign d2[1] = clink_rx_out[18];
-assign d2[2] = clink_rx_out[19];
-assign d2[3] = clink_rx_out[20];
-assign d2[4] = clink_rx_out[21];
-assign d2[5] = clink_rx_out[22];
-assign d2[6] = clink_rx_out[16];
-assign d2[7] = clink_rx_out[17];
+assign d2[0]                = clink_rx_out[15];
+assign d2[1]                = clink_rx_out[18];
+assign d2[2]                = clink_rx_out[19];
+assign d2[3]                = clink_rx_out[20];
+assign d2[4]                = clink_rx_out[21];
+assign d2[5]                = clink_rx_out[22];
+assign d2[6]                = clink_rx_out[16];
+assign d2[7]                = clink_rx_out[17];
 
-assign lval = clink_rx_out[24];
-assign fval = clink_rx_out[25];
-assign dval = clink_rx_out[26];
+assign lval                 = clink_rx_out[24];
+assign fval                 = clink_rx_out[25];
+assign dval                 = clink_rx_out[26];
 
 reg clink_reset_buffer1, clink_reset_buffer2;
 
@@ -234,6 +244,22 @@ always @(posedge clink_X_clk_out) begin
         end
     end
 end
+//-------------------------------------------------------------------------------
+
+
+// Receiver reset Logic
+assign rx_reset_int         = ~s_axi_aresetn;
+assign idly_reset_int       = (rx_reset_int | !rx_cmt_locked);
+
+//  Idelay control block
+IDELAYCTRL #(                                   // Instantiate input delay control block
+    .SIM_DEVICE             ("ULTRASCALE")      //ULTRASCALE should be used for both ULTRASCALE and ULTRASCALE+ devices
+)
+icontrol (
+    .REFCLK                 (clk_300mhz),
+    .RST                    (idly_reset_int),
+    .RDY                    (rx_idelay_rdy)
+);
 
 rx_channel_1to7 # (
    .LINES                   (LINES),            // Number of data lines 
@@ -247,8 +273,7 @@ rx_channel_1to7 # (
    .RX_SWAP_MASK            (16'b0),            // Allows P/N inputs to be invered to ease PCB routing
    .SIM_DEVICE              ("ULTRASCALE_PLUS") // Set for the family <ULTRASCALE | ULTRASCALE_PLUS>
 )
-clink_X_7to1
-(
+clink_X_7to1 (
    .clkin_p                 (clink_X_clk_p),    // Clock input LVDS P-side
    .clkin_n                 (clink_X_clk_n),    // Clock input LVDS N-side
    .datain_p                ({clink_X_data_3_p,
@@ -259,13 +284,12 @@ clink_X_7to1
                             clink_X_data_2_n,
                             clink_X_data_1_n,
                             clink_X_data_0_n}), // Data input LVDS N-side
-   .reset                   (~s_axi_aresetn),   // Asynchronous interface reset
-   .idelay_rdy              (),                 // Asynchronous IDELAYCTRL ready 
-   .cmt_locked              (clink_X_ready),    // PLL/MMCM locked output
-   //
+   .reset                   (rx_reset_int),     // Asynchronous interface reset
+   .idelay_rdy              (rx_idelay_rdy),    // Asynchronous IDELAYCTRL ready 
+   .cmt_locked              (rx_cmt_locked),    // PLL/MMCM locked output
    .px_clk                  (clink_X_clk_out),  // Pixel clock output
    .px_data                 (pixel_X),          // Pixel data bus output
-   .px_ready                ()                  // Pixel data ready
+   .px_ready                (px_ready)          // Pixel data ready
 );
 
 uart 
@@ -273,17 +297,16 @@ uart
     .CLK_FREQ               (125000000),
     .BAUD_RATE              (9600)
 )    
-uart_inst
-(
+uart_inst (
     .clk                    (s_axi_aclk),       // System clock
     .rst_n                  (s_axi_aresetn),    // Active low reset
     .tx_start               (tx_start),         // Start transmission signal
     .tx_data                (tx_data),          // Data to be transmitted
     .tx_busy                (tx_busy),          // Transmission in progress
     .tx_serial              (SerTC),            // UART transmit serial output
-    .rx_serial              (SerTFG),        // UART receive serial input
+    .rx_serial              (SerTFG),           // UART receive serial input
     .rx_ready               (rx_ready),         // Data received and ready
-    .rx_data                (rx_data)            // Data received
+    .rx_data                (rx_data)           // Data received
 );
 
 AXI2UART #(

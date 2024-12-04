@@ -335,15 +335,15 @@ class ZCU104:
         Initialize camera
         """
         # self.reset_dram()
-        # self.reset_clink()
-        self.set_tap_1x3()
-        self.set_pixel_format()
-        # self.cl_clock()
-        self.set_acquisition_trigger()
-        self.set_acqusition_source_cc1()
-        self.set_frame_tirgger()
-        self.set_frame_trigger_source_cc2()
-        self.set_frame_count(1)
+        self.reset_clink()
+        # self.set_tap_1x3()
+        # self.set_pixel_format()
+        # # self.cl_clock()
+        # self.set_acquisition_trigger()
+        # self.set_acqusition_source_cc1()
+        # self.set_frame_tirgger()
+        # self.set_frame_trigger_source_cc2()
+        # self.set_frame_count(1)
         
     def camera_soft_init(self)->None:
         """

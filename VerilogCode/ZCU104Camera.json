@@ -21,8 +21,8 @@
             "GPIO_LED_1_LS"
         ],
         "input_ports" : [
-            "FMC_LPC_LA01_CC_P",
-            "FMC_LPC_LA01_CC_N",
+            "FMC_LPC_LA13_P",
+            "FMC_LPC_LA13_N",
             "FMC_LPC_LA03_P",
             "FMC_LPC_LA03_N",
             "FMC_LPC_LA04_P",
@@ -332,8 +332,8 @@
                 "range" : "0x00001000"
             },
             "ports": {
-                "clink_X_clk_p": "FMC_LPC_LA01_CC_P",
-                "clink_X_clk_n": "FMC_LPC_LA01_CC_N",
+                "clink_X_clk_p": "FMC_LPC_LA13_P",
+                "clink_X_clk_n": "FMC_LPC_LA13_N",
                 "clink_X_data_0_p": "FMC_LPC_LA03_P",
                 "clink_X_data_0_n": "FMC_LPC_LA03_N",
                 "clink_X_data_1_p": "FMC_LPC_LA04_P",
@@ -357,7 +357,8 @@
                 "s_axi_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
                 "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
                 "clk_blink_0" : "GPIO_LED_0_LS",
-                "clk_blink_1" : "GPIO_LED_1_LS"
+                "clk_blink_1" : "GPIO_LED_1_LS",
+                "clk_300mhz" : "zynq_ultra_ps_e_0/pl_clk1"
             }
         },
         "image2dram_0": {
@@ -501,6 +502,9 @@
                 "PSU__ACT_DDR_FREQ_MHZ" : "1050.000000",
                 "PSU__GEM__TSU__ENABLE" : "0",
                 "PSU__FPGA_PL0_ENABLE" : "1",
+                "PSU__FPGA_PL1_ENABLE" : "1",
+                "PSU__CRL_APB__PL1_REF_CTRL__SRCSEL" : "IOPLL",
+                "PSU__CRL_APB__PL1_REF_CTRL__FREQMHZ" : "300",
                 "PSU__ENET3__PERIPHERAL__ENABLE" : "1",
                 "PSU__ENET3__FIFO__ENABLE" : "0",
                 "PSU__ENET3__PTP__ENABLE" : "0",

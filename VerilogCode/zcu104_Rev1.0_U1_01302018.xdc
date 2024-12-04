@@ -497,16 +497,18 @@ set_property PACKAGE_PIN R9       [get_ports "HDMI_RX_CLK_C_N"] ;# Bank 227 - MG
 set_property PACKAGE_PIN R10      [get_ports "HDMI_RX_CLK_C_P"] ;# Bank 227 - MGTREFCLK1P_227
 
 # Clock Constraints
-#set_property CLOCK_DELAY_GROUP ioclockGroup_rx1 [get_nets {rx_channel1/rx_clkdiv*}]
-#set_false_path -to [get_pins {rx_channel1/rxc_gen/iserdes_m/D}]
-#set_false_path -to [get_pins {rx_channel1/rxc_gen/iserdes_s/D}]
-#set_false_path -to [get_pins {rx_channel1/rxc_gen/px_reset_sync_reg[*]/PRE}]
-#set_false_path -to [get_pins {rx_channel1/rxc_gen/px_rx_ready_sync_reg[*]/CLR}]
-#set_false_path -to [get_pins {rx_channel1/rxc_gen/px_data_reg[*]/D}]
-#set_false_path -to [get_pins {rx_channel1/rxc_gen/px_rd_last_reg[*]/D}]
-#set_false_path -to [get_pins {rx_channel1/rxd[*].sipo/px_data_reg[*]/D}]
-#set_false_path -to [get_pins {rx_channel1/rxd[*].sipo/px_rd_last_reg[*]/D}]
 
-create_clock -period 12.195 -name clink_X_clk [get_nets ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/clink_X_clk_p]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/iob_clk_in/O]
+# Clock group constraint to ensure correct clock skew for ISERDES
+set_property CLOCK_DELAY_GROUP ioclockGroup_rx1 [get_nets "rx_channel1/rx_clkdiv*"]
+
+set_false_path -to [get_pins "ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/iserdes_m/D"]
+set_false_path -to [get_pins "ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/iserdes_s/D"]
+set_false_path -to [get_pins {ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/px_reset_sync_reg[*]/PRE}] 
+set_false_path -to [get_pins {ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/px_rx_ready_sync_reg[*]/CLR}] 
+set_false_path -to [get_pins {ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/px_data_reg[*]/D}]
+set_false_path -to [get_pins {ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxc_gen/px_rd_last_reg[*]/D}]
+set_false_path -to [get_pins {ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxd[*].sipo/px_data_reg[*]/D}]
+set_false_path -to [get_pins {ZCU104_Main_blk_i/clink_intf/inst/clink_X_7to1/rxd[*].sipo/px_rd_last_reg[*]/D}]
+
+create_clock -period 12.195  [get_ports "FMC_LPC_LA13_P"] ;#
 
