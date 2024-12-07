@@ -334,16 +334,16 @@ class ZCU104:
         """
         Initialize camera
         """
-        # self.reset_dram()
+        self.reset_dram()
         self.reset_clink()
-        # self.set_tap_1x3()
-        # self.set_pixel_format()
-        # # self.cl_clock()
-        # self.set_acquisition_trigger()
-        # self.set_acqusition_source_cc1()
-        # self.set_frame_tirgger()
-        # self.set_frame_trigger_source_cc2()
-        # self.set_frame_count(1)
+        self.set_tap_1x3()
+        self.set_pixel_format()
+        self.cl_clock()
+        self.set_acquisition_trigger()
+        self.set_acqusition_source_cc1()
+        self.set_frame_tirgger()
+        self.set_frame_trigger_source_cc2()
+        self.set_frame_count(1)
         
     def camera_soft_init(self)->None:
         """
@@ -423,16 +423,16 @@ if __name__ == "__main__":
         time.sleep(1)
         zcu104.cc_ctrl(0b0001,0)
         zcu104.cc_ctrl(0b0001,1)
-        time.usleep(1)
+        time.sleep(1)
         zcu104.cc_ctrl(0b0001,0)
         for i in range(1):
             zcu104.cc_ctrl(0b0010,0)
             zcu104.cc_ctrl(0b0010,1)
-            time.usleep(1)
+            time.sleep(1)
             zcu104.cc_ctrl(0b0010,0)
     else:
         zcu104.set_tap_1x3()
         
-    # time.sleep(1)
-    # zcu104.read_dram(0x00000000, 0x10)
+    time.sleep(1)
+    zcu104.read_dram(0x00000000, 0x10)
     zcu104.disconnect()
