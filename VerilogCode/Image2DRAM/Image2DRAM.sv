@@ -5,13 +5,13 @@ module Image2DRAM
     //////////////////////////////////////////////////////////////////////////////////
     // DRAM Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter DRAM_ADDR_WIDTH               = 39,
-    parameter DRAM_ADDR_BASE                = 39'h400000000,
+    parameter DRAM_ADDR_WIDTH               = 48,
+    parameter DRAM_ADDR_BASE                = 48'h400000000,
     parameter DRAM_DATA_WIDTH               = 512,
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
-    parameter MAXI_ADDR_WIDTH               = 39,
+    parameter MAXI_ADDR_WIDTH               = 48,
     parameter MAXI_DATA_WIDTH               = DRAM_DATA_WIDTH,
     parameter MAXI_STROBE_WIDTH             = MAXI_DATA_WIDTH >> 3,
     parameter MAXI_STROBE_LEN               = $clog2(MAXI_STROBE_WIDTH) // LOG(AXI_STROBE_WDITH)
@@ -92,7 +92,12 @@ module Image2DRAM
     //////////////////////////////////////////////////////////////////////////////////
     // Cameralink clock region reset
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire clk_pixel_resetn
+    input  wire clk_pixel_resetn,
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // Master Controller
+    //////////////////////////////////////////////////////////////////////////////////
+    input  wire auto_start
 );
 
 wire [MAXI_ADDR_WIDTH - 1:0] dram_write_addr;
@@ -182,6 +187,7 @@ BufferGearBox #(
     .dram_write_en                  (dram_write_en),
     .dram_write_len                 (dram_write_len),
     .dram_write_busy                (dram_write_busy),
-    .clk_pixel_resetn               (clk_pixel_resetn)
+    .clk_pixel_resetn               (clk_pixel_resetn),
+    .auto_start                     (auto_start)
 );
 endmodule

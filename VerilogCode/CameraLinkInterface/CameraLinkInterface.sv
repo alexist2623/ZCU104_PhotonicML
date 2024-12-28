@@ -146,7 +146,11 @@ module CameraLinkInterface
     //
     output wire        clink_resetn,
     output wire        dram_resetn,
-    input  wire        clk_300mhz
+    input  wire        clk_300mhz,
+    //////////////////////////////////////////////////////////////////////////////////
+    // Cameralink Trigger and Image end
+    //////////////////////////////////////////////////////////////////////////////////
+    input wire         auto_start  // Master Enable
 );
 
 // AXI2UART instance for handling AXI communication and UART interface
@@ -232,14 +236,16 @@ assign fval                 = clink_rx_out[25];
 assign dval                 = clink_rx_out[26];
 
 reg clink_reset_buffer1, clink_reset_buffer2;
+reg auto_start_buffer1, auto_start_buffer2;
 
 always @(posedge clink_X_clk_out) begin
     {clink_reset_buffer2, clink_reset_buffer1} <= {clink_reset_buffer1, ~s_axi_aresetn};
+    {auto_start_buffer2, auto_start_buffer1} <= {auto_start_buffer1, auto_start};
     if (clink_reset_buffer2 == 1'b1) begin
         clk_blink_1         <= 1'b0;
     end
     else begin
-        if (fval == 1'b1) begin
+        if (fval == 1'b1 && auto_start_buffer2 == 1'b1) begin
             clk_blink_1     <= 1'b1;
         end
     end

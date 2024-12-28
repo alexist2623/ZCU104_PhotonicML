@@ -1,7 +1,7 @@
 module BufferGearBox
 #(
-    parameter DRAM_ADDR_WIDTH       = 39,
-    parameter DRAM_ADDR_BASE        = 39'h400000000, // should be fixed
+    parameter DRAM_ADDR_WIDTH       = 48,
+    parameter DRAM_ADDR_BASE        = 48'h400000000, // should be fixed
     parameter DRAM_DATA_WIDTH       = 512
 )
 (
@@ -22,7 +22,9 @@ module BufferGearBox
     output reg  dram_write_en,
     output reg  [DRAM_ADDR_WIDTH - 1:0] dram_write_addr,
     input  wire dram_write_busy,
-    output reg  [7:0] dram_write_len
+    output reg  [7:0] dram_write_len,
+
+    input  wire auto_start
 );
 
 localparam BUFFER_SIZE           = DRAM_DATA_WIDTH * 3;
@@ -65,8 +67,11 @@ async_fifo_generator async_fifo_inst (
 
 reg [3:0] dram_write_wait_cnt;
 
+reg auto_start_buffer1, auto_start_buffer2;
+
 // DRAM interface
 always_ff @(posedge m_axi_aclk) begin
+    {auto_start_buffer2, auto_start_buffer1} <= {auto_start_buffer1, auto_start};
     if( reset ) begin
         dram_write_addr     <= DRAM_ADDR_BASE;
         dram_next_addr      <= DRAM_ADDR_BASE;
@@ -76,32 +81,34 @@ always_ff @(posedge m_axi_aclk) begin
     end
     else begin
         dram_write_en <= 1'b0;
-        if( async_fifo_empty == 1'b0 && dram_write_busy == 1'b0 && dram_write_wait_cnt == 4'h0 ) begin
-            dram_write_en <= 1'b1;
-            dram_write_len <= 8'h0;
-            dram_next_addr <= dram_write_addr + BUFFER_SIZE;
-            dram_write_wait_cnt <= 4'h1;
+        if(auto_start_buffer2 == 1'b1) begin
+            if( async_fifo_empty == 1'b0 && dram_write_busy == 1'b0 && dram_write_wait_cnt == 4'h0) begin
+                dram_write_en <= 1'b1;
+                dram_write_len <= 8'h0;
+                dram_next_addr <= dram_write_addr + BUFFER_SIZE;
+                dram_write_wait_cnt <= 4'h1;
 
-            /* 
-             * Debugging 
-             */
-            $display("DRAM Write Addr: %h, wirte data : %h", dram_write_addr, async_fifo_out);
-        end
-        /*
-         * load next address ( adding BUFFER_SIZE) to dram_write_addr
-         */
-        else begin
-            dram_write_addr <= dram_next_addr;
-        end
-        
-        /*
-         * dram_write_wait_cnt is used to wait for 16 clock cycles before writing to DRAM
-         * since there is delay to assert dram_wirte_busy signal
-         */
-        if( dram_write_wait_cnt != 4'h0 ) begin
-            dram_write_wait_cnt <= dram_write_wait_cnt + 4'h1;
-            if( dram_write_wait_cnt == 4'hF ) begin
-                dram_write_wait_cnt <= 4'h0;
+                /* 
+                * Debugging 
+                */
+                $display("DRAM Write Addr: %h, wirte data : %h", dram_write_addr, async_fifo_out);
+            end
+            /*
+            * load next address ( adding BUFFER_SIZE) to dram_write_addr
+            */
+            else begin
+                dram_write_addr <= dram_next_addr;
+            end
+            
+            /*
+            * dram_write_wait_cnt is used to wait for 16 clock cycles before writing to DRAM
+            * since there is delay to assert dram_wirte_busy signal
+            */
+            if( dram_write_wait_cnt != 4'h0 ) begin
+                dram_write_wait_cnt <= dram_write_wait_cnt + 4'h1;
+                if( dram_write_wait_cnt == 4'hF ) begin
+                    dram_write_wait_cnt <= 4'h0;
+                end
             end
         end
     end
