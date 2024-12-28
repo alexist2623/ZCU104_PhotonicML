@@ -8,33 +8,26 @@
             "MasterController.json"
         ],
         "output_ports" : [
-            "FMC_LPC_LA07_P",
-            "FMC_LPC_LA07_N",
-            "FMC_LPC_LA08_P",
-            "FMC_LPC_LA08_N",
-            "FMC_LPC_LA09_P",
-            "FMC_LPC_LA09_N",
-            "FMC_LPC_LA15_P",
-            "FMC_LPC_LA15_N",
-            "FMC_LPC_LA17_CC_P",
-            "FMC_LPC_LA17_CC_N",
             "GPIO_LED_0_LS",
-            "GPIO_LED_1_LS"
+            "GPIO_LED_1_LS",
+            "SerTC",
+            "cc1",
+            "cc2",
+            "cc3",
+            "cc4"
         ],
         "input_ports" : [
-            "FMC_LPC_LA13_P",
-            "FMC_LPC_LA13_N",
-            "FMC_LPC_LA03_P",
-            "FMC_LPC_LA03_N",
-            "FMC_LPC_LA04_P",
-            "FMC_LPC_LA04_N",
-            "FMC_LPC_LA05_P",
-            "FMC_LPC_LA05_N",
-            "FMC_LPC_LA06_P",
-            "FMC_LPC_LA06_N",
-            "FMC_LPC_LA14_P",
-            "FMC_LPC_LA14_N",
-            "pl_resetn0"
+            "pl_resetn0",
+            "clink_X_clk_p",
+            "clink_X_clk_n",
+            "clink_X_data_0_p",
+            "clink_X_data_0_n",
+            "clink_X_data_1_p",
+            "clink_X_data_1_n",
+            "clink_X_data_2_p",
+            "clink_X_data_2_n",
+            "clink_X_data_3_p",
+            "clink_X_data_3_n"
         ],
         "clk" : {
             "CLK_300_P" : {
@@ -63,7 +56,7 @@
                 "mode" : "Master",
                 "vlnv" : "xilinx.com:interface:ddr4_rtl:1.0"
             },
-            "M_AXI_HPM0_FPD" : {
+            "S00_AXI" : {
                 "mode" : "Slave",
                 "vlnv" : "xilinx.com:interface:aximm_rtl:1.0",
                 "config" : {
@@ -88,14 +81,16 @@
                 "S00_ACLK" : "pl_clk0",
                 "M00_ACLK" : "pl_clk0",
                 "M01_ACLK" : "pl_clk0",
+                "M02_ACLK" : "pl_clk0",
 
                 "ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "M00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "M01_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
+                "M02_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "S00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn"
             },
             "interface" : {
-                "S00_AXI" : "M_AXI_HPM0_FPD"
+                "S00_AXI" : "S00_AXI"
             }
         },
         "dram_interconnect_0" : {
@@ -191,7 +186,7 @@
                 "C0_DDR4_S_AXI" : "dram_interconnect_0/M00_AXI"
             },
             "axi" : {
-                "M_AXI_HPM0_FPD" : {
+                "S00_AXI" : {
                     "offset" : "0x0400000000",
                     "range" : "0x100000000"
                 },
@@ -351,21 +346,21 @@
                 "range" : "0x00001000"
             },
             "ports": {
-                "clink_X_clk_p": "FMC_LPC_LA13_P",
-                "clink_X_clk_n": "FMC_LPC_LA13_N",
-                "clink_X_data_0_p": "FMC_LPC_LA03_P",
-                "clink_X_data_0_n": "FMC_LPC_LA03_N",
-                "clink_X_data_1_p": "FMC_LPC_LA04_P",
-                "clink_X_data_1_n": "FMC_LPC_LA04_N",
-                "clink_X_data_2_p": "FMC_LPC_LA06_P",
-                "clink_X_data_2_n": "FMC_LPC_LA06_N",
-                "clink_X_data_3_p": "FMC_LPC_LA05_P",
-                "clink_X_data_3_n": "FMC_LPC_LA05_N",
-                "SerTC": "LVDS_15/OBUF_IN",
-                "cc1": "LVDS_08/OBUF_IN",
-                "cc2": "LVDS_07/OBUF_IN",
-                "cc3": "LVDS_09/OBUF_IN",
-                "cc4": "LVDS_17/OBUF_IN",
+                "clink_X_clk_p": "clink_X_clk_p",
+                "clink_X_clk_n": "clink_X_clk_n",
+                "clink_X_data_0_p": "clink_X_data_0_p",
+                "clink_X_data_0_n": "clink_X_data_0_n",
+                "clink_X_data_1_p": "clink_X_data_1_p",
+                "clink_X_data_1_n": "clink_X_data_1_n",
+                "clink_X_data_2_p": "clink_X_data_2_p",
+                "clink_X_data_2_n": "clink_X_data_2_n",
+                "clink_X_data_3_p": "clink_X_data_3_p",
+                "clink_X_data_3_n": "clink_X_data_3_n",
+                "SerTC": "SerTC",
+                "cc1": "cc1",
+                "cc2": "cc2",
+                "cc3": "cc3",
+                "cc4": "cc4",
                 "d0": "image2dram_0/d0",
                 "d1": "image2dram_0/d1",
                 "d2": "image2dram_0/d2",
@@ -377,7 +372,8 @@
                 "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
                 "clk_blink_0" : "GPIO_LED_0_LS",
                 "clk_blink_1" : "GPIO_LED_1_LS",
-                "clk_300mhz" : "pl_clk1"
+                "clk_300mhz" : "pl_clk1",
+                "auto_start" : "MasterController_0/auto_start"
             }
         },
         "image2dram_0": {
@@ -386,122 +382,25 @@
             "tcl_options" : ["type", "vlnv"],
             "ports" : {
                 "m_axi_aclk" : "ddr4_0/c0_ddr4_ui_clk",
-                "m_axi_aresetn" : "dram_reset_0/peripheral_aresetn"
+                "m_axi_aresetn" : "dram_reset_0/peripheral_aresetn",
+                "auto_start" : "MasterController_0/auto_start"
             }
         },
-        "LVDS_14" : {
+        "MasterController_0" : {
             "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
+            "vlnv" : "xilinx.com:user:MasterController:1.0",
             "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "IBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
+            "interface" : {
+                "s_axi" : "axi_interconnect_0/M02_AXI"
             },
             "ports" : {
-                "IBUF_DS_P" : "FMC_LPC_LA14_P",
-                "IBUF_DS_N" : "FMC_LPC_LA14_N",
-                "IBUF_OUT" : "clink_intf/SerTFG"
-            }
-        },
-        "LVDS_08" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
+                "s_axi_aclk" : "pl_clk0",
+                "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
+                "clk_pixel" : "pl_clk0"
             },
-            "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA08_P",
-                "OBUF_DS_N" : "FMC_LPC_LA08_N"
-            }
-        },
-        "LVDS_09" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
-            "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA09_P",
-                "OBUF_DS_N" : "FMC_LPC_LA09_N"
-            }
-        },
-        "LVDS_07" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
-            "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA07_P",
-                "OBUF_DS_N" : "FMC_LPC_LA07_N"
-            }
-        },
-        "LVDS_15" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
-            "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA15_P",
-                "OBUF_DS_N" : "FMC_LPC_LA15_N"
-            }
-        },
-        "LVDS_17" : {
-            "type" : "ip",
-            "vlnv" : "xilinx.com:ip:util_ds_buf",
-            "tcl_options" : ["type", "vlnv"],
-            "config" : {
-                "C_BUFGCE_DIV" : "1",
-                "C_BUFG_GT_SYNC" : "false",
-                "C_BUF_TYPE" : "OBUFDS",
-                "C_OBUFDS_GTE5_ADV" : "00",
-                "C_REFCLK_ICNTL_TX" : "00000",
-                "C_SIZE" : "1",
-                "DIFF_CLK_IN_BOARD_INTERFACE" : "Custom",
-                "USE_BOARD_FLOW" : "false"
-            },
-            "ports" : {
-                "OBUF_DS_P" : "FMC_LPC_LA17_CC_P",
-                "OBUF_DS_N" : "FMC_LPC_LA17_CC_N"
+            "axi" : {
+                "offset" : "0xA0001000",
+                "range" : "0x00001000"
             }
         }
     }

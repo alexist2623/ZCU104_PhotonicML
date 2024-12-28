@@ -44,10 +44,7 @@ module ZCU104CaemraSIM_uut(
     input  wire clink_X_data_2_p           ,
     input  wire clink_X_data_3_n           ,
     input  wire clink_X_data_3_p           ,
-    input  wire clink_X_ready              ,
-    output wire image_end                  ,
-    //input  wire trigger                    ,
-    input  wire clk_pixel_resetn
+    input  wire clink_X_ready              
 );
 
 localparam ADDR_WIDTH                     = 17;
@@ -87,11 +84,7 @@ parameter UTYPE_density CONFIGURED_DENSITY = _8G;
 //   $shm_probe("ACMTF");
 //end
 
-reg                  sys_clk_i;
 reg                  sys_rst;
-
-wire                 c0_sys_clk_p;
-wire                 c0_sys_clk_n;
 
 reg  [16:0]            c0_ddr4_adr_sdram[1:0];
 reg  [1:0]           c0_ddr4_ba_sdram[1:0];
@@ -145,9 +138,10 @@ end
 //**************************************************************************//
 // Clock Generation
 //**************************************************************************//
-
-assign c0_sys_clk_p =  axi_if_inst.s_axi_aclk;
-assign c0_sys_clk_n = ~axi_if_inst.s_axi_aclk;
+initial begin
+  forever begin
+  end
+end
 
 assign c0_ddr4_ck_t = c0_ddr4_ck_t_int[0];
 assign c0_ddr4_ck_c = c0_ddr4_ck_c_int[0];
@@ -199,7 +193,7 @@ ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
     .S00_AXI_araddr             (axi_if_inst.s_axi_araddr),
     .S00_AXI_arburst            (axi_if_inst.s_axi_arburst),
     //.S00_AXI_arcache            (axi_if_inst.s_axi_arcache),
-    .S00_AXI_arid               (axi_if_inst.s_axi_arid),
+    // .S00_AXI_arid               (axi_if_inst.s_axi_arid),
     .S00_AXI_arlen              (axi_if_inst.s_axi_arlen),
     //.S00_AXI_arlock             (axi_if_inst.s_axi_arlock),
     //.S00_AXI_arprot             (axi_if_inst.s_axi_arprot),
@@ -211,7 +205,7 @@ ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
     .S00_AXI_awaddr             (axi_if_inst.s_axi_awaddr),
     .S00_AXI_awburst            (axi_if_inst.s_axi_awburst),
     //.S00_AXI_awcache            (axi_if_inst.s_axi_awcache),
-    .S00_AXI_awid               (axi_if_inst.s_axi_awid),
+    // .S00_AXI_awid               (axi_if_inst.s_axi_awid),
     .S00_AXI_awlen              (axi_if_inst.s_axi_awlen),
     //.S00_AXI_awlock             (axi_if_inst.s_axi_awlock),
     //.S00_AXI_awprot             (axi_if_inst.s_axi_awprot),
@@ -220,12 +214,12 @@ ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
     //.S00_AXI_awregion           (axi_if_inst.s_axi_awregion),
     .S00_AXI_awsize             (axi_if_inst.s_axi_awsize),
     .S00_AXI_awvalid            (axi_if_inst.s_axi_awvalid),
-    .S00_AXI_bid                (axi_if_inst.s_axi_bid),
+    // .S00_AXI_bid                (axi_if_inst.s_axi_bid),
     .S00_AXI_bready             (axi_if_inst.s_axi_bready),
     .S00_AXI_bresp              (axi_if_inst.s_axi_bresp),
     .S00_AXI_bvalid             (axi_if_inst.s_axi_bvalid),
     .S00_AXI_rdata              (axi_if_inst.s_axi_rdata),
-    .S00_AXI_rid                (axi_if_inst.s_axi_rid),
+    // .S00_AXI_rid                (axi_if_inst.s_axi_rid),
     .S00_AXI_rlast              (axi_if_inst.s_axi_rlast),
     .S00_AXI_rready             (axi_if_inst.s_axi_rready),
     .S00_AXI_rresp              (axi_if_inst.s_axi_rresp),
@@ -236,7 +230,6 @@ ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
     .S00_AXI_wstrb              (axi_if_inst.s_axi_wstrb),
     .S00_AXI_wvalid             (axi_if_inst.s_axi_wvalid),
     .SerTC                      (SerTC),
-    .SerTFG                     (SerTFG),
     .cc1                        (cc1),
     .cc2                        (cc2),
     .cc3                        (cc3),
@@ -252,12 +245,11 @@ ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
     .clink_X_data_3_n           (clink_X_data_3_n),
     .clink_X_data_3_p           (clink_X_data_3_p),
     .clink_X_ready              (clink_X_ready),
-    .image_end                  (image_end),
-    .s_axi_aclk                 (axi_if_inst.s_axi_aclk),
-    .s_axi_aresetn              (~sys_rst),
-    .sys_rst                    (sys_rst),
-    //.trigger                    (trigger),
-    .clk_pixel_resetn           (clk_pixel_resetn)
+    .pl_clk0                    (axi_if_inst.s_axi_aclk),
+    .pl_clk1                    (clk_300mhz),
+    .CLK_300_P                  (clk_300mhz),
+    .CLK_300_N                  (~clk_300mhz),
+    .pl_resetn0                 (~sys_rst)
 );
 
 
