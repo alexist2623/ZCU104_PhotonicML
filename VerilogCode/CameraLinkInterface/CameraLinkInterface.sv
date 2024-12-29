@@ -244,7 +244,7 @@ always @(posedge clink_X_clk_out) begin
         clk_blink_1         <= 1'b0;
     end
     else begin
-        if (fval == 1'b1 && auto_start_buffer2 == 1'b1) begin
+        if (lval == 1'b1 && auto_start_buffer2 == 1'b1) begin
             clk_blink_1     <= 1'b1;
         end
     end

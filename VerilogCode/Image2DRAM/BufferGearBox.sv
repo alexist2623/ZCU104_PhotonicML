@@ -1,7 +1,7 @@
 module BufferGearBox
 #(
     parameter DRAM_ADDR_WIDTH       = 48,
-    parameter DRAM_ADDR_BASE        = 48'h400000000, // should be fixed
+    parameter DRAM_ADDR_BASE        = 48'h4_0000_0000,
     parameter DRAM_DATA_WIDTH       = 512
 )
 (
@@ -26,7 +26,12 @@ module BufferGearBox
 
     input  wire auto_start
 );
-
+/*
+ * Data stream
+ *   -----       -----       -----
+ *  |Buffer| -> | FIFO | -> | DRAM |
+ *   -----       -----       -----
+ */
 localparam BUFFER_SIZE           = DRAM_DATA_WIDTH * 3;
 localparam BUFFER_SIZE_WIDTH     = $clog2(BUFFER_SIZE);
 localparam INPUT_DATA_SIZE       = 24; // 8-bit * 3
@@ -47,6 +52,7 @@ reg  [INPUT_NUM_WIDTH - 1:0] async_fifo_buffer_index;
 wire async_fifo_buffer_write;
 
 // Async FIFO inteface
+// Write to buffer when fval, dval, lval are all high.(Line valid, data valid, frame valid)
 assign async_fifo_buffer_write = fval & dval & lval;
 
 /*
@@ -66,12 +72,10 @@ async_fifo_generator async_fifo_inst (
 );
 
 reg [3:0] dram_write_wait_cnt;
-
 reg auto_start_buffer1, auto_start_buffer2;
 
 // DRAM interface
 always_ff @(posedge m_axi_aclk) begin
-    {auto_start_buffer2, auto_start_buffer1} <= {auto_start_buffer1, auto_start};
     if( reset ) begin
         dram_write_addr     <= DRAM_ADDR_BASE;
         dram_next_addr      <= DRAM_ADDR_BASE;
@@ -81,34 +85,32 @@ always_ff @(posedge m_axi_aclk) begin
     end
     else begin
         dram_write_en <= 1'b0;
-        if(auto_start_buffer2 == 1'b1) begin
-            if( async_fifo_empty == 1'b0 && dram_write_busy == 1'b0 && dram_write_wait_cnt == 4'h0) begin
-                dram_write_en <= 1'b1;
-                dram_write_len <= 8'h0;
-                dram_next_addr <= dram_write_addr + BUFFER_SIZE;
-                dram_write_wait_cnt <= 4'h1;
+        if( async_fifo_empty == 1'b0 && dram_write_busy == 1'b0 && dram_write_wait_cnt == 4'h0) begin
+            dram_write_en <= 1'b1;
+            dram_write_len <= 8'h0;
+            dram_next_addr <= dram_write_addr + BUFFER_SIZE;
+            dram_write_wait_cnt <= 4'h1;
 
-                /* 
-                * Debugging 
-                */
-                $display("DRAM Write Addr: %h, wirte data : %h", dram_write_addr, async_fifo_out);
-            end
-            /*
-            * load next address ( adding BUFFER_SIZE) to dram_write_addr
+            /* 
+            * Debugging 
             */
-            else begin
-                dram_write_addr <= dram_next_addr;
-            end
-            
-            /*
-            * dram_write_wait_cnt is used to wait for 16 clock cycles before writing to DRAM
-            * since there is delay to assert dram_wirte_busy signal
-            */
-            if( dram_write_wait_cnt != 4'h0 ) begin
-                dram_write_wait_cnt <= dram_write_wait_cnt + 4'h1;
-                if( dram_write_wait_cnt == 4'hF ) begin
-                    dram_write_wait_cnt <= 4'h0;
-                end
+            $display("DRAM Write Addr: %h, wirte data : %h", dram_write_addr, async_fifo_out);
+        end
+        /*
+        * load next address ( adding BUFFER_SIZE) to dram_write_addr
+        */
+        else begin
+            dram_write_addr <= dram_next_addr;
+        end
+        
+        /*
+        * dram_write_wait_cnt is used to wait for 16 clock cycles before writing to DRAM
+        * since there is delay to assert dram_wirte_busy signal
+        */
+        if( dram_write_wait_cnt != 4'h0 ) begin
+            dram_write_wait_cnt <= dram_write_wait_cnt + 4'h1;
+            if( dram_write_wait_cnt == 4'hF ) begin
+                dram_write_wait_cnt <= 4'h0;
             end
         end
     end
@@ -123,34 +125,35 @@ always_ff @(posedge clink_X_clk) begin
         {fval_buffer, dval_buffer, lval_buffer} <= 3'h0;
     end
     else begin
-        async_fifo_write_fsm <= 1'b0;
-        {fval_buffer, dval_buffer, lval_buffer} <= {fval, dval, lval};
-        if( async_fifo_buffer_write == 1'b1 ) begin
-            /*
-             * Write to buffer and fill zero when first data is received
-             */
-            if (async_fifo_buffer_index == 0) begin
-                async_fifo_buffer <= {(BUFFER_SIZE - INPUT_DATA_SIZE)'(0), d2,d1,d0};
-            end
-            else begin
-                async_fifo_buffer[async_fifo_buffer_index * INPUT_DATA_SIZE +: INPUT_DATA_SIZE] <= {d2,d1,d0};
-            end
+        {auto_start_buffer2, auto_start_buffer1} <= {auto_start_buffer1, auto_start};
+        if(auto_start_buffer2 == 1'b1) begin
+            async_fifo_write_fsm <= 1'b0;
+            // Save current value of fval, dval, lval to compare with next value
+            {fval_buffer, dval_buffer, lval_buffer} <= {fval, dval, lval};
+            if( async_fifo_buffer_write == 1'b1 ) begin
+                /*
+                * Write to buffer and fill zero when first data is received
+                */
+                if (async_fifo_buffer_index == 0) begin
+                    async_fifo_buffer <= {(BUFFER_SIZE - INPUT_DATA_SIZE)'(0), d2,d1,d0};
+                end
+                else begin
+                    async_fifo_buffer[async_fifo_buffer_index * INPUT_DATA_SIZE +: INPUT_DATA_SIZE] <= {d2,d1,d0};
+                end
 
-            /*
-             * Write to DRAM when buffer is full or when the last data is received or buffer is full
-             */
-            if( 
-                async_fifo_buffer_index == INPUT_NUM - 1 || 
-                (
-                    {fval_buffer, dval_buffer, lval_buffer} == 3'b111 && 
-                    {fval, dval, lval}                      == 3'b000
-                )
-            ) begin
-                async_fifo_write_fsm <= 1'b1;
-                async_fifo_buffer_index <= BUFFER_SIZE_WIDTH'(0);
-            end
-            else begin
-                async_fifo_buffer_index <= async_fifo_buffer_index + 1;
+                /*
+                * Write to DRAM when buffer is full or when the last data is received
+                */
+                if( 
+                    async_fifo_buffer_index == INPUT_NUM - 1 || 
+                    (lval_buffer == 1'b1 && lval == 1'b0)
+                ) begin
+                    async_fifo_write_fsm <= 1'b1;
+                    async_fifo_buffer_index <= BUFFER_SIZE_WIDTH'(0);
+                end
+                else begin
+                    async_fifo_buffer_index <= async_fifo_buffer_index + 1;
+                end
             end
         end
     end
