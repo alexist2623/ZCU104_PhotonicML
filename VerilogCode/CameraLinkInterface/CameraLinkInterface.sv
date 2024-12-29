@@ -164,7 +164,6 @@ wire            tx_busy;                // Transmission in progress
 wire [27:0]     clink_rx_out;
 wire [27:0]     pixel_X;
 
-wire            refclk_i;         
 wire            idly_reset_int;
 wire            rx_idelay_rdy;
 wire            rx_reset_int;

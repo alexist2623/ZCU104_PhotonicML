@@ -29,7 +29,6 @@ module ZCU104CaemraSIM_uut(
     axi_if axi_if_inst,
     
     output wire SerTC                      ,
-    input  wire SerTFG                     ,
     output wire cc1                        ,
     output wire cc2                        ,
     output wire cc3                        ,
@@ -44,7 +43,8 @@ module ZCU104CaemraSIM_uut(
     input  wire clink_X_data_2_p           ,
     input  wire clink_X_data_3_n           ,
     input  wire clink_X_data_3_p           ,
-    input  wire clink_X_ready              
+    output wire GPIO_LED_0_LS              ,
+    output wire GPIO_LED_1_LS
 );
 
 localparam ADDR_WIDTH                     = 17;
@@ -138,9 +138,12 @@ end
 //**************************************************************************//
 // Clock Generation
 //**************************************************************************//
+reg clk_300mhz;
 initial begin
-  forever begin
-  end
+    clk_300mhz <= 1'b0;
+    forever begin
+        #(3.333/2) clk_300mhz <= ~clk_300mhz;
+    end
 end
 
 assign c0_ddr4_ck_t = c0_ddr4_ck_t_int[0];
@@ -244,12 +247,13 @@ ZCU104_Main_blk_wrapper ZCU104_Main_blk_wrapper_i
     .clink_X_data_2_p           (clink_X_data_2_p),
     .clink_X_data_3_n           (clink_X_data_3_n),
     .clink_X_data_3_p           (clink_X_data_3_p),
-    .clink_X_ready              (clink_X_ready),
+    .GPIO_LED_0_LS              (GPIO_LED_0_LS),
+    .GPIO_LED_1_LS              (GPIO_LED_1_LS),
     .pl_clk0                    (axi_if_inst.s_axi_aclk),
     .pl_clk1                    (clk_300mhz),
     .CLK_300_P                  (clk_300mhz),
     .CLK_300_N                  (~clk_300mhz),
-    .pl_resetn0                 (~sys_rst)
+    .pl_resetn0                 (axi_if_inst.s_axi_aresetn)
 );
 
 

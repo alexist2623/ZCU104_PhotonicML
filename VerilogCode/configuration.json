@@ -1,10 +1,10 @@
 {
-    "common_path" : "C:/Jeonghyun/SNU_GIT/ZCU104_PhotonicML/VerilogCode",
-    "target_path" : "C:/Jeonghyun/Lab/ZCU104",
-    "vivado_path" : "C:/Xilinx/Vivado/2020.2/bin/vivado.bat",
-    "board_path" : "C:/Xilinx/Vivado/2020.2/data/boards/board_files",
+    "common_path" : "C:/Users/aleix/Documents/GitHub/ZCU104_PhotonicML/VerilogCode",
+    "target_path" : "D:/ZCU104",
+    "vivado_path" : "D:/Xilinx/Vivado/2020.2/bin/vivado.bat",
+    "board_path" : "D:/Xilinx/Vivado/2020.2/data/boards/board_files",
     "part_name" : "xczu7ev-ffvc1156-2-e",
     "board_name" : "xilinx.com:zcu104:part0:1.1",
-    "constraints" : "C:/Jeonghyun/SNU_GIT/ZCU104_PhotonicML/VerilogCode/zcu104_Rev1.0_U1_01302018.xdc",
+    "constraints" : "C:/Users/aleix/Documents/GitHub/ZCU104_PhotonicML/VerilogCode/zcu104_Rev1.0_U1_01302018.xdc",
     "version" : "2020.2"
 }
