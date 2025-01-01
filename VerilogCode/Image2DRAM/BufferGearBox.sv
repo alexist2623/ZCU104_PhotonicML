@@ -2,7 +2,8 @@ module BufferGearBox
 #(
     parameter DRAM_ADDR_WIDTH       = 48,
     parameter DRAM_ADDR_BASE        = 48'h4_0000_0000,
-    parameter DRAM_DATA_WIDTH       = 512
+    parameter DRAM_DATA_WIDTH       = 512,
+    parameter IMAGE_NUM_WIDTH       = 8
 )
 (
     input  wire reset,
@@ -24,7 +25,8 @@ module BufferGearBox
     input  wire dram_write_busy,
     output reg  [7:0] dram_write_len,
 
-    input  wire auto_start
+    input  wire auto_start,
+    output wire [IMAGE_NUM_WIDTH-1:0] captured_image_num
 );
 /*
  * Data stream
@@ -33,6 +35,7 @@ module BufferGearBox
  *   -----       -----       -----
  */
 localparam BUFFER_SIZE           = DRAM_DATA_WIDTH * 3;
+localparam DRAM_CHUNK_SIZE       = (DRAM_DATA_WIDTH >> 3);
 localparam BUFFER_SIZE_WIDTH     = $clog2(BUFFER_SIZE);
 localparam INPUT_DATA_SIZE       = 24; // 8-bit * 3
 localparam INPUT_NUM             = BUFFER_SIZE / INPUT_DATA_SIZE;
@@ -88,7 +91,7 @@ always_ff @(posedge m_axi_aclk) begin
         if( async_fifo_empty == 1'b0 && dram_write_busy == 1'b0 && dram_write_wait_cnt == 4'h0) begin
             dram_write_en <= 1'b1;
             dram_write_len <= 8'h0;
-            dram_next_addr <= dram_write_addr + BUFFER_SIZE;
+            dram_next_addr <= dram_write_addr + DRAM_CHUNK_SIZE;
             dram_write_wait_cnt <= 4'h1;
 
             /* 
@@ -117,19 +120,23 @@ always_ff @(posedge m_axi_aclk) begin
 end
 
 // async fifo interface
+reg [IMAGE_NUM_WIDTH-1:0] captured_image_num;
 always_ff @(posedge clink_X_clk) begin
+    {auto_start_buffer2, auto_start_buffer1} <= {auto_start_buffer1, auto_start};
     if( ~clk_pixel_resetn ) begin
         async_fifo_buffer       <= 0;
         async_fifo_buffer_index <= 0;
         async_fifo_write_fsm    <= 1'b0;
         {fval_buffer, dval_buffer, lval_buffer} <= 3'h0;
+        captured_image_num <= 0;
     end
     else begin
-        {auto_start_buffer2, auto_start_buffer1} <= {auto_start_buffer1, auto_start};
+        async_fifo_write_fsm <= 1'b0;
+        {fval_buffer, dval_buffer, lval_buffer} <= {fval, dval, lval};
         if(auto_start_buffer2 == 1'b1) begin
-            async_fifo_write_fsm <= 1'b0;
-            // Save current value of fval, dval, lval to compare with next value
-            {fval_buffer, dval_buffer, lval_buffer} <= {fval, dval, lval};
+            /* 
+             * Save current value of fval, dval, lval to compare with next value
+             */
             if( async_fifo_buffer_write == 1'b1 ) begin
                 /*
                 * Write to buffer and fill zero when first data is received
@@ -145,14 +152,27 @@ always_ff @(posedge clink_X_clk) begin
                 * Write to DRAM when buffer is full or when the last data is received
                 */
                 if( 
-                    async_fifo_buffer_index == INPUT_NUM - 1 || 
-                    (lval_buffer == 1'b1 && lval == 1'b0)
+                    async_fifo_buffer_index == INPUT_NUM - 1
                 ) begin
                     async_fifo_write_fsm <= 1'b1;
                     async_fifo_buffer_index <= BUFFER_SIZE_WIDTH'(0);
+                    $display("BUFFER WRITE END");
                 end
                 else begin
                     async_fifo_buffer_index <= async_fifo_buffer_index + 1;
+                end
+            end
+
+            /*
+            * Save total image number to debug
+            */
+            if (lval_buffer == 1'b1 && lval == 1'b0) begin
+                captured_image_num  <= captured_image_num + 1;
+                $display("%d th IMAGE END", captured_image_num);
+                if (async_fifo_buffer_index != 0) begin
+                    async_fifo_write_fsm <= 1'b1;
+                    async_fifo_buffer_index <= BUFFER_SIZE_WIDTH'(0);
+                    $display("BUFFER WRITE END (with LVAL END)");
                 end
             end
         end
@@ -183,6 +203,7 @@ always_ff @(posedge clink_X_clk) begin
         case(async_fifo_write_state)
             IDLE: begin
                 if( async_fifo_write_fsm == 1'b1 ) begin
+                    $display("BUFFER DATA : %x",async_fifo_buffer);
                     async_fifo_chunk_input[0] <= async_fifo_buffer[0 +:DRAM_DATA_WIDTH];
                     async_fifo_chunk_input[1] <= async_fifo_buffer[DRAM_DATA_WIDTH +:DRAM_DATA_WIDTH];
                     async_fifo_chunk_input[2] <= async_fifo_buffer[DRAM_DATA_WIDTH*2 +:DRAM_DATA_WIDTH];

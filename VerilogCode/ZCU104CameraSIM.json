@@ -72,7 +72,7 @@
             "tcl_options" : ["type", "vlnv"],
             "config" : {
                 "NUM_SI" : "1",
-                "NUM_MI" : "2",
+                "NUM_MI" : "3",
                 "ENABLE_ADVANCED_OPTIONS" : "1",
                 "XBAR_DATA_WIDTH" : "128"
             },
@@ -373,7 +373,8 @@
                 "clk_blink_0" : "GPIO_LED_0_LS",
                 "clk_blink_1" : "GPIO_LED_1_LS",
                 "clk_300mhz" : "pl_clk1",
-                "auto_start" : "MasterController_0/auto_start"
+                "auto_start" : "MasterController_0/auto_start",
+                "captured_image_num" : "image2dram_0/captured_image_num"
             }
         },
         "image2dram_0": {

@@ -26,6 +26,7 @@ module CameraLinkInterface
     // Cameralink Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
     parameter LINES                     = 4,
+    parameter IMAGE_NUM_WIDTH           = 8,
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +151,8 @@ module CameraLinkInterface
     //////////////////////////////////////////////////////////////////////////////////
     // Cameralink Trigger and Image end
     //////////////////////////////////////////////////////////////////////////////////
-    input wire         auto_start  // Master Enable
+    input wire         auto_start,  // Master Enable
+    input wire [IMAGE_NUM_WIDTH-1:0] captured_image_num
 );
 
 // AXI2UART instance for handling AXI communication and UART interface
@@ -203,14 +205,14 @@ assign clink_rx_out[26]     = pixel_X[14];
 assign clink_rx_out[27]     = pixel_X[27];
 
 // clink_rx_out data to actual cameralink data
-assign d0[0]                = clink_rx_out[0];
-assign d0[1]                = clink_rx_out[1];
-assign d0[2]                = clink_rx_out[2];
-assign d0[3]                = clink_rx_out[3];
-assign d0[4]                = clink_rx_out[4];
-assign d0[5]                = clink_rx_out[6];
-assign d0[6]                = clink_rx_out[27];
-assign d0[7]                = clink_rx_out[5];
+assign d0[0]                = clink_rx_out[0]; // A0
+assign d0[1]                = clink_rx_out[1]; // A1
+assign d0[2]                = clink_rx_out[2]; // A2
+assign d0[3]                = clink_rx_out[3]; // A3
+assign d0[4]                = clink_rx_out[4]; // A4
+assign d0[5]                = clink_rx_out[6]; // A5
+assign d0[6]                = clink_rx_out[27];// A6
+assign d0[7]                = clink_rx_out[5]; // A7
 
 assign d1[0]                = clink_rx_out[7];
 assign d1[1]                = clink_rx_out[8];
@@ -367,7 +369,9 @@ axi2uart_inst (
     .CC1                    (cc1),
     .CC2                    (cc2),
     .CC3                    (cc3),
-    .CC4                    (cc4)
+    .CC4                    (cc4),
+
+    .captured_image_num     (captured_image_num)
 );
 
 endmodule

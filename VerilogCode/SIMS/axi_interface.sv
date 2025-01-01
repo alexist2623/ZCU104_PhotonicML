@@ -118,6 +118,7 @@ interface axi_if#(
         s_axi_arvalid <= 0;
 
         wait (s_axi_rvalid);
+        #8;
         data = s_axi_rdata;
         s_axi_rready <= 0;
 

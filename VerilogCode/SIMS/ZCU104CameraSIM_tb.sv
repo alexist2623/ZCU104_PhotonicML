@@ -22,11 +22,14 @@
 
 module ZCU104CameraSIM_tb;
 
-localparam DRAM_ADDR_BASE        = 48'h4_0000_0000;
-localparam MASTER_CONTROLLER_AXI_ADDR = 48'hA000_1000;
-localparam real CLINK_PERIOD_ON = 6.968641114982579;
-localparam real CLINK_PERIOD_OFF= 5.2264808362369335;
-localparam real CLINK_PERIODx7  = 0.8710801393728224;
+localparam DRAM_ADDR_BASE               = 48'h4_0000_0000;
+localparam CLINK_INTF_AXI_ADDR          = 48'hA000_0000;
+localparam CLINK_INTF_READ_IMG_NUM_ADRR = 48'hA000_0010;
+localparam MASTER_CONTROLLER_AXI_ADDR   = 48'hA000_1000;
+localparam AXI_ADDR_WIDTH               = 48;
+localparam real CLINK_PERIOD_ON         = 6.968641114982579;
+localparam real CLINK_PERIOD_OFF        = 5.2264808362369335;
+localparam real CLINK_PERIODx7          = 0.8710801393728224;
 
 wire SerTC;
 wire cc1;
@@ -86,7 +89,7 @@ reg clink_A0;
 
 
 logic [127:0] axi_read_data;
-logic [31:0] axi_read_addr;
+logic [48:0] axi_read_addr;
 
 assign clink_X_clk_p =  clink_X_clk;
 assign clink_X_clk_n = ~clink_X_clk;
@@ -100,7 +103,12 @@ assign clink_X_data_3_p =  clink_X_data_3;
 assign clink_X_data_3_n = ~clink_X_data_3;
 
 // Instantiate AXI interface
-axi_if axi_if_inst(
+axi_if #(
+    //////////////////////////////////////////////////////////////////////////////////
+    // AXI4 Configuraiton
+    //////////////////////////////////////////////////////////////////////////////////
+    .AXI_ADDR_WIDTH     (AXI_ADDR_WIDTH)
+)axi_if_inst (
     .s_axi_aclk         (s_axi_aclk)
 );
 
@@ -133,7 +141,7 @@ end
 
 parameter IMAGE_DATA_NUM = 16;
 parameter IMAGE_LINE_NUM = 16;
-parameter IMAGE_DURATION = 16;
+parameter IMAGE_DURATION = 256;
 parameter IMAGE_FVAL_DURATION = 16;
 parameter IMAGE_DATA_NUM_WIDTH = $clog2(IMAGE_DATA_NUM);
 parameter IMAGE_LINE_NUM_WIDTH = $clog2(IMAGE_LINE_NUM);
@@ -144,7 +152,13 @@ reg [9:0] image_num_cnt;
 reg [9:0] image_duration_cnt;
 reg [9:0] image_fval_cnt;
 
+reg [10:0] image_index;
+reg clink_data_gen_en;
+
 initial begin
+    image_index <= 0;
+    clink_data_gen_en <= 1'b0;
+
     image_data_cnt <= 0;
     image_line_cnt <= 0;
     image_num_cnt <= 0;
@@ -194,60 +208,68 @@ initial begin
             // Set the image data with a random value
             //////////////////////////////
             if (image_line_cnt == (IMAGE_LINE_NUM+1)) begin
-                clink_LVAL <= 1'b0;
+                clink_LVAL = 1'b0;
                 image_data_cnt <= 0;
                 image_line_cnt <= 0;
                 image_duration_cnt <= 0;
+                $display("IMAGE GENERATION DONE");
+                $display("LAST WRITTEN DATA : %x", image_index);
             end
             else if ((image_duration_cnt == IMAGE_DURATION - 1 && clink_LVAL == 1'b0) || clink_LVAL == 1'b1) begin
-                clink_LVAL <= 1'b1;
+                if (clink_data_gen_en == 1'b1) begin
+                    clink_LVAL = 1'b1;
+                end
                 if (image_data_cnt == IMAGE_DATA_NUM) begin
                     image_data_cnt <= 0;
-                    clink_DVAL <= 1'b0;
-                    clink_FVAL <= 1'b0;
-                    image_fval_cnt <= image_fval_cnt + 1;
+                    clink_DVAL = 1'b0;
+                    clink_FVAL = 1'b0;
+                    image_fval_cnt = image_fval_cnt + 1;
                 end
                 else if ((image_fval_cnt == IMAGE_FVAL_DURATION - 1 && clink_FVAL == 1'b0) || clink_FVAL == 1'b1) begin
-                    clink_DVAL <= 1'b1;
-                    clink_FVAL <= 1'b1;
-                    image_data_cnt <= image_data_cnt + 1;
-                    image_fval_cnt <= 0;
-
-                    clink_RES  <= 1'b0;
-                    clink_C7 <= $urandom;
-                    clink_C6 <= $urandom;
-                    clink_C5 <= $urandom;
-                    clink_C4 <= $urandom;
-                    clink_C3 <= $urandom;
-                    clink_C2 <= $urandom;
-                    clink_C1 <= $urandom;
-                    clink_C0 <= $urandom;
-                    clink_B7 <= $urandom;
-                    clink_B6 <= $urandom;
-                    clink_B5 <= $urandom;
-                    clink_B4 <= $urandom;
-                    clink_B3 <= $urandom;
-                    clink_B2 <= $urandom;
-                    clink_B1 <= $urandom;
-                    clink_B0 <= $urandom;
-                    clink_A7 <= $urandom;
-                    clink_A6 <= $urandom;
-                    clink_A5 <= $urandom;
-                    clink_A4 <= $urandom;
-                    clink_A3 <= $urandom;
-                    clink_A2 <= $urandom;
-                    clink_A1 <= $urandom;
-                    clink_A0 <= $urandom;
+                    if (clink_data_gen_en == 1'b1) begin
+                        clink_DVAL = 1'b1;
+                        clink_FVAL = 1'b1;
+                        image_data_cnt = image_data_cnt + 1;
+                        image_fval_cnt = 0;
+    
+                        clink_RES  = 1'b0;
+                        clink_C7 = image_index[7];
+                        clink_C6 = image_index[6];
+                        clink_C5 = image_index[5];
+                        clink_C4 = image_index[4];
+                        clink_C3 = image_index[3];
+                        clink_C2 = image_index[2];
+                        clink_C1 = image_index[1];
+                        clink_C0 = image_index[0];
+                        clink_B7 = image_index[7];
+                        clink_B6 = image_index[6];
+                        clink_B5 = image_index[5];
+                        clink_B4 = image_index[4];
+                        clink_B3 = image_index[3];
+                        clink_B2 = image_index[2];
+                        clink_B1 = image_index[1];
+                        clink_B0 = image_index[0];
+                        clink_A7 = image_index[7];
+                        clink_A6 = image_index[6];
+                        clink_A5 = image_index[5];
+                        clink_A4 = image_index[4];
+                        clink_A3 = image_index[3];
+                        clink_A2 = image_index[2];
+                        clink_A1 = image_index[1];
+                        clink_A0 = image_index[0];
+    
+                        image_index <= image_index + 1;
+                    end
                 end
                 else if (clink_FVAL == 1'b0) begin
                     image_fval_cnt <= image_fval_cnt + 1;
                     if (image_fval_cnt == (IMAGE_FVAL_DURATION >> 1)) begin
-                        image_line_cnt <= image_line_cnt + 1;
+                        image_line_cnt = image_line_cnt + 1;
                     end
                 end
             end
             else if ( clink_LVAL == 1'b0) begin
-                image_duration_cnt <= image_duration_cnt + 1;
+                image_duration_cnt = image_duration_cnt + 1;
             end
             //////////////////////////////
             // 0
@@ -345,6 +367,8 @@ initial begin
     end
 end
 
+int k = 0;
+
 initial begin
     axi_if_inst.init();
     axi_read_addr <= DRAM_ADDR_BASE;
@@ -353,14 +377,32 @@ initial begin
     axi_if_inst.init();
     
     wait(GPIO_LED_0_LS);
+    clink_data_gen_en <= 1'b1;
     $display("7:1 deserializer stabilized");
+
+    #1000;
+    axi_if_inst.write(MASTER_CONTROLLER_AXI_ADDR, 4'b1000 | 128'h0);
+    $display("Master Controller Auto Start");
     
     #20000;
+    clink_data_gen_en <= 1'b0;
+    $display("Image generation disabled");
     #100;
-    
-    // axi_if_inst.read(axi_read_addr,axi_read_data);
+    axi_if_inst.read(CLINK_INTF_READ_IMG_NUM_ADRR,axi_read_data);
+    $display("IMAGE NUMBER : %d", axi_read_data);
+    $display("====================< DATA WRITTEN >====================");
+    for ( k = 0 ; k < 9'h60; k ++ ) begin
+        axi_if_inst.read(axi_read_addr,axi_read_data);
+        $display("ADDR : %x , DATA : %x", axi_read_addr, axi_read_data);
+        axi_read_addr = axi_read_addr + 16;
+        #8;
+    end
     
     #100;
+    $display("Simulation END");
+
+
+
     $finish;
 end
 

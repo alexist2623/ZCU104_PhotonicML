@@ -6,8 +6,9 @@ module Image2DRAM
     // DRAM Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
     parameter DRAM_ADDR_WIDTH               = 48,
-    parameter DRAM_ADDR_BASE                = 48'h400000000,
+    parameter DRAM_ADDR_BASE                = 48'h4_0000_0000,
     parameter DRAM_DATA_WIDTH               = 512,
+    parameter IMAGE_NUM_WIDTH               = 8,
     //////////////////////////////////////////////////////////////////////////////////
     // AXI4 Configuraiton
     //////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +98,8 @@ module Image2DRAM
     //////////////////////////////////////////////////////////////////////////////////
     // Master Controller
     //////////////////////////////////////////////////////////////////////////////////
-    input  wire auto_start
+    input  wire auto_start,
+    output wire [IMAGE_NUM_WIDTH-1:0] captured_image_num
 );
 
 wire [MAXI_ADDR_WIDTH - 1:0] dram_write_addr;
@@ -188,6 +190,7 @@ BufferGearBox #(
     .dram_write_len                 (dram_write_len),
     .dram_write_busy                (dram_write_busy),
     .clk_pixel_resetn               (clk_pixel_resetn),
-    .auto_start                     (auto_start)
+    .auto_start                     (auto_start),
+    .captured_image_num             (captured_image_num)
 );
 endmodule

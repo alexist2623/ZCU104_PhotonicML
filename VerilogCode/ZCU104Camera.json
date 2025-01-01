@@ -60,7 +60,7 @@
             "tcl_options" : ["type", "vlnv"],
             "config" : {
                 "NUM_SI" : "1",
-                "NUM_MI" : "2",
+                "NUM_MI" : "3",
                 "ENABLE_ADVANCED_OPTIONS" : "1",
                 "XBAR_DATA_WIDTH" : "128"
             },
@@ -69,10 +69,12 @@
                 "S00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
                 "M00_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
                 "M01_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
+                "M02_ACLK" : "zynq_ultra_ps_e_0/pl_clk0",
 
                 "ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "M00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "M01_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
+                "M02_ARESETN" : "proc_sys_reset_0/interconnect_aresetn",
                 "S00_ARESETN" : "proc_sys_reset_0/interconnect_aresetn"
             },
             "interface" : {
@@ -358,7 +360,9 @@
                 "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
                 "clk_blink_0" : "GPIO_LED_0_LS",
                 "clk_blink_1" : "GPIO_LED_1_LS",
-                "clk_300mhz" : "zynq_ultra_ps_e_0/pl_clk1"
+                "clk_300mhz" : "zynq_ultra_ps_e_0/pl_clk1",
+                "auto_start" : "MasterController_0/auto_start",
+                "captured_image_num" : "image2dram_0/captured_image_num"
             }
         },
         "image2dram_0": {
@@ -367,7 +371,25 @@
             "tcl_options" : ["type", "vlnv"],
             "ports" : {
                 "m_axi_aclk" : "ddr4_0/c0_ddr4_ui_clk",
-                "m_axi_aresetn" : "dram_reset_0/peripheral_aresetn"
+                "m_axi_aresetn" : "dram_reset_0/peripheral_aresetn",
+                "auto_start" : "MasterController_0/auto_start"
+            }
+        },
+        "MasterController_0" : {
+            "type" : "ip",
+            "vlnv" : "xilinx.com:user:MasterController:1.0",
+            "tcl_options" : ["type", "vlnv"],
+            "interface" : {
+                "s_axi" : "axi_interconnect_0/M02_AXI"
+            },
+            "ports" : {
+                "s_axi_aclk" : "pl_clk0",
+                "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
+                "clk_pixel" : "pl_clk0"
+            },
+            "axi" : {
+                "offset" : "0xA0001000",
+                "range" : "0x00001000"
             }
         },
         "LVDS_14" : {

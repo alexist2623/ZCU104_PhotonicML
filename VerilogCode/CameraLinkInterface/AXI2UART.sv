@@ -28,7 +28,8 @@ module AXI2UART
     parameter AXI_ADDR_WIDTH   = 7,
     parameter AXI_DATA_WIDTH   = 128,
     parameter AXI_STROBE_WIDTH = AXI_DATA_WIDTH >> 3,
-    parameter AXI_STROBE_LEN   = 4 // LOG(AXI_STROBE_WIDTH)
+    parameter AXI_STROBE_LEN   = 4, // LOG(AXI_STROBE_WIDTH)
+    parameter IMAGE_NUM_WIDTH           = 8
 )
 (
     //////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +108,8 @@ module AXI2UART
     output reg                        dram_resetn,
     output reg                        clink_resetn,
     
-    input  wire                       clink_ready // CameraLink ready signal
+    input  wire                       clink_ready, // CameraLink ready signal
+    input  wire [IMAGE_NUM_WIDTH-1:0] captured_image_num
 );
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +121,7 @@ localparam AXI_CLINK_RESETN     = AXI_ADDR_WIDTH'(0) + 7'h20;
 localparam AXI_DRAM_RESETN      = AXI_ADDR_WIDTH'(0) + 7'h30;
 
 localparam AXI_READ_UART        = AXI_ADDR_WIDTH'(0) + 7'h00;
+localparam AXI_READ_IMAGE_NUM   = AXI_ADDR_WIDTH'(0) + 7'h10;
 localparam AXI_READ_UART_VALID  = AXI_ADDR_WIDTH'(0) + 7'h20;
 localparam AXI_READ_UART_BUSY   = AXI_ADDR_WIDTH'(0) + 7'h30;
 
@@ -141,6 +144,7 @@ typedef enum logic [4:0] {
     READ_UART, 
     READ_UART_VALID,
     READ_UART_BUSY,
+    READ_IMAGE_NUM,
     READ_ERROR_STATE} statetype_r;
 statetype_r axi_state_read;
 
@@ -439,6 +443,9 @@ always_ff @(posedge s_axi_aclk) begin
                     if (s_axi_araddr == AXI_READ_UART) begin
                         axi_state_read <= READ_UART;
                     end
+                    else if (s_axi_araddr == AXI_READ_IMAGE_NUM) begin
+                        axi_state_read <= READ_IMAGE_NUM;
+                    end
                     else if (s_axi_araddr == AXI_READ_UART_VALID) begin
                         axi_state_read <= READ_UART_VALID;
                     end
@@ -448,6 +455,16 @@ always_ff @(posedge s_axi_aclk) begin
                     else begin
                         axi_state_read <= READ_ERROR_STATE;
                     end
+                end
+            end
+            READ_IMAGE_NUM : begin
+                if (s_axi_rready == 1'b1) begin
+                    s_axi_rdata    <= captured_image_num | 128'h0;
+                    s_axi_rresp    <= 2'b0;
+                    s_axi_rvalid   <= 1'b1;
+                    s_axi_rlast    <= 1'b1;
+                    s_axi_rid      <= axi_arid;
+                    axi_state_read <= READ_IDLE;
                 end
             end
             READ_UART: begin
