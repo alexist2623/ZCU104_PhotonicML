@@ -173,7 +173,7 @@ class ZCU104:
 
         """
         self.send_uart(
-            addr = 0x00040100,
+            addr = 0x00040100 | 0x04,
             addr_len = 0b11,
             data = [0x01, 0x00, 0x00, 0x00]
         )
@@ -190,7 +190,7 @@ class ZCU104:
 
         """
         self.send_uart(
-            addr = 0x00040100,
+            addr = 0x00040100 | 0x04,
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x00]
         )
@@ -207,7 +207,7 @@ class ZCU104:
 
         """
         self.send_uart(
-            addr = 0x00040140,
+            addr = 0x00040140 | 0x04,
             addr_len = 0b11,
             data = [0x09, 0x00, 0x00, 0x00]
         )
@@ -224,7 +224,7 @@ class ZCU104:
 
         """
         self.send_uart(
-            addr = 0x00040140,
+            addr = 0x00040140 | 0x04,
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x00]
         )
@@ -232,18 +232,17 @@ class ZCU104:
     def set_frame_count(self, frame_count : int)->None:
         """
         Set frame count
-
-        Args:
-            frame_count (int): Frame count. Min is 1, and Max is 255
-        
-        Returns:
-            None
-
         """
+        data_bytes = [
+            frame_count & 0xFF,
+            (frame_count >> 8) & 0xFF,
+            (frame_count >> 16) & 0xFF,
+            (frame_count >> 24) & 0xFF
+        ]
         self.send_uart(
-            addr = 0x000400A0|0x04,
+            addr = 0x000400A0 | 0x04,  # == 0x000400A4
             addr_len = 0b11,
-            data = [frame_count & 0xff]
+            data = data_bytes
         )
 
     def set_frame_tirgger(self)->None:
@@ -251,7 +250,7 @@ class ZCU104:
         Set framer start as a hardware trigger mode
         """
         self.send_uart(
-            addr = 0x00040200,
+            addr = 0x00040200 | 0x04,
             addr_len = 0b11,
             data = [0x01, 0x00, 0x00, 0x00]
         )
@@ -261,7 +260,7 @@ class ZCU104:
         Set framer start as a hardware trigger mode
         """
         self.send_uart(
-            addr = 0x00040200,
+            addr = 0x00040200 | 0x04,
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x00]
         )
@@ -271,17 +270,17 @@ class ZCU104:
         Set frame trigger source as CC2
         """
         self.send_uart(
-            addr = 0x00040240,
+            addr = 0x00040240 | 0x04,
             addr_len = 0b11,
             data = [0x0A, 0x00, 0x00, 0x00]
         )
-    
+
     def set_frame_trigger_source_soft(self)->None:
         """
         Set frame trigger source as CC2
         """
         self.send_uart(
-            addr = 0x00040240,
+            addr = 0x00040240 | 0x04,
             addr_len = 0b11,
             data = [0x00, 0x00, 0x00, 0x00]
         )
@@ -291,7 +290,7 @@ class ZCU104:
         Set cameralink tap configuartion as 1X3-1Y
         """
         self.send_uart(
-            addr = 0x0720,
+            addr = 0x0720 | 0x04,
             addr_len = 0b01,
             data = [0x07, 0x00, 0x00, 0x00]
         )
@@ -301,9 +300,9 @@ class ZCU104:
         Set cameralink clock to 82MHz
         """
         self.send_uart(
-            addr = 0x0740,
+            addr = 0x0740 | 0x04,
             addr_len = 0b01,
-            data = [0x23, 0x00, 0x00, 0x00]
+            data = [0x17, 0x00, 0x00, 0x00]
         )
 
     def set_pixel_format(self)->None:
@@ -311,7 +310,7 @@ class ZCU104:
         Set pixel format to mono8
         """
         self.send_uart(
-            addr = 0x00030020,
+            addr = 0x00030020 | 0x04,
             addr_len = 0b11,
             data = [0x01, 0x00, 0x00, 0x00]
         )
@@ -378,8 +377,13 @@ class ZCU104:
         """
         packet = f"#READ_DRAM#{addr}#{size}#!EOL#"
         self.tcp.write(packet)
-        a = self.tcp.read()
-        print(a)
+        a = b""
+        while len(a) != 2048:
+            a += self.tcp.socket.recv(2048)
+        print(len(a))
+        if not hasattr(self, 'img_data'):
+            self.img_data = b""  # img_data 초기화
+        self.img_data += a
         
     def write_dram(self, addr: int, data_upper, data_lower):
         packet = f"#WRITE_DRAM#{addr}#{data_upper}#{data_lower}#!EOL#"
@@ -412,27 +416,36 @@ class ZCU104:
         self.tcp.write(packet)
         a = self.tcp.read()
         print(a)
+    
+    def read_img_num(self):
+        packet = "#READ_IMG_NUM#!EOL#"
+        self.tcp.write(packet)
+        a = self.tcp.read()
+        print(a)
+        
+    
+    def auto_start(self):
+        packet = "#AUTO_START#!EOL#"
+        self.tcp.write(packet)
+        a = self.tcp.read()
+        print(a)
 
 if __name__ == "__main__":
     zcu104 = ZCU104(IPAddress = '172.22.22.236', TCPPort = 7)
     zcu104.connect()
-    test = True
-    
-    if test == True:
-        zcu104.camera_init()
-        time.sleep(1)
-        zcu104.cc_ctrl(0b0001,0)
-        zcu104.cc_ctrl(0b0001,1)
-        time.sleep(1)
-        zcu104.cc_ctrl(0b0001,0)
-        for i in range(1):
-            zcu104.cc_ctrl(0b0010,0)
-            zcu104.cc_ctrl(0b0010,1)
-            time.sleep(1)
-            zcu104.cc_ctrl(0b0010,0)
-    else:
-        zcu104.set_tap_1x3()
-        
+    zcu104.camera_init()
+    zcu104.auto_start()
     time.sleep(1)
-    zcu104.read_dram(0x00000000, 0x10)
+    zcu104.cc_ctrl(0b0001,1)
+    time.sleep(1)
+    zcu104.cc_ctrl(0b0010,1)
+    time.sleep(5)
+    for i in range(1122):
+        zcu104.read_dram(0x00000000, i)
+    print(len(zcu104.img_data))
+    zcu104.read_img_num()
     zcu104.disconnect()
+    with open("img_data.bin", "wb") as f:
+        f.write(zcu104.img_data)
+    
+    

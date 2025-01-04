@@ -38,10 +38,15 @@ static INLINE __uint128_t Xil_In128(UINTPTR Addr)
 	return *LocalAddr;
 }
 
+#define AXI_OFFSET			 (0xA0000000)
 #define AXI_WRITE_UART       (0x00)
 #define AXI_WRITE_CC         (0x10)
-#define AXI_READ_UART        (0x20)
-#define AXI_READ_UART_VALID  (0x30)
+#define AXI_CLINK_RESETN     (0x20)
+#define AXI_DRAM_RESETN      (0x30)
+
+#define AXI_READ_UART        (0x00)
+#define AXI_READ_UART_VALID  (0x20)
+#define AXI_READ_UART_BUSY   (0x30)
 
 struct tcp_pcb * start_application();
 err_t 	accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err);

@@ -100,6 +100,31 @@ int main()
 	xil_printf("############################################################\r\n");
 	xil_printf("###            IWSL ZCU104 Firmware V1_00                ###\r\n");
 	xil_printf("############################################################\r\n");
+
+	/* Test code */
+	// xil_printf("Write Test\r\n");
+	// xil_printf("ADDR 0x00 \r\n");
+	// Xil_Out128(AXI_OFFSET|AXI_WRITE_UART, MAKE128CONST(0x00000000, 0x00000000));
+	// xil_printf("ADDR 0x10 \r\n");
+	// Xil_Out128(AXI_OFFSET|AXI_WRITE_CC, MAKE128CONST(0x00000000, 0x00000000));
+	// xil_printf("Write Test passed\r\n");
+	// xil_printf("Check Clink is ready\r\n");
+	// uint64_t count_clink = 0;
+	// __uint128_t clink_ready = 0;
+	// clink_ready = Xil_In128(AXI_OFFSET|AXI_READ_UART);
+	// xil_printf("Clink ready: %d\r\n", LOWER(clink_ready));
+	// while(1){
+	// 	clink_ready = Xil_In128(AXI_OFFSET|AXI_READ_CLINK_READY);
+	// 	if(LOWER(clink_ready) == 0x0000000000000001){
+	// 		xil_printf("Clink is ready\r\n");
+	// 		break;
+	// 	}
+	// 	count_clink++;
+	// 	if (count_clink == 100000000){
+	// 		xil_printf("Clink is not ready\r\n");
+	// 		count_clink = 0;
+	// 	}
+	// }
 	while (1) {
 		if (TcpFastTmrFlag) {
 			tcp_fasttmr();

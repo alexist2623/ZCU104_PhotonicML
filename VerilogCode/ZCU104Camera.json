@@ -4,7 +4,8 @@
         "axi_offset" : "0xA0000000",
         "json_path" : [
             "CameraLinkInterface.json",
-            "Image2DRAM.json"
+            "Image2DRAM.json",
+            "MasterController.json"
         ],
         "output_ports" : [
             "FMC_LPC_LA07_P",
@@ -383,9 +384,9 @@
                 "s_axi" : "axi_interconnect_0/M02_AXI"
             },
             "ports" : {
-                "s_axi_aclk" : "pl_clk0",
+                "s_axi_aclk" : "zynq_ultra_ps_e_0/pl_clk0",
                 "s_axi_aresetn" : "proc_sys_reset_0/peripheral_aresetn",
-                "clk_pixel" : "pl_clk0"
+                "clk_pixel" : "zynq_ultra_ps_e_0/pl_clk0"
             },
             "axi" : {
                 "offset" : "0xA0001000",
