@@ -36,6 +36,7 @@ if __name__ == "__main__":
         hex_data = f.read()
     # Process the data
     print(len(hex_data))
+    print(type(hex_data))
     image = hex_to_image(hex_data)
 
     # Save the image

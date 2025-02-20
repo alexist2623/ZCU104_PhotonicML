@@ -4,12 +4,7 @@
 # Change log
 # v1_00: Initial version
 
-import os
-import subprocess
-import io
-import time
 import socket
-import numpy as np
 
 class TCP_Client:
     def __init__(self, IPAddress = '192.168.1.10', TCPPort = 7):
